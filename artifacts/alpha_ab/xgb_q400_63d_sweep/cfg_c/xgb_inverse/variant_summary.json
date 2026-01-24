@@ -1,0 +1,19 @@
+{
+  "metrics": {
+    "ann_vol": 0.22067538784975463,
+    "cagr": 0.1529712155634575,
+    "cagr_over_vol": 0.6931956347918914,
+    "max_drawdown": -0.41246071185186267,
+    "sharpe": 0.6931956347918914,
+    "total_cost": 0.012291184096328896,
+    "total_turnover": 4.205
+  },
+  "params": {
+    "cost_bps": 10.0,
+    "method": "topk",
+    "rebalance": "Q",
+    "slippage_bps": 5.0,
+    "top_k": 400
+  },
+  "source": "variant"
+}

@@ -1,0 +1,12 @@
+{
+  "dates_with_universe_lt_topk": [
+    "2021-12-31",
+    "2024-09-30",
+    "2024-10-01"
+  ],
+  "effective_top_k": 219,
+  "fraction_of_all_universe": 0.21719831094831094,
+  "mean_universe_size_per_date": 533.65625,
+  "min_universe_size_per_date": 219,
+  "subset_mode": "sec_covered"
+}

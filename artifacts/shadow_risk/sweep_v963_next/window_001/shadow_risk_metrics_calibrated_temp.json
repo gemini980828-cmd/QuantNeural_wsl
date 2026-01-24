@@ -1,0 +1,442 @@
+{
+  "best_temperature": 4.2738095238,
+  "config": {
+    "as_of_date": "2024-04-04",
+    "drawdown_threshold": -0.1,
+    "horizon_days": 63,
+    "n_bins": 10,
+    "seed": 42,
+    "train_end": "2022-04-04",
+    "val_end": "2023-04-04"
+  },
+  "metrics": {
+    "test": {
+      "calibrated": {
+        "base_rate": 0.1474103586,
+        "brier": 0.2103321683,
+        "calibration_bins": [
+          {
+            "bin_idx": 0,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.05
+          },
+          {
+            "bin_idx": 1,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.15
+          },
+          {
+            "bin_idx": 2,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.25
+          },
+          {
+            "bin_idx": 3,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.35
+          },
+          {
+            "bin_idx": 4,
+            "count": 251,
+            "frac_pos": 0.1474103586,
+            "mean_pred": 0.4352650332
+          },
+          {
+            "bin_idx": 5,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.55
+          },
+          {
+            "bin_idx": 6,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.65
+          },
+          {
+            "bin_idx": 7,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.75
+          },
+          {
+            "bin_idx": 8,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.85
+          },
+          {
+            "bin_idx": 9,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.95
+          }
+        ],
+        "ece": 0.2878546746,
+        "log_loss": 0.6133859014,
+        "n_obs": 251,
+        "roc_auc": 0.3101793382
+      },
+      "uncalibrated": {
+        "base_rate": 0.1474103586,
+        "brier": 0.1428758617,
+        "calibration_bins": [
+          {
+            "bin_idx": 0,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.05
+          },
+          {
+            "bin_idx": 1,
+            "count": 8,
+            "frac_pos": 0.0,
+            "mean_pred": 0.1920461102
+          },
+          {
+            "bin_idx": 2,
+            "count": 213,
+            "frac_pos": 0.1737089202,
+            "mean_pred": 0.2407477842
+          },
+          {
+            "bin_idx": 3,
+            "count": 30,
+            "frac_pos": 0.0,
+            "mean_pred": 0.3205316456
+          },
+          {
+            "bin_idx": 4,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.45
+          },
+          {
+            "bin_idx": 5,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.55
+          },
+          {
+            "bin_idx": 6,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.65
+          },
+          {
+            "bin_idx": 7,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.75
+          },
+          {
+            "bin_idx": 8,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.85
+          },
+          {
+            "bin_idx": 9,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.95
+          }
+        ],
+        "ece": 0.1013211007,
+        "log_loss": 0.4658193683,
+        "n_obs": 251,
+        "roc_auc": 0.3101793382
+      }
+    },
+    "train": {
+      "calibrated": {
+        "base_rate": 0.3702531646,
+        "brier": 0.233104344,
+        "calibration_bins": [
+          {
+            "bin_idx": 0,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.05
+          },
+          {
+            "bin_idx": 1,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.15
+          },
+          {
+            "bin_idx": 2,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.25
+          },
+          {
+            "bin_idx": 3,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.35
+          },
+          {
+            "bin_idx": 4,
+            "count": 316,
+            "frac_pos": 0.3702531646,
+            "mean_pred": 0.4377181457
+          },
+          {
+            "bin_idx": 5,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.55
+          },
+          {
+            "bin_idx": 6,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.65
+          },
+          {
+            "bin_idx": 7,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.75
+          },
+          {
+            "bin_idx": 8,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.85
+          },
+          {
+            "bin_idx": 9,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.95
+          }
+        ],
+        "ece": 0.0674649811,
+        "log_loss": 0.6591096987,
+        "n_obs": 316,
+        "roc_auc": 0.806382339
+      },
+      "uncalibrated": {
+        "base_rate": 0.3702531646,
+        "brier": 0.2311508564,
+        "calibration_bins": [
+          {
+            "bin_idx": 0,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.05
+          },
+          {
+            "bin_idx": 1,
+            "count": 4,
+            "frac_pos": 0.0,
+            "mean_pred": 0.1913616844
+          },
+          {
+            "bin_idx": 2,
+            "count": 280,
+            "frac_pos": 0.3035714286,
+            "mean_pred": 0.2503729364
+          },
+          {
+            "bin_idx": 3,
+            "count": 32,
+            "frac_pos": 1.0,
+            "mean_pred": 0.3170208097
+          },
+          {
+            "bin_idx": 4,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.45
+          },
+          {
+            "bin_idx": 5,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.55
+          },
+          {
+            "bin_idx": 6,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.65
+          },
+          {
+            "bin_idx": 7,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.75
+          },
+          {
+            "bin_idx": 8,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.85
+          },
+          {
+            "bin_idx": 9,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.95
+          }
+        ],
+        "ece": 0.1187226539,
+        "log_loss": 0.6527520182,
+        "n_obs": 316,
+        "roc_auc": 0.806382339
+      }
+    },
+    "val": {
+      "calibrated": {
+        "base_rate": 0.4820717131,
+        "brier": 0.2468819612,
+        "calibration_bins": [
+          {
+            "bin_idx": 0,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.05
+          },
+          {
+            "bin_idx": 1,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.15
+          },
+          {
+            "bin_idx": 2,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.25
+          },
+          {
+            "bin_idx": 3,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.35
+          },
+          {
+            "bin_idx": 4,
+            "count": 251,
+            "frac_pos": 0.4820717131,
+            "mean_pred": 0.4454945196
+          },
+          {
+            "bin_idx": 5,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.55
+          },
+          {
+            "bin_idx": 6,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.65
+          },
+          {
+            "bin_idx": 7,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.75
+          },
+          {
+            "bin_idx": 8,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.85
+          },
+          {
+            "bin_idx": 9,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.95
+          }
+        ],
+        "ece": 0.0365771935,
+        "log_loss": 0.68683164,
+        "n_obs": 251,
+        "roc_auc": 0.677813096
+      },
+      "uncalibrated": {
+        "base_rate": 0.4820717131,
+        "brier": 0.2761007679,
+        "calibration_bins": [
+          {
+            "bin_idx": 0,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.05
+          },
+          {
+            "bin_idx": 1,
+            "count": 3,
+            "frac_pos": 0.0,
+            "mean_pred": 0.1953211711
+          },
+          {
+            "bin_idx": 2,
+            "count": 151,
+            "frac_pos": 0.4238410596,
+            "mean_pred": 0.254838024
+          },
+          {
+            "bin_idx": 3,
+            "count": 96,
+            "frac_pos": 0.59375,
+            "mean_pred": 0.3312829393
+          },
+          {
+            "bin_idx": 4,
+            "count": 1,
+            "frac_pos": 0.0,
+            "mean_pred": 0.4058223602
+          },
+          {
+            "bin_idx": 5,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.55
+          },
+          {
+            "bin_idx": 6,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.65
+          },
+          {
+            "bin_idx": 7,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.75
+          },
+          {
+            "bin_idx": 8,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.85
+          },
+          {
+            "bin_idx": 9,
+            "count": 0,
+            "frac_pos": null,
+            "mean_pred": 0.95
+          }
+        ],
+        "ece": 0.2060082951,
+        "log_loss": 0.7501853455,
+        "n_obs": 251,
+        "roc_auc": 0.677813096
+      }
+    }
+  },
+  "schema_version": "9.6.2",
+  "warnings": []
+}

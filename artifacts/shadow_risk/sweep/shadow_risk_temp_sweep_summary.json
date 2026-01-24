@@ -1,0 +1,29 @@
+{
+  "config": {
+    "as_of_date": "2024-12-31",
+    "drawdown_threshold": -0.1,
+    "horizon_days": 63,
+    "min_obs_test": 50,
+    "min_obs_val": 50,
+    "n_bins": 10,
+    "seed": 42,
+    "step_months": 6,
+    "test_years": 1,
+    "train_years": 2,
+    "val_years": 1
+  },
+  "schema_version": "9.6.3",
+  "summary": {
+    "best_temperature_mean": 0.7380952381,
+    "best_temperature_median": 0.7380952381,
+    "delta_test_ece_mean": -0.0661956268,
+    "n_windows_evaluated": 1,
+    "n_windows_skipped": 1,
+    "n_windows_total": 2,
+    "share_improved_test_ece": 1.0,
+    "test_ece_cal_mean": 0.1717203657,
+    "test_ece_cal_median": 0.1717203657,
+    "test_ece_uncal_mean": 0.2379159925,
+    "test_ece_uncal_median": 0.2379159925
+  }
+}

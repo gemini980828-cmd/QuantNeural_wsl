@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* fonts */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* surfaces */
+  --bg: 246 247 251;       /* #F6F7FB */
+  --surface: 255 255 255;  /* #FFFFFF */
+  --inset: 240 242 246;    /* #F0F2F6 */
+  --border: 230 232 239;   /* #E6E8EF */
+
+  /* text */
+  --fg: 17 19 24;          /* #111318 */
+  --muted: 94 101 114;     /* #5E6572 */
+
+  /* semantic colors */
+  --positive: 16 185 129;  /* #10B981 - Fintech Green (emerald-500) */
+  --negative: 248 113 113; /* red-400 (brighter for accessibility) */
+
+  /* Strategy strips (Story Mode chart) */
+  --strip-e03-on: #10b981;     /* emerald-500 */
+  --strip-e03-off: #6b7280;    /* gray-500 */
+  --strip-200tq-bear: #ef4444;  /* red-500 */
+  --strip-200tq-focus: #3b82f6; /* blue-500 */
+  --strip-200tq-overheat: #f97316; /* orange-500 */
+
+  /* status (semantic) */
+  --status-inactive-bg: 238 240 244; /* light inactive */
+  --status-inactive-fg: 91 97 109;
+
+  --status-action-bg: 245 158 11;    /* amber-500-ish */
+  --status-action-fg: 17 19 24;
+
+  --status-danger-bg: 239 68 68;     /* red-500 */
+  --status-danger-fg: 255 255 255;
+}
+
+.dark {
+  --bg: 11 15 20;          /* #0B0F14 (Reference Grade) */
+  --surface: 17 24 39;     /* #111827 */
+  --inset: 15 23 42;       /* #0F172A */
+  --border: 31 41 55;      /* #1F2937 */
+
+  --fg: 230 230 232;
+  --muted: 180 185 191;    /* #B4B9BF - bumped up for better contrast */
+  --muted-subtle: 120 126 135; /* #787E87 - for very low-priority hints */
+
+  /* Brighter colors for dark mode accessibility */
+  --positive: 52 211 153;  /* #34D399 - Fintech Green (emerald-400) */
+  --negative: 252 165 165; /* red-300 (salmon/coral for dark bg) */
+
+  /* Strategy strips (Story Mode chart) - brighter for dark bg */
+  --strip-e03-on: #34d399;     /* emerald-400 */
+  --strip-e03-off: #9ca3af;    /* gray-400 */
+  --strip-200tq-bear: #f87171;  /* red-400 */
+  --strip-200tq-focus: #60a5fa; /* blue-400 */
+  --strip-200tq-overheat: #fb923c; /* orange-400 */
+
+  --status-inactive-bg: 37 39 43;  /* dark inactive */
+  --status-inactive-fg: 175 177 183; /* bumped up */
+
+  --status-action-bg: 245 158 11;
+  --status-action-fg: 15 17 21;
+
+  --status-danger-bg: 239 68 68;
+  --status-danger-fg: 255 255 255;
+}
+
+body {
+  color: rgb(var(--fg));
+  background: rgb(var(--bg));
+  font-family: var(--font-sans);
+}
+/* Custom color classes for SVG text - uses !important to override Tailwind/body inheritance */
+.fill-blue-force {
+  fill: #3b82f6 !important;
+}
+.fill-red-force {
+  fill: #ef4444 !important;
+}
+
+/* Compact Mode - reduces spacing throughout the UI */
+.compact {
+  --spacing-scale: 0.75;
+}
+
+.compact .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
+}
+
+.compact .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(1rem * var(--tw-space-y-reverse));
+}
+
+.compact .p-6 {
+  padding: 1rem;
+}
+
+.compact .p-5 {
+  padding: 0.875rem;
+}
+
+.compact .p-4 {
+  padding: 0.75rem;
+}
+
+.compact .gap-4 {
+  gap: 0.75rem;
+}
+
+.compact .mb-4 {
+  margin-bottom: 0.75rem;
+}
+
+.compact .text-2xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.compact .text-lg {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}

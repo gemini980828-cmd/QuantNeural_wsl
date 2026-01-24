@@ -1,0 +1,65 @@
+{
+  "TQQQ_synthetic": {
+    "method": "B: QQQ 일간수익률로 가상 TQQQ(3x 일일리셋) 합성",
+    "formula": {
+      "pseudo_code": [
+        "qqq_returns = QQQ_close.pct_change()",
+        "daily_cost = (0.95% ER / 252) + (3 * 0.05% financing / day)",
+        "tqqq_return = 3 * qqq_returns - daily_cost",
+        "tqqq_close[i] = START_PRICE * cumulative_product(1 + tqqq_return)"
+      ],
+      "constants": {
+        "LEVERAGE": 3.0,
+        "EXPENSE_RATIO": 0.0095,
+        "DAILY_FINANCING_COST": 0.0005
+      }
+    },
+    "source_data": "QQQ (Nasdaq 100 ETF) from Stooq, 1999-03-10 onwards",
+    "dividend_handling": "NOT included (QQQ close prices, not adjusted for dividends)",
+    "cost_handling": "Included via daily_cost deduction (ER + financing)",
+    "period": "1999-03-10 to 2010-02-08",
+    "transition_to_real": "2010-02-09 (TQQQ listing date)",
+    "scaling": "Synthetic prices scaled to match real TQQQ open on transition date",
+    "note": "This is NOT a simple rename (method A); it's a proper 3x daily reset simulation"
+  },
+  "SPLG_synthetic": {
+    "method": "SPY proxy before 2012, then scaled to match SPLG at transition",
+    "source_data": {
+      "2005-02-25 to 2012-01-02": "SPY from Stooq (direct proxy)",
+      "1999-03-11 to 2005-02-24": "Synthetic SPY from QQQ with beta adjustment (BETA=0.65)"
+    },
+    "formula": {
+      "pseudo_code": [
+        "# 1999-2005: Derive from QQQ",
+        "qqq_returns = QQQ_close.pct_change()",
+        "spy_synthetic_returns = qqq_returns * 0.65  # Beta adjustment",
+        "spy_prices = backward_propagate_from_first_real_SPY",
+        "",
+        "# 2005-2012: Direct SPY proxy",
+        "spy_prices = SPY_from_Stooq",
+        "",
+        "# 2012+: Real SPLG",
+        "splg_prices = SPLG_from_Yahoo"
+      ]
+    },
+    "period": "1999-03-11 to 2011-12-30 (proxy), 2012-01-03+ (real SPLG)",
+    "scaling": "All proxy prices scaled to match SPLG open on 2012-01-03"
+  },
+  "BIL_synthetic": {
+    "method": "Synthetic constant growth rate before 2012",
+    "formula": {
+      "pseudo_code": [
+        "daily_rate = 0.02 / 252  # 2% annual risk-free rate",
+        "bil_price[t-1] = bil_price[t] / (1 + daily_rate)",
+        "# Backward propagate from first real BIL price"
+      ]
+    },
+    "period": "1999-03-10 to 2011-12-30 (synthetic), 2012-01-03+ (real BIL)",
+    "rate_assumption": "2% annual (historical short-term rate for 1999-2007)"
+  },
+  "safe_asset_gap_1999_2007": {
+    "handling": "Synthetic BIL with 2% annual constant growth",
+    "justification": "Historical Fed Funds Rate ranged 1-6% in this period; 2% is conservative",
+    "note": "No SGOV (starts 2021), no BIL (starts 2007) in this period"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "metrics": {
+    "total_return": 2.4271851434695253,
+    "cagr": 0.09957421327870342,
+    "ann_vol": 0.2161358904431328,
+    "cagr_over_vol": 0.4607018902531703,
+    "max_drawdown": -0.3420914184856291,
+    "n_trades": 220
+  },
+  "config": {
+    "start_date": "2011-01-01",
+    "end_date": "2024-12-31",
+    "initial_equity": 1.0,
+    "tqqq_ticker": "TQQQ",
+    "splg_ticker": "SPLG",
+    "safe_ticker": "SGOV",
+    "safe_proxy_ticker": "BIL",
+    "sma_window": 200,
+    "overheat_mult": 1.05,
+    "apply_entry_confirmation": true,
+    "monthly_contribution": 0.0,
+    "cost_bps": 0.0,
+    "slippage_bps": 0.0,
+    "stop_loss_pct": 0.05,
+    "take_profit_mode": "official",
+    "take_profit_reinvest": "all_splg",
+    "initial_mode": "strategy",
+    "overheat_start_splg_weight": 1.0
+  }
+}

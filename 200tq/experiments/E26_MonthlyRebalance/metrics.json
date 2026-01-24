@@ -1,0 +1,13 @@
+{
+  "Final": 92.8422221334442,
+  "CAGR": 0.3307364729661577,
+  "MDD": -0.5441709078090953,
+  "Sharpe": 0.8593176418819168,
+  "Sortino": 0.8725033374784797,
+  "Calmar": 0.6077805120044857,
+  "TradesPerYear": 3.279279279279279,
+  "TurnoverPerYear": 29.208564335049825,
+  "TotalTaxPaid": 9.642953406822837,
+  "NumDays": 3996,
+  "experiment": "E26_MonthlyRebalance"
+}

@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+*:Zone.Identifier
+
+# Node
+node_modules/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Vibe system
+.vibe/
+
+# Large data directories (DO NOT COMMIT)
+data/
+models/
+*.parquet
+*.feather
+*.h5
+*.pkl
+*.pickle
+*.csv.gz
+
+# Next.js build outputs
+.next/
+out/

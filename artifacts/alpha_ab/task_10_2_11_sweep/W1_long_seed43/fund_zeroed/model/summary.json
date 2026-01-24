@@ -1,0 +1,60 @@
+{
+  "config": {
+    "alpha_dataset_path": "data/processed/alpha_dataset_fund_q400_v2_7.csv.gz",
+    "as_of_date": "2024-10-01",
+    "feature_mode": "fund_zeroed",
+    "ineligible_penalty": 1000000.0,
+    "min_train_samples": 500,
+    "rebalance": "Q",
+    "seed": 43,
+    "target_col": "fwd_ret_21d",
+    "top_k": 400,
+    "train_end": "2014-12-31",
+    "val_end": "2016-12-31"
+  },
+  "features": [
+    "atr_14d_norm",
+    "bbands_20d",
+    "mom_21d",
+    "mom_5d",
+    "mom_63d",
+    "net_income",
+    "net_income_is_missing",
+    "operating_cash_flow",
+    "operating_cash_flow_is_missing",
+    "revenues",
+    "revenues_is_missing",
+    "rsi_14d",
+    "shares_outstanding",
+    "shares_outstanding_is_missing",
+    "stockholders_equity",
+    "stockholders_equity_is_missing",
+    "total_assets",
+    "total_assets_is_missing",
+    "total_liabilities",
+    "total_liabilities_is_missing",
+    "vol_20d"
+  ],
+  "model": {
+    "params": {
+      "early_stopping": false,
+      "learning_rate": 0.05,
+      "loss": "squared_error",
+      "max_depth": 3,
+      "max_iter": 300,
+      "random_state": 43
+    },
+    "type": "sklearn_hist_gb"
+  },
+  "n_features_used": 21,
+  "results": {
+    "ic_spearman_mean": 0.009761492473643687,
+    "ic_spearman_n": 32,
+    "n_dates_scored": 32,
+    "n_tickers": 2457
+  },
+  "schema_version": "10.2.10",
+  "warnings": [
+    "ALPHA_XGB_FALLBACK:sklearn_hist_gb:No module named 'xgboost'"
+  ]
+}

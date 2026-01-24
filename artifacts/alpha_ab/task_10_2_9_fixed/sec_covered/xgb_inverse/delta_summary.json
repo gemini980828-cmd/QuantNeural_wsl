@@ -1,0 +1,14 @@
+{
+  "delta": {
+    "ann_vol": 0.013138190713424036,
+    "cagr": 0.04396413722159731,
+    "cagr_over_vol": 0.16755905448705932,
+    "cagr_over_vol_pct_change": 33.18786860596877,
+    "max_drawdown": -0.053512025899233207,
+    "total_cost": -0.009973254089051576,
+    "total_turnover": -4.666666666666666
+  },
+  "interpretation": {
+    "positive_cagr_over_vol": "variant outperforms baseline"
+  }
+}

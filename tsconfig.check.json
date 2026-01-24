@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "skipLibCheck": true,
+    "strict": false,
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "200tq/dashboard/app/**/*",
+    "200tq/dashboard/components/**/*",
+    "200tq/dashboard/lib/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules",
+    ".vibe",
+    "dist",
+    "build",
+    "out",
+    "**/.next",
+    "**/__pycache__",
+    ".venv"
+  ]
+}

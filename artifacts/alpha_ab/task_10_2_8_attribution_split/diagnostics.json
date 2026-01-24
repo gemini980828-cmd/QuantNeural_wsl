@@ -1,0 +1,27 @@
+{
+  "invert_mode": true,
+  "oos_window": {
+    "date_max": "2024-10-01",
+    "date_min": "2017-03-31",
+    "ic_mean": 0.02051262161656258,
+    "n_dates_scored": 32
+  },
+  "paths": {
+    "baseline_scores_csv": "data/backtest_universe_sec_mktcap/scores.csv",
+    "fund_dataset": "data/processed/alpha_dataset_fund_q400_v2_7.csv.gz",
+    "prices_csv": "data/backtest_universe_sec_mktcap/prices.csv",
+    "xgb_scores_csv": "data/alpha/xgb_model_q400_fund_v2_7/scores.csv"
+  },
+  "schema_version": "10.2.8",
+  "seed": 42,
+  "subset_mode": "split",
+  "warnings": [
+    "SUBSET_TOO_SMALL:sec_covered:2021-12-31:219",
+    "SUBSET_TOO_SMALL:sec_covered:2024-09-30:219",
+    "SUBSET_TOO_SMALL:sec_covered:2024-10-01:219",
+    "XGB_BACKTEST_FAILED:sec_covered:baseline scores contain non-finite values: 234867 NaN, 0 inf",
+    "XGB_INVERSE_BACKTEST_FAILED:sec_covered:baseline scores contain non-finite values: 234867 NaN, 0 inf",
+    "XGB_BACKTEST_FAILED:sec_missing:baseline scores contain non-finite values: 59734 NaN, 0 inf",
+    "XGB_INVERSE_BACKTEST_FAILED:sec_missing:baseline scores contain non-finite values: 59734 NaN, 0 inf"
+  ]
+}

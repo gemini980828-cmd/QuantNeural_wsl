@@ -1,0 +1,341 @@
+# SEC Tag Mapping Configuration v2.1
+# Enhanced with:
+# - label_whitelist for extension tag absorption (targeted items only)
+# - is_duration flag for period validation
+# - safety_tier for fallback prioritization
+# - Expanded fallback tags for low-coverage items
+
+version: "2.1"
+
+# =============================================================================
+# Global Settings
+# =============================================================================
+
+# Period validation settings (days) - V2.1: soft scoring
+period_validation:
+  quarter_min: 80
+  quarter_max: 100
+  annual_min: 350
+  annual_max: 380
+  # Relaxed ranges for soft scoring
+  quarter_min_relaxed: 70
+  quarter_max_relaxed: 120
+  annual_min_relaxed: 320
+  annual_max_relaxed: 410
+
+# =============================================================================
+# Canonical Items
+# =============================================================================
+
+canonical_items:
+  # ========================================
+  # Balance Sheet - Assets (instant, safety_tier: 1)
+  # ========================================
+  total_assets:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 1
+    tags:
+      - Assets
+    label_whitelist:
+      - "Total Assets"
+      - "Assets"
+      - "Assets, Total"
+
+  current_assets:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 2
+    tags:
+      - AssetsCurrent
+
+  cash_and_equivalents:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 2
+    tags:
+      - CashAndCashEquivalentsAtCarryingValue
+      - Cash
+      - CashCashEquivalentsAndShortTermInvestments
+    label_whitelist:
+      - "Cash and Cash Equivalents, at Carrying Value"
+      - "Cash"
+      - "Cash and Cash Equivalents"
+
+  # ========================================
+  # Balance Sheet - Liabilities (instant)
+  # V2.1: Expanded fallbacks for coverage recovery
+  # ========================================
+  total_liabilities:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 1
+    tags:
+      - Liabilities
+      - LiabilitiesNoncurrent
+      # Note: LiabilitiesAndStockholdersEquity requires subtraction, handled in Layer 2
+    label_whitelist:
+      - "Total Liabilities"
+      - "Liabilities"
+      - "Liabilities, Total"
+
+  current_liabilities:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 2
+    tags:
+      - LiabilitiesCurrent
+
+  long_term_debt:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 2
+    tags:
+      - LongTermDebt
+      - LongTermDebtNoncurrent
+      - LongTermDebtAndCapitalLeaseObligations
+      - DebtNoncurrent
+
+  # ========================================
+  # Balance Sheet - Equity (instant, safety_tier: 3 - cautious)
+  # ========================================
+  stockholders_equity:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 3 # Higher risk - many similar tags
+    tags:
+      - StockholdersEquity
+      - StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest
+    label_whitelist:
+      - "Stockholders' Equity Attributable to Parent"
+      - "Stockholders' Equity"
+      - "Total Stockholders' Equity"
+
+  retained_earnings:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 2
+    tags:
+      - RetainedEarningsAccumulatedDeficit
+      - RetainedEarnings
+
+  # ========================================
+  # Income Statement (duration, safety_tier varies)
+  # ========================================
+  revenues:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: true # Requires period validation
+    safety_tier: 3 # Higher risk - many similar tags
+    tags:
+      - Revenues
+      - RevenueFromContractWithCustomerExcludingAssessedTax
+      - SalesRevenueNet
+      - SalesRevenueGoodsNet
+      - RevenueFromContractWithCustomerIncludingAssessedTax
+    label_whitelist:
+      - "Revenues"
+      - "Revenue"
+      - "Net Revenue"
+      - "Total Revenue"
+      - "Total Revenues"
+
+  cost_of_revenue:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: true
+    safety_tier: 2
+    tags:
+      - CostOfRevenue
+      - CostOfGoodsAndServicesSold
+      - CostOfGoodsSold
+      - CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization
+
+  gross_profit:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: true
+    safety_tier: 2
+    tags:
+      - GrossProfit
+    label_whitelist:
+      - "Gross Profit"
+
+  operating_income:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: true
+    safety_tier: 2
+    tags:
+      - OperatingIncomeLoss
+      - IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
+      - IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
+
+  net_income:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: true
+    safety_tier: 1 # Core metric
+    tags:
+      - NetIncomeLoss
+      - ProfitLoss
+      - NetIncomeLossAvailableToCommonStockholdersBasic
+      - NetIncomeLossAttributableToParent
+    label_whitelist:
+      - "Net Income (Loss)"
+      - "Net Income (Loss) Attributable to Parent"
+      - "Profit (Loss)"
+
+  # ========================================
+  # Cash Flow Statement (duration)
+  # ========================================
+  operating_cash_flow:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: true
+    safety_tier: 1
+    tags:
+      - NetCashProvidedByUsedInOperatingActivities
+    label_whitelist:
+      - "Net Cash Provided by (Used in) Operating Activities"
+
+  investing_cash_flow:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: true
+    safety_tier: 1
+    tags:
+      - NetCashProvidedByUsedInInvestingActivities
+
+  financing_cash_flow:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: true
+    safety_tier: 1
+    tags:
+      - NetCashProvidedByUsedInFinancingActivities
+
+  capital_expenditures:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: true
+    safety_tier: 2
+    tags:
+      - PaymentsToAcquirePropertyPlantAndEquipment
+      - CapitalExpendituresIncurredButNotYetPaid
+      - PaymentsToAcquireProductiveAssets
+
+  # ========================================
+  # Share Data (instant, safety_tier: 1 - safest due to unit filter)
+  # ========================================
+  shares_outstanding:
+    taxonomy: dei
+    unit: shares
+    is_duration: false
+    safety_tier: 1 # Safest - unit filter provides strong validation
+    tags:
+      - EntityCommonStockSharesOutstanding
+    fallback_taxonomy: us-gaap
+    fallback_tags:
+      - CommonStockSharesOutstanding
+      - WeightedAverageNumberOfSharesOutstandingBasic
+    label_whitelist:
+      - "Entity Common Stock, Shares Outstanding"
+      - "Common Stock, Shares, Outstanding"
+
+  # ========================================
+  # Per Share Data (instant)
+  # ========================================
+  earnings_per_share_basic:
+    taxonomy: us-gaap
+    unit: USD/shares
+    is_duration: true # EPS is calculated from duration items
+    safety_tier: 2
+    tags:
+      - EarningsPerShareBasic
+
+  earnings_per_share_diluted:
+    taxonomy: us-gaap
+    unit: USD/shares
+    is_duration: true
+    safety_tier: 2
+    tags:
+      - EarningsPerShareDiluted
+
+  # ========================================
+  # Other Key Items
+  # ========================================
+  research_and_development:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: true
+    safety_tier: 2
+    tags:
+      - ResearchAndDevelopmentExpense
+      - ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost
+
+  accounts_receivable:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 2
+    tags:
+      - AccountsReceivableNetCurrent
+      - AccountsReceivableNet
+      - ReceivablesNetCurrent
+
+  inventory:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 2
+    tags:
+      - InventoryNet
+      - Inventories
+      - InventoryGross
+
+  accounts_payable:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 2
+    tags:
+      - AccountsPayableCurrent
+      - AccountsPayable
+      - AccountsPayableAndAccruedLiabilitiesCurrent
+
+  property_plant_equipment:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 2
+    tags:
+      - PropertyPlantAndEquipmentNet
+      - PropertyPlantAndEquipmentGross
+
+  goodwill:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 2
+    tags:
+      - Goodwill
+      - GoodwillGross
+
+  intangible_assets:
+    taxonomy: us-gaap
+    unit: USD
+    is_duration: false
+    safety_tier: 2
+    tags:
+      - IntangibleAssetsNetExcludingGoodwill
+      - OtherIntangibleAssetsNet
+      - FiniteLivedIntangibleAssetsNet

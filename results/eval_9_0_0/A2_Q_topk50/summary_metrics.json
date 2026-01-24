@@ -1,0 +1,29 @@
+{
+  "metrics": {
+    "ann_vol": 0.2850086399879724,
+    "cagr": 0.14739265900008336,
+    "max_drawdown": -0.4615816475971258,
+    "sharpe": 0.5171515467261044,
+    "total_cost": 0.21502852368720907,
+    "total_turnover": 53.56
+  },
+  "n_rebalances": 50,
+  "n_trades": 2678,
+  "params": {
+    "cost_bps": 10.0,
+    "date_col": "date",
+    "execution_lag_days": 1,
+    "initial_equity": 1.0,
+    "max_gross_leverage": null,
+    "max_weight": null,
+    "method": "topk",
+    "price_col": "close",
+    "prices_csv_path": "data/backtest_universe_full/prices.csv",
+    "rebalance": "Q",
+    "scores_csv_path": "data/backtest_universe_full/scores.csv",
+    "slippage_bps": 5.0,
+    "temperature": 1.0,
+    "ticker_col": "ticker",
+    "top_k": 50
+  }
+}

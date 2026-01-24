@@ -1,0 +1,35 @@
+{
+  "checks": {
+    "pass_cagr_over_vol": true,
+    "pass_dd_reduction": true,
+    "pass_ece": false
+  },
+  "computed": {
+    "dd_reduction": 0.3267104871,
+    "overlay": {
+      "cagr_over_vol": 2.2233345519,
+      "max_drawdown": -0.0671571818
+    },
+    "spy_buy_hold": {
+      "cagr_over_vol": 2.3057764545,
+      "max_drawdown": -0.0997448802
+    },
+    "test_ece": 0.1561426322
+  },
+  "decision": "RETAIN_SHADOW_ONLY",
+  "inputs": {
+    "overlay_csv_path": "artifacts\\shadow_risk\\spy_only_eval_val_2023_06_30_asof_2024_10_01\\horizon_63\\logit\\shadow_risk_overlay.csv",
+    "overlay_metrics_json_path": "artifacts\\shadow_risk\\spy_only_eval_val_2023_06_30_asof_2024_10_01\\horizon_63\\logit\\shadow_risk_overlay_metrics.json",
+    "risk_metrics_json_path": "artifacts\\shadow_risk\\spy_only_eval_val_2023_06_30_asof_2024_10_01\\horizon_63\\logit\\shadow_risk_metrics.json"
+  },
+  "reasons": [
+    "ECE 0.1561 >= threshold 0.05"
+  ],
+  "schema_version": "9.6.0",
+  "thresholds": {
+    "cagr_over_vol": 1.0,
+    "dd_reduction": 0.2,
+    "ece": 0.05
+  },
+  "warnings": []
+}

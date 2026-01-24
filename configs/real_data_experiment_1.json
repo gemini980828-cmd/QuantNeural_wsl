@@ -1,0 +1,74 @@
+{
+  "feature_builder": "real_data_smoke",
+  "feature_builder_kwargs": {
+    "stooq_csv_path": "data/raw/stooq/us/aapl.us.txt",
+    "price_ticker": "AAPL.US",
+    "companyfacts_json_paths": [
+      "data/raw/sec_bulk/CIK0000320193.json",
+      "data/raw/sec_bulk/CIK0000789019.json",
+      "data/raw/sec_bulk/CIK0001018724.json",
+      "data/raw/sec_bulk/CIK0001652044.json",
+      "data/raw/sec_bulk/CIK0001326801.json",
+      "data/raw/sec_bulk/CIK0001318605.json",
+      "data/raw/sec_bulk/CIK0001045810.json",
+      "data/raw/sec_bulk/CIK0000019617.json",
+      "data/raw/sec_bulk/CIK0000034088.json",
+      "data/raw/sec_bulk/CIK0000200406.json"
+    ],
+    "cik_to_sector": {
+      "0000320193": 0,
+      "0000789019": 1,
+      "0001018724": 2,
+      "0001652044": 3,
+      "0001326801": 4,
+      "0001318605": 5,
+      "0001045810": 6,
+      "0000019617": 7,
+      "0000034088": 8,
+      "0000200406": 9
+    }
+  },
+  "labels": {
+    "stooq_csv_by_ticker": {
+      "AAPL.US": "data/raw/stooq/us/aapl.us.txt",
+      "MSFT.US": "data/raw/stooq/us/msft.us.txt",
+      "AMZN.US": "data/raw/stooq/us/amzn.us.txt",
+      "GOOG.US": "data/raw/stooq/us/goog.us.txt",
+      "META.US": "data/raw/stooq/us/meta.us.txt",
+      "TSLA.US": "data/raw/stooq/us/tsla.us.txt",
+      "NVDA.US": "data/raw/stooq/us/nvda.us.txt",
+      "JPM.US": "data/raw/stooq/us/jpm.us.txt",
+      "XOM.US": "data/raw/stooq/us/xom.us.txt",
+      "JNJ.US": "data/raw/stooq/us/jnj.us.txt",
+      "SPY.US": "data/raw/stooq/us/spy.us.txt"
+    },
+    "tickers_in_order": [
+      "AAPL.US",
+      "MSFT.US",
+      "AMZN.US",
+      "GOOG.US",
+      "META.US",
+      "TSLA.US",
+      "NVDA.US",
+      "JPM.US",
+      "XOM.US",
+      "JNJ.US"
+    ]
+  },
+  "dates": {
+    "as_of_date": "2024-12-31",
+    "train_end": "2020-12-31",
+    "val_end": "2022-12-31"
+  },
+  "training": {
+    "seed": 42,
+    "rankgauss": true,
+    "epochs": 1,
+    "batch_size": 32
+  },
+  "health": {
+    "min_months": 18,
+    "missing_threshold": 0.3,
+    "ignore_first_n_rows": 12
+  }
+}

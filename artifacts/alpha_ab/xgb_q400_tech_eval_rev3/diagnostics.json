@@ -1,0 +1,16 @@
+{
+  "invert_mode": true,
+  "oos_window": {
+    "date_max": "2024-10-01",
+    "date_min": "2017-03-31",
+    "ic_mean": 0.0041776660482708075,
+    "n_dates_scored": 32
+  },
+  "paths": {
+    "baseline_scores_csv": "data/backtest_universe_sec_mktcap/scores.csv",
+    "prices_csv": "data/backtest_universe_sec_mktcap/prices.csv",
+    "xgb_scores_csv": "data/alpha/xgb_model_q400_tech_rev3/scores.csv"
+  },
+  "schema_version": "10.1.3",
+  "seed": 42
+}

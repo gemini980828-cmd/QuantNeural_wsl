@@ -1,0 +1,310 @@
+{
+  "generated_at": "2026-01-13T11:44:44.331818",
+  "config_sha256": "c2a25940d2447dc27204a4002795b957d4c7656da1e495b046c1bf8b451f2ac9",
+  "split_verification": [
+    {
+      "date": "2012-05-11",
+      "ticker": "TQQQ",
+      "split_ratio": 2.0,
+      "prev_close": 50.71996879577637,
+      "curr_close": 25.3350248336792,
+      "price_ratio": 0.49950789472466983,
+      "trade_on_split_day": false,
+      "equity_change_pct": -0.3859,
+      "double_count_flag": false,
+      "missed_split_flag": false
+    },
+    {
+      "date": "2014-01-24",
+      "ticker": "TQQQ",
+      "split_ratio": 2.0,
+      "prev_close": 62.86502265930176,
+      "curr_close": 29.56999111175537,
+      "price_ratio": 0.47037271062496117,
+      "trade_on_split_day": false,
+      "equity_change_pct": -3.5042,
+      "double_count_flag": false,
+      "missed_split_flag": false
+    },
+    {
+      "date": "2017-01-12",
+      "ticker": "TQQQ",
+      "split_ratio": 2.0,
+      "prev_close": 70.78999328613281,
+      "curr_close": 35.21499538421631,
+      "price_ratio": 0.4974572499516629,
+      "trade_on_split_day": false,
+      "equity_change_pct": 0.0001,
+      "double_count_flag": false,
+      "missed_split_flag": false
+    },
+    {
+      "date": "2018-05-24",
+      "ticker": "TQQQ",
+      "split_ratio": 3.0,
+      "prev_close": 83.18499755859375,
+      "curr_close": 27.70499992370605,
+      "price_ratio": 0.3330528429022461,
+      "trade_on_split_day": false,
+      "equity_change_pct": -0.094,
+      "double_count_flag": false,
+      "missed_split_flag": false
+    },
+    {
+      "date": "2021-01-21",
+      "ticker": "TQQQ",
+      "split_ratio": 2.0,
+      "prev_close": 98.9800033569336,
+      "curr_close": 50.72000122070312,
+      "price_ratio": 0.5124267478331032,
+      "trade_on_split_day": false,
+      "equity_change_pct": 0.0,
+      "double_count_flag": false,
+      "missed_split_flag": false
+    },
+    {
+      "date": "2022-01-13",
+      "ticker": "TQQQ",
+      "split_ratio": 2.0,
+      "prev_close": 76.33999633789062,
+      "curr_close": 35.400001525878906,
+      "price_ratio": 0.46371500162501916,
+      "trade_on_split_day": false,
+      "equity_change_pct": -6.1254,
+      "double_count_flag": false,
+      "missed_split_flag": false
+    },
+    {
+      "date": "2017-11-30",
+      "ticker": "BIL",
+      "split_ratio": 0.5,
+      "prev_close": 45.7400016784668,
+      "curr_close": 91.4800033569336,
+      "price_ratio": 2.0,
+      "trade_on_split_day": false,
+      "equity_change_pct": 2.1686,
+      "double_count_flag": false,
+      "missed_split_flag": false
+    }
+  ],
+  "lookahead_verification": {
+    "sma_computation": "rolling(window=200, min_periods=200).mean() - uses only past data up to and including current day",
+    "state_signal": "Computed from close price of day t, used for scheduling trades on day t+1 open",
+    "trade_execution": "All trades execute at 'open' price of next trading day after signal",
+    "violation_flag": false,
+    "notes": "Signal on day t close => trade at day t+1 open. No lookahead detected in code review."
+  },
+  "accounting_consistency": {
+    "max_error": 0.0,
+    "max_error_date": null,
+    "error_threshold": 1e-06,
+    "total_violations": 0,
+    "pass": true
+  },
+  "trade_verification": {
+    "issues": [],
+    "total_issues": 0,
+    "stop_trades_sample": [
+      {
+        "date": "2003-03-20",
+        "ticker": "TQQQ",
+        "price": 26.329422424063193,
+        "stop_price": 26.329422424063193,
+        "shares": 0.041091507289633136
+      },
+      {
+        "date": "2003-03-21",
+        "ticker": "TQQQ",
+        "price": 26.621715346077696,
+        "stop_price": 26.621715346077696,
+        "shares": 0.038608326226737495
+      },
+      {
+        "date": "2003-03-24",
+        "ticker": "TQQQ",
+        "price": 27.7316478898753,
+        "stop_price": 27.7316478898753,
+        "shares": 0.03520991183554461
+      },
+      {
+        "date": "2003-03-27",
+        "ticker": "TQQQ",
+        "price": 25.727469626259104,
+        "stop_price": 25.727469626259104,
+        "shares": 0.03606085992868404
+      },
+      {
+        "date": "2003-04-09",
+        "ticker": "TQQQ",
+        "price": 24.093407546400552,
+        "stop_price": 24.093407546400552,
+        "shares": 0.03536739713166592
+      }
+    ],
+    "take_profit_sample": [
+      {
+        "date": "2003-04-23",
+        "ticker": "TQQQ",
+        "checkpoint": "+10%",
+        "shares": 0.003289599374671128,
+        "price": 29.411966508150403
+      },
+      {
+        "date": "2003-05-07",
+        "ticker": "TQQQ",
+        "checkpoint": "+25%",
+        "shares": 0.0029606394372040153,
+        "price": 33.17074234876519
+      },
+      {
+        "date": "2003-06-05",
+        "ticker": "TQQQ",
+        "checkpoint": "+50%",
+        "shares": 0.002664575493483614,
+        "price": 39.21700760286555
+      },
+      {
+        "date": "2003-09-03",
+        "ticker": "TQQQ",
+        "checkpoint": "+100%",
+        "shares": 0.011990589720676263,
+        "price": 51.95828141898555
+      },
+      {
+        "date": "2004-04-05",
+        "ticker": "TQQQ",
+        "checkpoint": "+10%",
+        "shares": 0.0029653523831108665,
+        "price": 63.12295175771808
+      }
+    ],
+    "pass": true
+  },
+  "rule_sample_verification": {
+    "DOWN_transitions": [
+      {
+        "date": "2000-04-13",
+        "prev_state": "OVERHEAT",
+        "action": "Exit to SAFE next open"
+      },
+      {
+        "date": "2000-04-19",
+        "prev_state": "FOCUS",
+        "action": "Exit to SAFE next open"
+      },
+      {
+        "date": "2000-05-02",
+        "prev_state": "OVERHEAT",
+        "action": "Exit to SAFE next open"
+      }
+    ],
+    "DOWN_to_FOCUS_confirmation": [
+      {
+        "date": "2000-04-18",
+        "expected": "Wait 1 more day for confirmation before entering TQQQ"
+      },
+      {
+        "date": "2003-03-17",
+        "expected": "Wait 1 more day for confirmation before entering TQQQ"
+      },
+      {
+        "date": "2003-03-25",
+        "expected": "Wait 1 more day for confirmation before entering TQQQ"
+      }
+    ],
+    "OVERHEAT_to_FOCUS_immediate": [
+      {
+        "date": "2003-03-19",
+        "expected": "Enter TQQQ immediately at next open"
+      },
+      {
+        "date": "2003-04-04",
+        "expected": "Enter TQQQ immediately at next open"
+      },
+      {
+        "date": "2004-03-10",
+        "expected": "Enter TQQQ immediately at next open"
+      }
+    ],
+    "STOP_triggers": [
+      {
+        "date": "2003-03-20",
+        "price": 26.329422424063193,
+        "stop_price": 26.329422424063193
+      },
+      {
+        "date": "2003-03-21",
+        "price": 26.621715346077696,
+        "stop_price": 26.621715346077696
+      },
+      {
+        "date": "2003-03-24",
+        "price": 27.7316478898753,
+        "stop_price": 27.7316478898753
+      },
+      {
+        "date": "2003-03-27",
+        "price": 25.727469626259104,
+        "stop_price": 25.727469626259104
+      },
+      {
+        "date": "2003-04-09",
+        "price": 24.093407546400552,
+        "stop_price": 24.093407546400552
+      }
+    ],
+    "take_profit_triggers": [
+      {
+        "date": "2003-04-23",
+        "checkpoint": "+10%",
+        "shares": 0.003289599374671128
+      },
+      {
+        "date": "2003-05-07",
+        "checkpoint": "+25%",
+        "shares": 0.0029606394372040153
+      },
+      {
+        "date": "2003-06-05",
+        "checkpoint": "+50%",
+        "shares": 0.002664575493483614
+      },
+      {
+        "date": "2003-09-03",
+        "checkpoint": "+100%",
+        "shares": 0.011990589720676263
+      },
+      {
+        "date": "2004-04-05",
+        "checkpoint": "+10%",
+        "shares": 0.0029653523831108665
+      }
+    ]
+  },
+  "baseline_sanity_check": {
+    "date_range": "1999-03-11 to 2024-12-31",
+    "years": 23.87,
+    "BH_TQQQ": {
+      "total_return_pct": 22.32,
+      "cagr_pct": 0.85,
+      "cumulative_split": 96.0
+    },
+    "BH_SPLG": {
+      "total_return_pct": 349.51,
+      "cagr_pct": 6.5,
+      "cumulative_split": 1.0
+    },
+    "BH_BIL": {
+      "total_return_pct": 148.06,
+      "cagr_pct": 3.88
+    },
+    "strategy_200TQQ": {
+      "total_return_pct": 988.7,
+      "cagr_pct": 10.52
+    },
+    "sanity_check": {
+      "strategy_beats_BIL": true,
+      "strategy_positive_return": true
+    }
+  }
+}

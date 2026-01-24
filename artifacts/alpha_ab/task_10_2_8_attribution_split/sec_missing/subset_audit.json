@@ -1,0 +1,8 @@
+{
+  "dates_with_universe_lt_topk": [],
+  "effective_top_k": 400,
+  "fraction_of_all_universe": 1.0,
+  "mean_universe_size_per_date": 1923.34375,
+  "min_universe_size_per_date": 1735,
+  "subset_mode": "sec_missing"
+}

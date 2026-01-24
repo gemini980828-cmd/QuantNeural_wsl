@@ -1,0 +1,13 @@
+{
+  "Final": 56.75418805015366,
+  "CAGR": 0.29006763872414476,
+  "MDD": -0.5734888320148894,
+  "Sharpe": 0.7885385420283597,
+  "Sortino": 0.7483485773268312,
+  "Calmar": 0.5057947470485594,
+  "TradesPerYear": 2.900900900900901,
+  "TurnoverPerYear": 20.062411461661554,
+  "TotalTaxPaid": 7.672585154811362,
+  "NumDays": 3996,
+  "experiment": "E10_BuySellConfirm_2days"
+}

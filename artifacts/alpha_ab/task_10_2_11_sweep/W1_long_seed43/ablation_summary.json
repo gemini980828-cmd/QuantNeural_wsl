@@ -1,0 +1,100 @@
+{
+  "config": {
+    "as_of_date": "2024-10-01",
+    "baseline_scores_csv_path": "data/backtest_universe_sec_mktcap/scores.csv",
+    "fund_alpha_dataset_path": "data/processed/alpha_dataset_fund_q400_v2_7.csv.gz",
+    "prices_csv_path": "data/backtest_universe_sec_mktcap/prices.csv",
+    "rebalance": "Q",
+    "seed": 43,
+    "subset_mode": "split",
+    "target_col": "fwd_ret_21d",
+    "top_k": 400,
+    "train_end": "2014-12-31",
+    "val_end": "2016-12-31"
+  },
+  "modes": {
+    "fund_full": {
+      "ab_dir": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_full/ab",
+      "backtest_success": false,
+      "delta_cagr_vol_all": null,
+      "delta_cagr_vol_sec_covered": null,
+      "delta_cagr_vol_sec_missing": null,
+      "feature_mode": "fund_full",
+      "ic_csv": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_full/model/ic_by_date.csv",
+      "ic_mean": 0.01159303746994789,
+      "model_dir": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_full/model",
+      "n_features_used": 21,
+      "scores_csv": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_full/model/scores.csv",
+      "summary_json": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_full/model/summary.json",
+      "training_success": true,
+      "warnings": [
+        "ALPHA_XGB_FALLBACK:sklearn_hist_gb:No module named 'xgboost'",
+        "ABLATION_MODE_FAILED:fund_full:training:Invalid format specifier '.4f if mode_result['ic_m"
+      ]
+    },
+    "fund_shuffled": {
+      "ab_dir": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_shuffled/ab",
+      "backtest_success": false,
+      "delta_cagr_vol_all": null,
+      "delta_cagr_vol_sec_covered": null,
+      "delta_cagr_vol_sec_missing": null,
+      "feature_mode": "fund_shuffled",
+      "ic_csv": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_shuffled/model/ic_by_date.csv",
+      "ic_mean": 0.0025919849576070235,
+      "model_dir": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_shuffled/model",
+      "n_features_used": 21,
+      "scores_csv": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_shuffled/model/scores.csv",
+      "summary_json": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_shuffled/model/summary.json",
+      "training_success": true,
+      "warnings": [
+        "ALPHA_XGB_FALLBACK:sklearn_hist_gb:No module named 'xgboost'",
+        "ABLATION_MODE_FAILED:fund_shuffled:training:Invalid format specifier '.4f if mode_result['ic_m"
+      ]
+    },
+    "fund_zeroed": {
+      "ab_dir": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_zeroed/ab",
+      "backtest_success": false,
+      "delta_cagr_vol_all": null,
+      "delta_cagr_vol_sec_covered": null,
+      "delta_cagr_vol_sec_missing": null,
+      "feature_mode": "fund_zeroed",
+      "ic_csv": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_zeroed/model/ic_by_date.csv",
+      "ic_mean": 0.009761492473643687,
+      "model_dir": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_zeroed/model",
+      "n_features_used": 21,
+      "scores_csv": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_zeroed/model/scores.csv",
+      "summary_json": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/fund_zeroed/model/summary.json",
+      "training_success": true,
+      "warnings": [
+        "ALPHA_XGB_FALLBACK:sklearn_hist_gb:No module named 'xgboost'",
+        "ABLATION_MODE_FAILED:fund_zeroed:training:Invalid format specifier '.4f if mode_result['ic_m"
+      ]
+    },
+    "tech_only": {
+      "ab_dir": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/tech_only/ab",
+      "backtest_success": false,
+      "delta_cagr_vol_all": null,
+      "delta_cagr_vol_sec_covered": null,
+      "delta_cagr_vol_sec_missing": null,
+      "feature_mode": "tech_only",
+      "ic_csv": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/tech_only/model/ic_by_date.csv",
+      "ic_mean": 0.009761492473643687,
+      "model_dir": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/tech_only/model",
+      "n_features_used": 7,
+      "scores_csv": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/tech_only/model/scores.csv",
+      "summary_json": "/home/juwon/QuantNeural/artifacts/alpha_ab/task_10_2_11_sweep/W1_long_seed43/tech_only/model/summary.json",
+      "training_success": true,
+      "warnings": [
+        "ALPHA_XGB_FALLBACK:sklearn_hist_gb:No module named 'xgboost'",
+        "ABLATION_MODE_FAILED:tech_only:training:Invalid format specifier '.4f if mode_result['ic_m"
+      ]
+    }
+  },
+  "schema_version": "10.2.10",
+  "warnings": [
+    "ABLATION_MODE_FAILED:fund_full:training:Invalid format specifier '.4f if mode_result['ic_m",
+    "ABLATION_MODE_FAILED:fund_zeroed:training:Invalid format specifier '.4f if mode_result['ic_m",
+    "ABLATION_MODE_FAILED:fund_shuffled:training:Invalid format specifier '.4f if mode_result['ic_m",
+    "ABLATION_MODE_FAILED:tech_only:training:Invalid format specifier '.4f if mode_result['ic_m"
+  ]
+}

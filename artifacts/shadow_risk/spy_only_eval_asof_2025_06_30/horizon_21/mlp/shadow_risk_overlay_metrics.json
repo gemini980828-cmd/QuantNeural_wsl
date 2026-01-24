@@ -1,0 +1,41 @@
+{
+  "config": {
+    "as_of_date": "2025-06-30",
+    "cash_daily_return": 0.0,
+    "shadow_csv_path": "artifacts\\shadow_risk\\spy_only_eval_asof_2025_06_30\\horizon_21\\mlp\\shadow_risk.csv",
+    "spy_ticker": "SPY",
+    "train_end": "2022-12-31",
+    "val_end": "2023-12-31"
+  },
+  "schema_version": "9.5.3",
+  "test": {
+    "ann_vol": 0.1386948515,
+    "avg_exposure": 0.4465781453,
+    "cagr": 0.1070085086,
+    "cagr_over_vol": 0.7715391555,
+    "max_drawdown": -0.1297801447,
+    "n_obs": 353,
+    "total_return": 0.1530453347,
+    "turnover_exposure": 34.8963748075
+  },
+  "train": {
+    "ann_vol": null,
+    "avg_exposure": null,
+    "cagr": null,
+    "cagr_over_vol": null,
+    "max_drawdown": null,
+    "n_obs": 0,
+    "total_return": null,
+    "turnover_exposure": null
+  },
+  "val": {
+    "ann_vol": 0.1098782369,
+    "avg_exposure": 0.753358454,
+    "cagr": 0.1857572125,
+    "cagr_over_vol": 1.6905732904,
+    "max_drawdown": -0.0924874241,
+    "n_obs": 250,
+    "total_return": 0.1841548741,
+    "turnover_exposure": 26.6036013275
+  }
+}

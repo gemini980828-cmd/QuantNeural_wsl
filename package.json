@@ -1,0 +1,28 @@
+{
+  "name": "quantneural",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gemini980828-cmd/QuantNeural.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/gemini980828-cmd/QuantNeural/issues"
+  },
+  "homepage": "https://github.com/gemini980828-cmd/QuantNeural#readme",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

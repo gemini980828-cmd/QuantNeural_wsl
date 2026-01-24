@@ -1,0 +1,53 @@
+project:
+  seed: 42
+  as_of_date: "2025-12-31"
+
+preprocessing:
+  rankgauss:
+    enabled: true
+    n_quantiles: 2000
+  hp_filter:
+    enabled: true
+    freq: "M" # M|Q|Y
+    mode: "classic" # classic|ravn_uhlig|manual
+    lamb_manual: null
+  hamilton_filter:
+    enabled: false
+    h: 24
+    p: 12
+  macro_lag_months: 24 # if using Hamilton output in live logic, must be >= h
+
+factors:
+  winsorize:
+    lower_q: 0.01
+    upper_q: 0.99
+
+selection:
+  lasso:
+    n_splits: 5
+    max_iter: 20000
+
+regime:
+  threshold: 0.60
+  C: 1.0
+  max_iter: 2000
+  class_weight: null # or "balanced"
+  calibration:
+    enabled: true # Phase 5.2
+    method: "temperature" # temperature (placeholder)
+
+models:
+  type: "mlp" # mlp|kan
+  mlp:
+    lr: 0.001
+    dropout: 0.3
+    batch_size: 32
+    epochs: 200
+    patience_es: 10
+    patience_rlr: 5
+    min_lr: 0.00001
+
+conformal:
+  enabled: true # Phase 5.1
+  method: "mapie_split" # placeholder
+  alpha: 0.05 # 95% intervals

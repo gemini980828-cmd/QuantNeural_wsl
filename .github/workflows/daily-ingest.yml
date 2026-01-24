@@ -1,0 +1,46 @@
+name: Daily ingest (call Vercel cron)
+
+on:
+  schedule:
+    # KST 07:05 = UTC 22:05 (전날)  ※ KST는 DST 없음
+    - cron: "5 22 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: daily-ingest
+  cancel-in-progress: false
+
+jobs:
+  call-cron:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Call Vercel cron endpoint
+        env:
+          CRON_URL: ${{ secrets.CRON_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          echo "Calling: $CRON_URL"
+
+          # 재시도(네트워크/일시 오류 대비): 3회, 지수 백오프
+          for i in 1 2 3; do
+            code=$(curl -sS -o resp.json -w "%{http_code}" \
+              -H "Authorization: Bearer ${CRON_SECRET}" \
+              -H "User-Agent: gh-actions-cron/1.0" \
+              "${CRON_URL}" || true)
+
+            echo "HTTP $code"
+            cat resp.json || true
+
+            if [ "$code" = "200" ]; then
+              echo "✅ Success"
+              exit 0
+            fi
+
+            sleep $((i*i*5))
+          done
+
+          echo "❌ Failed after retries"
+          exit 1

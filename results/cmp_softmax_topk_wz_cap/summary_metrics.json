@@ -1,0 +1,45 @@
+{
+  "metrics": {
+    "ann_vol": 0.2556194696009089,
+    "cagr": 0.1346108411922009,
+    "cagr_over_vol": 0.5266063707993949,
+    "max_drawdown": -0.4866022455883701,
+    "sharpe": 0.5266063707993949,
+    "total_cost": 0.1786294983800757,
+    "total_turnover": 51.37404520721597
+  },
+  "n_rebalances": 50,
+  "n_trades": 14315,
+  "params": {
+    "cost_bps": 10.0,
+    "date_col": "date",
+    "execution_lag_days": 1,
+    "initial_equity": 1.0,
+    "max_gross_leverage": null,
+    "max_weight": 0.02,
+    "method": "softmax_topk",
+    "price_col": "close",
+    "prices_csv_path": "data/backtest_universe_full/prices.csv",
+    "rebalance": "Q",
+    "score_transform": "winsorize_zscore",
+    "scores_csv_path": "data/backtest_universe_full/scores.csv",
+    "slippage_bps": 5.0,
+    "temperature": 1.0,
+    "ticker_col": "ticker",
+    "top_k": 200,
+    "winsorize_q_high": 0.99,
+    "winsorize_q_low": 0.01,
+    "zscore_eps": 1e-12
+  },
+  "warnings": [
+    "METRIC_DEPRECATED:sharpe:use cagr_over_vol (sharpe here is CAGR/AnnVol, not standard Sharpe)."
+  ],
+  "weights_stats": {
+    "eff_n_median": 99.0429139446,
+    "max_weight_max": 0.02,
+    "max_weight_median": 0.02,
+    "max_weight_p95": 0.02,
+    "n_holdings_median": 200,
+    "top10_share_median": 0.2
+  }
+}
