@@ -1,18 +1,76 @@
 "use client";
 
-import { useState } from "react";
-import { getMockInputsByScenario, ScenarioId } from "../../../lib/ops/e03/mock"; 
-import { buildViewModel } from "../../../lib/ops/e03/buildViewModel";
+import { useState, useEffect, useCallback } from "react";
+import { E03RawInputs, buildViewModel } from "../../../lib/ops/e03/buildViewModel";
+import { getInputs } from "../../../lib/ops/dataSource";
+import { useDataSource } from "../../../lib/stores/settings-store";
 import PortfolioSummaryStrip from "../../../components/portfolio/PortfolioSummaryStrip";
 import PortfolioPositionsTable from "../../../components/portfolio/PortfolioPositionsTable";
-import { Info, History, LayoutGrid, Layers, TrendingUp } from "lucide-react";
+import { Info, History, LayoutGrid, Layers, TrendingUp, RefreshCw, AlertTriangle } from "lucide-react";
 
 export default function PortfolioPage() {
-  // Use same mock logic as Command Dashboard for consistency
-  const [scenario, setScenario] = useState<ScenarioId>("fresh_normal");
-  const inputs = getMockInputsByScenario(scenario);
-  const vm = buildViewModel(inputs);
-  const portfolio = vm.portfolio;
+  const dataSource = useDataSource();
+  
+  // Data state
+  const [rawInputs, setRawInputs] = useState<E03RawInputs | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load data based on dataSource
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const inputs = await getInputs({ 
+        dataSource, 
+        scenario: "fresh_normal" 
+      });
+      setRawInputs(inputs);
+    } catch (e) {
+      setError(String(e));
+      console.error("Failed to load portfolio data:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [dataSource]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const vm = rawInputs ? buildViewModel(rawInputs) : null;
+  const portfolio = vm?.portfolio;
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="p-4">
+        <div className="mt-8 text-center text-muted flex flex-col items-center gap-2">
+          <RefreshCw className="animate-spin" size={24} />
+          <span>포트폴리오 로딩 중...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="p-4">
+        <div className="mt-8 text-center text-negative flex flex-col items-center gap-2">
+          <AlertTriangle size={24} />
+          <span>데이터 로드 실패: {error}</span>
+          <button 
+            onClick={loadData}
+            className="mt-2 px-4 py-2 bg-neutral-800 rounded-lg text-sm hover:bg-neutral-700"
+          >
+            다시 시도
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!portfolio) {
     return (
@@ -30,6 +88,25 @@ export default function PortfolioPage() {
           포트폴리오
           <span className="text-sm font-normal text-muted bg-neutral-800 px-2.5 py-0.5 rounded-full border border-neutral-700">Portfolio</span>
         </h1>
+        
+        {/* Data Source Indicator */}
+        <div className="flex items-center gap-2">
+          <span className={`text-xs px-2 py-1 rounded-full ${
+            dataSource === "REAL" 
+              ? "bg-positive/20 text-positive border border-positive/30" 
+              : "bg-amber-900/30 text-amber-400 border border-amber-700/30"
+          }`}>
+            {dataSource}
+          </span>
+          <button
+            onClick={loadData}
+            disabled={loading}
+            className="p-1.5 rounded-lg hover:bg-neutral-800 text-muted transition-colors"
+            title="새로고침"
+          >
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+          </button>
+        </div>
       </div>
 
       <main className="space-y-8">
@@ -66,7 +143,7 @@ export default function PortfolioPage() {
           </h2>
           <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
              <History size={24} className="opacity-50" />
-             <span className="text-sm">최근 체결 내역이 없습니다. (Mock)</span>
+             <span className="text-sm">최근 체결 내역이 없습니다.</span>
           </div>
         </div>
 
