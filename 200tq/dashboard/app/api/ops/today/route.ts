@@ -68,17 +68,41 @@ export async function GET() {
     const snapshot = data[0];
     const payload = snapshot.payload_json;
     
+    // Fetch QQQ previous close for daily change calculation
+    let qqqPrevClose: number | null = null;
+    try {
+      const { data: prevData } = await supabase
+        .from('prices_daily')
+        .select('close')
+        .eq('symbol', 'QQQ')
+        .lt('date', snapshot.verdict_date)
+        .order('date', { ascending: false })
+        .limit(1);
+      
+      if (prevData && prevData.length > 0) {
+        qqqPrevClose = prevData[0].close;
+      }
+    } catch (e) {
+      console.warn('Failed to fetch QQQ prev close:', e);
+    }
+    
     // Convert to KST timezone display
     const toKstString = (dateStr: string) => {
       if (!dateStr) return null;
       return `${dateStr}T09:00:00+09:00`;
     };
     
+    // Build prices with prev close
+    const prices = { ...(payload.prices || {}) };
+    if (qqqPrevClose !== null) {
+      prices.QQQ_PREV = qqqPrevClose;
+    }
+    
     const response: OpsSnapshot = {
       verdictDateKst: toKstString(snapshot.verdict_date) ?? '',
       executionDateKst: toKstString(snapshot.execution_date) ?? '',
       health: snapshot.health as 'FRESH' | 'STALE' | 'CLOSED',
-      prices: payload.prices || {},
+      prices,
       sma: payload.sma || { sma3: 0, sma160: 0, sma165: 0, sma170: 0 },
       verdict: payload.verdict || 'OFF10',
       updatedAtKst: snapshot.computed_at,

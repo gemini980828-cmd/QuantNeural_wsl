@@ -6,7 +6,7 @@ import { Copy, Lock, Info, ExternalLink, Check, Download } from "lucide-react";
 import { formatTradeForClipboard, getHumanReadableReason } from "../../lib/ops/e03/formatters";
 import Toast from "./Toast";
 import RecordModal from "./RecordModal";
-import { saveRecord, saveRecordToCsv, ManualRecord } from "../../lib/ops/e03/storage";
+import { saveRecord, saveRecordToSupabase, ManualRecord } from "../../lib/ops/e03/storage";
 
 interface ZoneCOpsConsoleProps {
   vm: E03ViewModel;
@@ -87,12 +87,12 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
     // Save to localStorage
     saveRecord(vm.executionDateLabel, record);
     
-    // Save to CSV file
-    const csvResult = await saveRecordToCsv(vm.executionDateLabel, record);
-    if (csvResult.success) {
-      setToastMsg("기록 완료 (localStorage + CSV)");
+    // Save to Supabase
+    const result = await saveRecordToSupabase(vm.executionDateLabel, record);
+    if (result.success) {
+      setToastMsg("기록 완료 (localStorage + Supabase)");
     } else {
-      setToastMsg("기록 완료 (CSV 저장 실패)");
+      setToastMsg("기록 완료 (Supabase 저장 실패)");
     }
     
     onRecordSuccess?.();

@@ -5,8 +5,8 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { ScenarioId } from "../../../lib/ops/e03/mock";
 import { E03RawInputs, buildViewModel } from "../../../lib/ops/e03/buildViewModel";
 import { loadToggle, saveToggle, loadRecord, STORAGE_KEYS } from "../../../lib/ops/e03/storage";
-import { Period } from "../../../lib/ops/e03/mockPrices";
-import { summarizePerf } from "../../../lib/ops/e03/performance";
+import { Period, PricePoint } from "../../../lib/ops/e03/mockPrices";
+import { summarizePerf, summarizePerfWithDateRange, DateRange, PriceData } from "../../../lib/ops/e03/performance";
 import { getInputs, DataSourceMode } from "../../../lib/ops/dataSource";
 import { useDataSource, useDevScenario } from "../../../lib/stores/settings-store";
 import ZoneAHeader from "../../../components/e03/ZoneAHeader";
@@ -36,6 +36,65 @@ export default function CommandPage({
   const [recordUpdateTrigger, setRecordUpdateTrigger] = useState(0);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>("1Y");
   const [startCapital, setStartCapital] = useState(10000000);
+  
+  // Custom date range for backtest
+  const getDefaultDateRange = (): DateRange => {
+    const end = new Date();
+    const start = new Date();
+    start.setFullYear(end.getFullYear() - 1); // Default 1Y
+    return {
+      start: start.toISOString().split('T')[0],
+      end: end.toISOString().split('T')[0],
+    };
+  };
+  const [customDateRange, setCustomDateRange] = useState<DateRange>(getDefaultDateRange);
+  
+  // Real price data for backtest (fetched from API)
+  const [realPriceData, setRealPriceData] = useState<PriceData | null>(null);
+  const [priceLoading, setPriceLoading] = useState(false);
+  
+  // Fetch real price data when date range changes
+  useEffect(() => {
+    const fetchRealPrices = async () => {
+      setPriceLoading(true);
+      try {
+        // Need extra history for SMA calculations (SMA200 needs 200 trading days before start)
+        // Add 300 calendar days buffer to ensure enough data
+        const bufferStart = new Date(customDateRange.start);
+        bufferStart.setDate(bufferStart.getDate() - 300);
+        const bufferedStartDate = bufferStart.toISOString().split('T')[0];
+        
+        // Fetch all required symbols in parallel with buffered start date
+        const [qqqRes, tqqqRes, sgovRes] = await Promise.all([
+          fetch(`/api/prices/history?symbol=QQQ&from=${bufferedStartDate}&to=${customDateRange.end}&limit=4000`),
+          fetch(`/api/prices/history?symbol=TQQQ&from=${bufferedStartDate}&to=${customDateRange.end}&limit=4000`),
+          fetch(`/api/prices/history?symbol=SGOV&from=${bufferedStartDate}&to=${customDateRange.end}&limit=4000`),
+        ]);
+        
+        const [qqqData, tqqqData, sgovData] = await Promise.all([
+          qqqRes.json(),
+          tqqqRes.json(),
+          sgovRes.json(),
+        ]);
+        
+        // Convert API format to PriceData format
+        const priceData: PriceData = {
+          QQQ: qqqData.bars?.map((b: { date: string; close: number }) => ({ date: b.date, close: b.close })) || [],
+          TQQQ: tqqqData.bars?.map((b: { date: string; close: number }) => ({ date: b.date, close: b.close })) || [],
+          SGOV: sgovData.bars?.map((b: { date: string; close: number }) => ({ date: b.date, close: b.close })) || [],
+        };
+        
+        setRealPriceData(priceData);
+      } catch (e) {
+        console.error('Failed to fetch real prices:', e);
+        setRealPriceData(null); // Fall back to mock
+      } finally {
+        setPriceLoading(false);
+      }
+    };
+    
+    fetchRealPrices();
+  }, [customDateRange]);
 
   // Load data based on dataSource
   const loadData = useCallback(async () => {
@@ -93,12 +152,38 @@ export default function CommandPage({
     return buildViewModel(inputsWithToggles);
   }, [rawInputs, simMode, privMode]);
 
+  // Check if record exists for today (Supabase + localStorage fallback)
+  const [hasRecordForToday, setHasRecordForToday] = useState(false);
+  
+  useEffect(() => {
+    if (!vm) return;
+    
+    // Check localStorage first (fast)
+    const localRecord = loadRecord(vm.executionDateLabel);
+    if (localRecord) {
+      setHasRecordForToday(true);
+      return;
+    }
+    
+    // Then check Supabase
+    const checkSupabaseRecord = async () => {
+      try {
+        const res = await fetch(`/api/record?date=${vm.executionDateLabel}`);
+        const data = await res.json();
+        setHasRecordForToday(!data.empty && data.executed);
+      } catch {
+        setHasRecordForToday(false);
+      }
+    };
+    
+    checkSupabaseRecord();
+  }, [vm?.executionDateLabel, recordUpdateTrigger]);
+
   // Apply record override
   const vmWithRecord = useMemo(() => {
     if (!vm) return null;
     
-    const record = typeof window !== "undefined" ? loadRecord(vm.executionDateLabel) : null;
-    if (record) {
+    if (hasRecordForToday) {
       vm.executionState = "RECORDED";
       vm.executionBadge.label = "Exec: RECORDED";
       vm.executionBadge.tone = "neutral";
@@ -107,10 +192,18 @@ export default function CommandPage({
       }
     }
     return vm;
-  }, [vm, recordUpdateTrigger]);
+  }, [vm, hasRecordForToday]);
 
-  // Performance Summary
-  const perfSummary = useMemo(() => summarizePerf(selectedPeriod, startCapital), [selectedPeriod, startCapital]);
+  // Performance Summary - now using custom date range with real price data
+  const perfSummary = useMemo(
+    () => summarizePerfWithDateRange(customDateRange, startCapital, realPriceData || undefined), 
+    [customDateRange, startCapital, realPriceData]
+  );
+  
+  // Handler for date range changes from ZoneBSignalCore
+  const handleDateRangeChange = (start: string, end: string) => {
+    setCustomDateRange({ start, end });
+  };
 
   const scenarios: ScenarioId[] = [
     "fresh_normal", 
@@ -207,6 +300,8 @@ export default function CommandPage({
               perfSummary={perfSummary}
               startCapital={startCapital}
               onCapitalChange={setStartCapital}
+              realPrices={rawInputs?.inputPrices}
+              onDateRangeChange={handleDateRangeChange}
             />
             
             <div className="h-8" /> {/* Spacer */}

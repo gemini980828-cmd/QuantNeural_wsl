@@ -12,6 +12,8 @@ interface ZoneBSignalCoreProps {
   perfSummary: PerfSummary | null;
   startCapital?: number;
   onCapitalChange?: (capital: number) => void;
+  realPrices?: Record<string, number>; // Real API prices (TQQQ, QQQ, etc.)
+  onDateRangeChange?: (start: string, end: string) => void;
 }
 
 function EvidenceCard({ item }: { item: EvidenceItem }) {
@@ -63,23 +65,49 @@ function getDateRange(period: Period): { start: string; end: string } {
   return { start: format(start), end: format(end) };
 }
 
+// Calculate dynamic period label from date range
+function getPeriodLabel(startDate: string, endDate: string): string {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const diffMs = end.getTime() - start.getTime();
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffDays <= 0) return "0D";
+  if (diffDays <= 90) return `${diffDays}D`;
+  if (diffDays <= 365) {
+    const months = Math.round(diffDays / 30);
+    return `${months}M`;
+  }
+  const years = (diffDays / 365).toFixed(1);
+  // Remove trailing .0
+  return years.endsWith('.0') ? `${Math.round(diffDays / 365)}Y` : `${years}Y`;
+}
+
 export default function ZoneBSignalCore({ 
   vm, 
   selectedPeriod, 
   perfSummary, 
   startCapital = 10000000,
-  onCapitalChange 
+  onCapitalChange,
+  realPrices,
+  onDateRangeChange
 }: ZoneBSignalCoreProps) {
   const isOff = vm.strategyState === "OFF10";
   const [showSettings, setShowSettings] = useState(false);
   const [includeFees, setIncludeFees] = useState(false);
   const [localCapital, setLocalCapital] = useState(startCapital / 10000); // 만원 단위
   
+  // Custom date range state
+  const defaultDateRange = getDateRange(selectedPeriod);
+  const [localStartDate, setLocalStartDate] = useState(defaultDateRange.start);
+  const [localEndDate, setLocalEndDate] = useState(defaultDateRange.end);
+  
   // Action guidance based on strategy state
   const actionLabel = isOff ? "매도 대기" : "매수 유지";
   const stateLabel = isOff ? "OFF" : "ON";
   
-  const dateRange = getDateRange(selectedPeriod);
+  // Use local dates for display
+  const dateRange = { start: localStartDate, end: localEndDate };
   
   const handleCapitalChange = (value: string) => {
     const num = parseInt(value, 10);
@@ -89,19 +117,45 @@ export default function ZoneBSignalCore({
     }
   };
   
+  const handleDateChange = (type: 'start' | 'end', value: string) => {
+    if (type === 'start') {
+      setLocalStartDate(value);
+      onDateRangeChange?.(value, localEndDate);
+    } else {
+      setLocalEndDate(value);
+      onDateRangeChange?.(localStartDate, value);
+    }
+  };
+  
 
 
   // Risk Calculation (SSOT: TQQQ -20% from entry price)
+  // Uses realPrices if available (REAL mode), otherwise falls back to mock prices
   const riskMetrics = useMemo(() => {
-    const tqqqFull = getClosePrices("TQQQ");
+    // Get prices: prefer realPrices (API) over mock data
+    let currentPrice: number;
+    let qqqCurrent: number;
+    let qqqPrev: number;
     
-    // Latest data
-    const idx = tqqqFull.length - 1;
-    const currentPrice = tqqqFull[idx];
+    if (realPrices && realPrices.TQQQ && realPrices.QQQ) {
+      // REAL mode: use API prices
+      currentPrice = realPrices.TQQQ;
+      qqqCurrent = realPrices.QQQ;
+      // For QQQ prev close, we'd need historical data - estimate ~0% change for now
+      // In production, this should come from a separate API call or stored prev close
+      qqqPrev = realPrices.QQQ_PREV || realPrices.QQQ; // Fallback to same (0% change)
+    } else {
+      // MOCK mode: use getClosePrices
+      const tqqqFull = getClosePrices("TQQQ");
+      const qqqFull = getClosePrices("QQQ");
+      currentPrice = tqqqFull[tqqqFull.length - 1];
+      qqqCurrent = qqqFull[qqqFull.length - 1];
+      qqqPrev = qqqFull[qqqFull.length - 2];
+    }
     
-    // Entry price = first valid price in series (simulated for demo)
-    // In production, this would come from user's actual entry log
-    const entryPrice = tqqqFull.find(p => p !== null && p !== undefined) || currentPrice;
+    // Entry price: In REAL mode, should come from user's actual entry log
+    // For now, use current price as entry (showing 0% from entry for safety)
+    const entryPrice = realPrices?.TQQQ_ENTRY || currentPrice;
     
     // Stop loss line per SSOT: -20% from entry
     const stopLossPrice = entryPrice * 0.80;
@@ -114,13 +168,6 @@ export default function ZoneBSignalCore({
     // Warning threshold: within 5% of stop loss (i.e., down 15-20% from entry)
     const isWarning = distToStop > 0 && distToStop < 5;
     const isTriggered = distToStop <= 0;
-    
-    // QQQ Trigger Calculation (Intraday drop > 7% from prev close)
-    // In mock data context (Daily close), we use Current Close vs Prev Close.
-    // In real-time context, this would be Real-time Price vs Prev Close.
-    const qqqFull = getClosePrices("QQQ");
-    const qqqCurrent = qqqFull[qqqFull.length - 1];
-    const qqqPrev = qqqFull[qqqFull.length - 2];
     
     // QQQ Drop Percentage (Negative value means drop)
     const qqqDropPct = (qqqCurrent && qqqPrev) 
@@ -143,7 +190,7 @@ export default function ZoneBSignalCore({
       isQqqWarning,
       isAnyTriggered: isTriggered || isQqqTriggered
     };
-  }, [selectedPeriod]);
+  }, [selectedPeriod, realPrices]);
 
   return (
     <section className="space-y-4">
@@ -294,7 +341,7 @@ export default function ZoneBSignalCore({
                 <span>기준: {localCapital.toLocaleString()}만</span>
               </div>
               <TrendingUp size={14} className="text-neutral-500" />
-              <span className="text-muted font-medium font-sans">PERF ({selectedPeriod}):</span>
+              <span className="text-muted font-medium font-sans">PERF ({getPeriodLabel(localStartDate, localEndDate)}):</span>
               <span className={perfSummary.tq200.returnPct >= 0 ? "text-positive" : "text-negative"}>
                 <span className="font-sans">200TQ</span> <span className="font-mono">{perfSummary.tq200.returnPct > 0 ? "+" : ""}{perfSummary.tq200.returnPct.toFixed(1)}%</span>
                 <span className="text-muted ml-1">({formatKrw(perfSummary.tq200.pnl, vm.privacyMode)})</span>
@@ -325,10 +372,24 @@ export default function ZoneBSignalCore({
           {/* Settings Panel */}
           {showSettings && (
             <div className="border-t border-border px-4 py-3 space-y-3 text-xs">
-              {/* Date Range Info */}
+              {/* Date Range Input */}
               <div className="flex items-center justify-between">
-                <span className="text-muted font-sans">기간 (롤링)</span>
-                <span className="font-mono text-fg">{dateRange.start} ~ {dateRange.end}</span>
+                <span className="text-muted font-sans">기간</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={localStartDate}
+                    onChange={(e) => handleDateChange('start', e.target.value)}
+                    className="px-2 py-1 bg-inset rounded border border-border text-fg font-mono text-xs focus:outline-none focus:ring-1 focus:ring-positive"
+                  />
+                  <span className="text-muted">~</span>
+                  <input
+                    type="date"
+                    value={localEndDate}
+                    onChange={(e) => handleDateChange('end', e.target.value)}
+                    className="px-2 py-1 bg-inset rounded border border-border text-fg font-mono text-xs focus:outline-none focus:ring-1 focus:ring-positive"
+                  />
+                </div>
               </div>
               
               {/* Capital Input */}

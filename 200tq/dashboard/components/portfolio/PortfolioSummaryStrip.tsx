@@ -15,7 +15,7 @@ export default function PortfolioSummaryStrip({ portfolio }: PortfolioSummaryStr
       <div className="w-full bg-surface border border-neutral-800 rounded-xl p-4 flex items-center justify-between text-sm">
         <div className="flex items-center gap-2 text-muted">
           <Info size={16} />
-          <span>보유 포트폴리오 데이터가 없습니다 (Mock)</span>
+          <span>보유 포트폴리오 데이터가 없습니다</span>
         </div>
         <Link 
           href="/portfolio" 

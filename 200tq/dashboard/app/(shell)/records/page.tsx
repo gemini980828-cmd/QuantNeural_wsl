@@ -1,40 +1,52 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Calendar, Download, ChevronRight, CheckCircle, XCircle, Clock, HelpCircle, ArrowLeft, BarChart3, Info, LayoutGrid, Activity, ArrowRight, FlaskConical, Filter } from "lucide-react";
-import { STORAGE_KEYS, ManualRecord } from "../../../lib/ops/e03/storage";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Calendar, Download, ChevronRight, CheckCircle, XCircle, Clock, HelpCircle, ArrowLeft, BarChart3, LayoutGrid, Activity, ArrowRight, FlaskConical, Filter, RefreshCw, Database } from "lucide-react";
+
+// Supabase record type (from /api/records/list)
+interface TradeExecutionRecord {
+  id: string;
+  execution_date: string;
+  verdict_date: string;
+  snapshot_verdict: 'ON' | 'OFF10';
+  snapshot_health: 'FRESH' | 'STALE' | 'CLOSED';
+  executed: boolean;
+  lines: { symbol: string; side: string; qty: number; price?: number }[];
+  note?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 interface RecordEntry {
   date: string;
-  record: ManualRecord;
+  record: TradeExecutionRecord;
   status: "DONE" | "SKIPPED" | "DELAY" | "UNKNOWN";
 }
 
-// Helper to get all records from localStorage
-function getAllRecords(): RecordEntry[] {
-  if (typeof window === "undefined") return [];
-  
-  const entries: RecordEntry[] = [];
-  const prefix = STORAGE_KEYS.RECORD_PREFIX;
-  
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith(prefix)) {
-      try {
-        const dateKey = key.replace(prefix, "");
-        const record = JSON.parse(localStorage.getItem(key) || "");
-        
-        const hasFills = record.fills && (record.fills.TQQQ > 0 || record.fills.SGOV > 0);
-        const status: RecordEntry["status"] = hasFills ? "DONE" : "UNKNOWN";
-        
-        entries.push({ date: dateKey, record, status });
-      } catch {
-        // Skip invalid entries
-      }
+// Fetch records from Supabase API
+async function fetchRecords(): Promise<RecordEntry[]> {
+  try {
+    const res = await fetch("/api/records/list?limit=100");
+    const data = await res.json();
+    
+    if (!data.success || !data.records) {
+      return [];
     }
+    
+    return data.records.map((rec: TradeExecutionRecord) => {
+      const hasLines = rec.lines && rec.lines.length > 0;
+      const status: RecordEntry["status"] = rec.executed && hasLines ? "DONE" : "UNKNOWN";
+      
+      return {
+        date: rec.execution_date,
+        record: rec,
+        status,
+      };
+    });
+  } catch (error) {
+    console.error("Failed to fetch records:", error);
+    return [];
   }
-  
-  return entries.sort((a, b) => b.date.localeCompare(a.date));
 }
 
 // Status badge component
@@ -151,6 +163,7 @@ function QualityAnalytics({ records }: { records: RecordEntry[] }) {
 export default function RecordsPage() {
   const [records, setRecords] = useState<RecordEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   
   // Filter state
   type PeriodFilter = "30d" | "3mo" | "all";
@@ -158,9 +171,17 @@ export default function RecordsPage() {
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   
-  useEffect(() => {
-    setRecords(getAllRecords());
+  // Fetch records from Supabase
+  const loadRecords = useCallback(async () => {
+    setLoading(true);
+    const data = await fetchRecords();
+    setRecords(data);
+    setLoading(false);
   }, []);
+  
+  useEffect(() => {
+    loadRecords();
+  }, [loadRecords]);
 
   // Filtered records
   const filteredRecords = useMemo(() => {
@@ -184,26 +205,15 @@ export default function RecordsPage() {
     return result;
   }, [records, periodFilter, statusFilter]);
   
-    const handleDownload = () => {
+  const handleDownload = () => {
     if (records.length === 0) return;
     window.open("/api/record", "_blank");
   };
 
-  // Load mock data for testing
-  const loadMockRecords = () => {
-    const mockDates = [
-      "2025-01-23", "2025-01-22", "2025-01-21", "2025-01-20", "2025-01-17"
-    ];
-    mockDates.forEach((date, i) => {
-      const mockRecord = {
-        recordedAt: new Date().toISOString(),
-        fills: { TQQQ: 100 + i * 10, SGOV: 50 + i * 5 },
-        prices: { TQQQ: 52.30 + i * 0.5, SGOV: 100.50 },
-        note: `Mock record for ${date}`
-      };
-      localStorage.setItem(`${STORAGE_KEYS.RECORD_PREFIX}${date}`, JSON.stringify(mockRecord));
-    });
-    setRecords(getAllRecords());
+  // Helper to get line data by symbol
+  const getLineData = (lines: TradeExecutionRecord["lines"], symbol: string) => {
+    const line = lines?.find(l => l.symbol === symbol);
+    return { qty: line?.qty || 0, price: line?.price };
   };
 
   const selectedRecord = records.find(r => r.date === selectedDate);
@@ -240,20 +250,26 @@ export default function RecordsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-800">
-                <tr className="hover:bg-neutral-800/30 transition-colors">
-                  <td className="px-4 py-3 font-bold text-fg">TQQQ</td>
-                  <td className="px-4 py-3 text-right font-mono">{selectedRecord.record.fills?.TQQQ?.toLocaleString() || 0}</td>
-                  <td className="px-4 py-3 text-right font-mono text-muted">
-                    {selectedRecord.record.prices?.TQQQ ? `$${selectedRecord.record.prices.TQQQ.toFixed(2)}` : "-"}
-                  </td>
-                </tr>
-                <tr className="hover:bg-neutral-800/30 transition-colors">
-                  <td className="px-4 py-3 font-bold text-fg">SGOV</td>
-                  <td className="px-4 py-3 text-right font-mono">{selectedRecord.record.fills?.SGOV?.toLocaleString() || 0}</td>
-                  <td className="px-4 py-3 text-right font-mono text-muted">
-                    {selectedRecord.record.prices?.SGOV ? `$${selectedRecord.record.prices.SGOV.toFixed(2)}` : "-"}
-                  </td>
-                </tr>
+                {selectedRecord.record.lines && selectedRecord.record.lines.length > 0 ? (
+                  selectedRecord.record.lines.map((line, idx) => (
+                    <tr key={idx} className="hover:bg-neutral-800/30 transition-colors">
+                      <td className="px-4 py-3 font-bold text-fg">
+                        <span className={line.side === 'BUY' ? 'text-positive' : 'text-negative'}>
+                          {line.side}
+                        </span>
+                        {' '}{line.symbol}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono">{line.qty.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right font-mono text-muted">
+                        {line.price ? `$${line.price.toFixed(2)}` : "-"}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={3} className="px-4 py-6 text-center text-muted">거래 내역 없음</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -266,12 +282,30 @@ export default function RecordsPage() {
             <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Meta</span>
           </h2>
           <div className="rounded-xl border border-neutral-800 bg-surface p-5 space-y-4">
-            <div>
-              <div className="text-xs text-muted mb-1">기록 시각</div>
-              <div className="font-mono text-fg">{new Date(selectedRecord.record.recordedAt).toLocaleString("ko-KR")}</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-xs text-muted mb-1">판정일</div>
+                <div className="font-mono text-fg">{selectedRecord.record.verdict_date}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted mb-1">판정</div>
+                <div className={`font-mono font-bold ${selectedRecord.record.snapshot_verdict === 'ON' ? 'text-positive' : 'text-amber-400'}`}>
+                  {selectedRecord.record.snapshot_verdict}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-muted mb-1">데이터 상태</div>
+                <div className={`font-mono ${selectedRecord.record.snapshot_health === 'FRESH' ? 'text-positive' : 'text-amber-400'}`}>
+                  {selectedRecord.record.snapshot_health}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-muted mb-1">기록 시각</div>
+                <div className="font-mono text-fg text-sm">{new Date(selectedRecord.record.created_at).toLocaleString("ko-KR")}</div>
+              </div>
             </div>
             {selectedRecord.record.note && (
-              <div>
+              <div className="pt-2 border-t border-neutral-800">
                 <div className="text-xs text-muted mb-1">메모</div>
                 <div className="text-fg whitespace-pre-wrap">{selectedRecord.record.note}</div>
               </div>
@@ -345,7 +379,7 @@ export default function RecordsPage() {
         
                         {records.length === 0 ? (
           <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-center gap-4">
-            <Calendar size={32} className="text-neutral-600" />
+            <Database size={32} className="text-neutral-600" />
             <div>
               <div className="text-fg font-medium mb-1">아직 기록이 없습니다</div>
               <div className="text-sm text-muted">Command 페이지에서 실행 완료 후 기록하세요</div>
@@ -359,11 +393,11 @@ export default function RecordsPage() {
                 오늘 기록하러 가기
               </a>
               <button
-                onClick={loadMockRecords}
+                onClick={loadRecords}
                 className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg text-sm font-medium transition-colors border border-neutral-700"
               >
-                <FlaskConical size={16} />
-                샘플 기록 불러오기
+                <RefreshCw size={16} />
+                새로고침
               </button>
             </div>
           </div>
@@ -427,23 +461,27 @@ export default function RecordsPage() {
                   </tr>
                 </thead>
                   <tbody className="divide-y divide-neutral-800">
-                  {filteredRecords.map((entry) => (
-                    <tr 
-                      key={entry.date} 
-                      onClick={() => setSelectedDate(entry.date)}
-                      className="hover:bg-neutral-800/30 transition-colors cursor-pointer group"
-                    >
-                      <td className="px-4 py-3 font-bold text-fg font-mono">{entry.date}</td>
-                      <td className="px-4 py-3 text-right font-mono">{entry.record.fills?.TQQQ?.toLocaleString() || 0}</td>
-                      <td className="px-4 py-3 text-right font-mono">{entry.record.fills?.SGOV?.toLocaleString() || 0}</td>
-                      <td className="px-4 py-3 text-right">
-                        <StatusBadge status={entry.status} />
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <ChevronRight size={16} className="text-neutral-600 group-hover:text-neutral-400" />
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredRecords.map((entry) => {
+                    const tqqq = getLineData(entry.record.lines, 'TQQQ');
+                    const sgov = getLineData(entry.record.lines, 'SGOV');
+                    return (
+                      <tr 
+                        key={entry.date} 
+                        onClick={() => setSelectedDate(entry.date)}
+                        className="hover:bg-neutral-800/30 transition-colors cursor-pointer group"
+                      >
+                        <td className="px-4 py-3 font-bold text-fg font-mono">{entry.date}</td>
+                        <td className="px-4 py-3 text-right font-mono">{tqqq.qty.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-right font-mono">{sgov.qty.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-right">
+                          <StatusBadge status={entry.status} />
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <ChevronRight size={16} className="text-neutral-600 group-hover:text-neutral-400" />
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

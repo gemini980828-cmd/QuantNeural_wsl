@@ -1,0 +1,8 @@
+{
+  "executionDate": "2026-01-24",
+  "executed": true,
+  "lines": [
+    {"symbol": "TQQQ", "side": "BUY", "qty": 10, "price": 54.5}
+  ],
+  "note": "Phase 5C test"
+}
