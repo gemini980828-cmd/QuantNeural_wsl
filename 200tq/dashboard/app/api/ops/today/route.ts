@@ -98,7 +98,45 @@ export async function GET() {
       prices.QQQ_PREV = qqqPrevClose;
     }
     
-    const response: OpsSnapshot = {
+    // Fetch meta info (last ingest, unresolved alerts)
+    let lastIngestSuccess: string | null = null;
+    let lastIngestFail: string | null = null;
+    let unresolvedAlerts = 0;
+    
+    try {
+      // Get last successful ingest
+      const { data: successRun } = await supabase
+        .from('ops_job_runs')
+        .select('ended_at')
+        .eq('status', 'success')
+        .order('ended_at', { ascending: false })
+        .limit(1);
+      if (successRun && successRun.length > 0) {
+        lastIngestSuccess = successRun[0].ended_at;
+      }
+      
+      // Get last failed ingest
+      const { data: failRun } = await supabase
+        .from('ops_job_runs')
+        .select('ended_at')
+        .eq('status', 'failed')
+        .order('ended_at', { ascending: false })
+        .limit(1);
+      if (failRun && failRun.length > 0) {
+        lastIngestFail = failRun[0].ended_at;
+      }
+      
+      // Get unresolved notification count
+      const { count } = await supabase
+        .from('ops_notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('resolved', false);
+      unresolvedAlerts = count || 0;
+    } catch (e) {
+      console.warn('Failed to fetch meta info:', e);
+    }
+    
+    const response: OpsSnapshot & { meta?: object } = {
       verdictDateKst: toKstString(snapshot.verdict_date) ?? '',
       executionDateKst: toKstString(snapshot.execution_date) ?? '',
       health: snapshot.health as 'FRESH' | 'STALE' | 'CLOSED',
@@ -108,6 +146,11 @@ export async function GET() {
       updatedAtKst: snapshot.computed_at,
       sourceMeta: payload.sourceMeta,
       staleReason: payload.staleReason,
+      meta: {
+        lastIngestSuccess,
+        lastIngestFail,
+        unresolvedAlerts,
+      },
     };
     
     return NextResponse.json(response);
@@ -120,3 +163,4 @@ export async function GET() {
     }, { status: 500 });
   }
 }
+

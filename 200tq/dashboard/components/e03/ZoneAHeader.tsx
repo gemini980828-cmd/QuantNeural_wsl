@@ -1,16 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { E03ViewModel, HeaderBadge, BadgeTone } from "../../lib/ops/e03/types";
-import { AlertCircle, CheckCircle, Info, Shield, ShieldAlert, MonitorPlay, Clock, Database, AlertTriangle } from "lucide-react";
+import { AlertCircle, CheckCircle, Info, Shield, ShieldAlert, MonitorPlay, Clock, Database, AlertTriangle, Bell } from "lucide-react";
 import { ThemeToggle } from "../ThemeToggle";
 
 interface ZoneAHeaderProps {
   vm: E03ViewModel;
   onToggleSimulation?: (next: boolean) => void;
   onTogglePrivacy?: (next: boolean) => void;
+  unresolvedAlerts?: number;
 }
 
-export default function ZoneAHeader({ vm, onToggleSimulation, onTogglePrivacy }: ZoneAHeaderProps) {
+export default function ZoneAHeader({ vm, onToggleSimulation, onTogglePrivacy, unresolvedAlerts = 0 }: ZoneAHeaderProps) {
   const needsRecord = vm.executionState === "DUE_TODAY" || vm.executionState === "UNKNOWN";
   
   // Determine emergency state
@@ -51,6 +53,24 @@ export default function ZoneAHeader({ vm, onToggleSimulation, onTogglePrivacy }:
               <Shield size={14} />
               <span className="hidden xs:inline">{vm.privacyMode ? "Privacy" : "Visible"}</span>
             </button>
+            
+            {/* Notifications Bell */}
+            <Link 
+              href="/notifications"
+              className={`relative flex items-center gap-1.5 px-2 py-1 rounded border transition-colors text-xs sm:text-sm ${
+                unresolvedAlerts > 0 
+                  ? "bg-red-900/40 text-red-400 border-red-800" 
+                  : "border-neutral-800 hover:border-neutral-700"
+              }`}
+            >
+              <Bell size={14} />
+              {unresolvedAlerts > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                  {unresolvedAlerts > 9 ? "9+" : unresolvedAlerts}
+                </span>
+              )}
+              <span className="hidden lg:inline">알림</span>
+            </Link>
           </div>
         </div>
 

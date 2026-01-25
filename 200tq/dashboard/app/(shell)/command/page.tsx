@@ -36,6 +36,7 @@ export default function CommandPage({
   const [recordUpdateTrigger, setRecordUpdateTrigger] = useState(0);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>("1Y");
   const [startCapital, setStartCapital] = useState(10000000);
+  const [unresolvedAlerts, setUnresolvedAlerts] = useState(0);
   
   // Custom date range for backtest
   const getDefaultDateRange = (): DateRange => {
@@ -108,6 +109,17 @@ export default function CommandPage({
       });
       setRawInputs(inputs);
       setStartCapital(inputs.inputTotalValueKrw || 10000000);
+      
+      // Fetch unresolved alerts count
+      try {
+        const notifRes = await fetch("/api/notifications/list?resolved=false&limit=1");
+        const notifData = await notifRes.json();
+        if (notifData.unresolvedCounts) {
+          setUnresolvedAlerts(notifData.unresolvedCounts.total || 0);
+        }
+      } catch (e) {
+        console.warn("Failed to fetch notification counts", e);
+      }
     } catch (e) {
       setError(String(e instanceof Error ? e.message : e));
       // Fallback to MOCK on error
@@ -291,6 +303,7 @@ export default function CommandPage({
              vm={vmWithRecord} 
              onToggleSimulation={toggleSim}
              onTogglePrivacy={togglePriv}
+             unresolvedAlerts={unresolvedAlerts}
           />
           
           <div>
