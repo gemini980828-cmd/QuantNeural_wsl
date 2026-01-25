@@ -1,8 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { 
   Palette, Eye, EyeOff, Monitor, Moon, Sun, Bell, BellOff, 
-  Database, Shield, AlertTriangle, Check
+  Database, Shield, AlertTriangle, Check, Send, MessageSquare, RefreshCw, CheckCircle2, XCircle
 } from "lucide-react";
 import { useSettingsStore, type AppSettings } from "@/lib/stores/settings-store";
 
@@ -126,6 +127,49 @@ export default function SettingsPage() {
     forceHighRiskWarning,
     setSetting,
   } = useSettingsStore();
+
+  // Telegram state
+  const [telegramConfigured, setTelegramConfigured] = useState<boolean | null>(null);
+  const [telegramLoading, setTelegramLoading] = useState(false);
+  const [telegramTestResult, setTelegramTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  
+  // Telegram event toggles (stored locally for now)
+  const [telegramEmergency, setTelegramEmergency] = useState(true);
+  const [telegramAction, setTelegramAction] = useState(true);
+  
+  // Check Telegram configuration on mount
+  useEffect(() => {
+    fetch("/api/telegram/send")
+      .then(res => res.json())
+      .then(data => setTelegramConfigured(data.configured))
+      .catch(() => setTelegramConfigured(false));
+  }, []);
+  
+  // Send test message
+  const sendTestMessage = async () => {
+    setTelegramLoading(true);
+    setTelegramTestResult(null);
+    try {
+      const res = await fetch("/api/telegram/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: `✅ 테스트 성공!\n\n현재 시각: ${new Date().toLocaleString("ko-KR")}\n\n200TQ Dashboard 연동이 정상적으로 작동합니다.`,
+          isTest: true,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTelegramTestResult({ success: true, message: "테스트 메시지 발송 완료!" });
+      } else {
+        setTelegramTestResult({ success: false, message: data.error || "발송 실패" });
+      }
+    } catch (e) {
+      setTelegramTestResult({ success: false, message: String(e) });
+    } finally {
+      setTelegramLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8 pb-20">
@@ -284,6 +328,84 @@ export default function SettingsPage() {
         <SettingsRow label="Stop-Loss 임박 알림" description="손절선 접근 시">
           <Toggle enabled={notifyStopLoss} onChange={(v) => setSetting("notifyStopLoss", v)} disabled={!notificationsEnabled} />
         </SettingsRow>
+      </SettingsSection>
+
+      {/* Telegram External Notifications */}
+      <SettingsSection id="telegram-section" title="텔레그램" badge="Telegram" icon={MessageSquare}>
+        <SettingsRow label="연결 상태" description="Vercel 환경변수 설정 필요">
+          <div className="flex items-center gap-2">
+            {telegramConfigured === null ? (
+              <span className="text-xs text-muted flex items-center gap-1">
+                <RefreshCw size={12} className="animate-spin" />
+                확인 중...
+              </span>
+            ) : telegramConfigured ? (
+              <span className="text-xs text-green-400 flex items-center gap-1 bg-green-900/30 px-2 py-1 rounded-lg border border-green-700/30">
+                <CheckCircle2 size={12} />
+                연결됨
+              </span>
+            ) : (
+              <span className="text-xs text-red-400 flex items-center gap-1 bg-red-900/30 px-2 py-1 rounded-lg border border-red-700/30">
+                <XCircle size={12} />
+                미설정
+              </span>
+            )}
+          </div>
+        </SettingsRow>
+        <SettingsRow label="Emergency 알림" description="비상 상황 발생 시 발송">
+          <Toggle 
+            enabled={telegramEmergency} 
+            onChange={setTelegramEmergency} 
+            disabled={!telegramConfigured} 
+          />
+        </SettingsRow>
+        <SettingsRow label="Action 알림" description="조치 필요 상황 발생 시 발송">
+          <Toggle 
+            enabled={telegramAction} 
+            onChange={setTelegramAction} 
+            disabled={!telegramConfigured} 
+          />
+        </SettingsRow>
+        <SettingsRow label="테스트 메시지" description="텔레그램으로 테스트 메시지 발송">
+          <div className="flex items-center gap-2">
+            {telegramTestResult && (
+              <span className={`text-xs flex items-center gap-1 ${
+                telegramTestResult.success ? "text-green-400" : "text-red-400"
+              }`}>
+                {telegramTestResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                {telegramTestResult.message}
+              </span>
+            )}
+            <button
+              onClick={sendTestMessage}
+              disabled={!telegramConfigured || telegramLoading}
+              className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
+                telegramConfigured 
+                  ? "bg-blue-600 hover:bg-blue-500 text-white" 
+                  : "bg-neutral-800 text-neutral-500 cursor-not-allowed"
+              }`}
+            >
+              {telegramLoading ? (
+                <RefreshCw size={12} className="animate-spin" />
+              ) : (
+                <Send size={12} />
+              )}
+              테스트
+            </button>
+          </div>
+        </SettingsRow>
+        {!telegramConfigured && (
+          <div className="p-4 bg-amber-900/20 border-t border-amber-800/30">
+            <div className="text-xs text-amber-400">
+              <strong className="block mb-1">설정 방법:</strong>
+              Vercel Dashboard → Settings → Environment Variables에서:
+              <ul className="list-disc list-inside mt-1 space-y-0.5 text-amber-400/80">
+                <li><code className="bg-neutral-800 px-1 rounded">TELEGRAM_BOT_TOKEN</code></li>
+                <li><code className="bg-neutral-800 px-1 rounded">TELEGRAM_CHAT_ID</code></li>
+              </ul>
+            </div>
+          </div>
+        )}
       </SettingsSection>
 
       {/* D. Data & Integrations */}
