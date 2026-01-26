@@ -69,12 +69,13 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { executionDate, executed, lines, note } = body as {
-      executionDate: string;
-      executed: boolean;
-      lines: TradeLine[];
-      note?: string;
-    };
+     const { executionDate, executed, lines, note, expectedLines } = body as {
+       executionDate: string;
+       executed: boolean;
+       lines: TradeLine[];
+       note?: string;
+       expectedLines?: TradeLine[];
+     };
     
     if (!executionDate) {
       return NextResponse.json({ error: "executionDate required" }, { status: 400 });
@@ -92,18 +93,19 @@ export async function POST(req: NextRequest) {
     
     const payload = snapshot?.payload_json || {};
     
-    // Build record with snapshot data
-    const record = {
-      execution_date: executionDate,
-      verdict_date: snapshot?.verdict_date || executionDate,
-      snapshot_verdict: payload.verdict || "OFF10",
-      snapshot_health: snapshot?.health || "STALE",
-      snapshot_json: payload,
-      executed: executed ?? false,
-      lines: lines || [],
-      note: note || null,
-      updated_at: new Date().toISOString(),
-    };
+     // Build record with snapshot data
+     const record = {
+       execution_date: executionDate,
+       verdict_date: snapshot?.verdict_date || executionDate,
+       snapshot_verdict: payload.verdict || "OFF10",
+       snapshot_health: snapshot?.health || "STALE",
+       snapshot_json: payload,
+       executed: executed ?? false,
+       lines: lines || [],
+       expected_lines: expectedLines || null,
+       note: note || null,
+       updated_at: new Date().toISOString(),
+     };
     
     // Upsert (insert or update based on execution_date)
     const { data, error } = await supabase

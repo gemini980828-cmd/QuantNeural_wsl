@@ -88,7 +88,7 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
     saveRecord(vm.executionDateLabel, record);
     
     // Save to Supabase
-    const result = await saveRecordToSupabase(vm.executionDateLabel, record);
+    const result = await saveRecordToSupabase(vm.executionDateLabel, record, vm.expectedTrades, vm.inputPrices);
     if (result.success) {
       setToastMsg("기록 완료 (localStorage + Supabase)");
     } else {

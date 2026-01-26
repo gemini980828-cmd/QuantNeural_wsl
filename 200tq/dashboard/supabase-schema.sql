@@ -19,9 +19,11 @@ create table if not exists trade_executions (
   -- 전체 스냅샷 (감사용)
   executed boolean default false,
   -- 실행 완료 여부
-  lines jsonb,
-  -- [{symbol, side, qty, price, note}]
-  note text,
+   lines jsonb,
+   -- [{symbol, side, qty, price, note}]
+   expected_lines jsonb,
+   -- Expected trades from strategy: [{symbol, side, qty, expectedPrice?}]
+   note text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

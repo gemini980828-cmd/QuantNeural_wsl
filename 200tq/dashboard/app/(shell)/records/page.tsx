@@ -12,6 +12,7 @@ interface TradeExecutionRecord {
   snapshot_health: 'FRESH' | 'STALE' | 'CLOSED';
   executed: boolean;
   lines: { symbol: string; side: string; qty: number; price?: number }[];
+  expected_lines?: { symbol: string; side: string; qty: number; expectedPrice?: number }[];
   note?: string;
   created_at: string;
   updated_at: string;
@@ -104,9 +105,33 @@ function QualityAnalytics({ records }: { records: RecordEntry[] }) {
   const stats = useMemo(() => {
     const executed = records.filter(r => r.status === "DONE");
     const count = executed.length;
-    const accuracy = count > 0 ? 98.5 : 0; 
-    const slippage = count > 0 ? 0.12 : 0;
+    
+    let totalExpected = 0;
+    let totalMatches = 0;
+    let slippageSum = 0;
+    let slippageCount = 0;
+
+    executed.forEach(entry => {
+      const expected = entry.record.expected_lines;
+      const actual = entry.record.lines;
+      if (!expected || !actual) return;
+      
+      expected.forEach(exp => {
+        totalExpected++;
+        const act = actual.find(l => l.symbol === exp.symbol);
+        if (act && act.qty === exp.qty) totalMatches++;
+        
+        if (act?.price && exp.expectedPrice) {
+          slippageSum += Math.abs(act.price - exp.expectedPrice) / exp.expectedPrice;
+          slippageCount++;
+        }
+      });
+    });
+
+    const accuracy = totalExpected > 0 ? (totalMatches / totalExpected * 100) : 0;
+    const slippage = slippageCount > 0 ? (slippageSum / slippageCount * 100) : 0;
     const delayed = records.filter(r => r.status === "DELAY").length;
+    
     return { accuracy, slippage, delayed, count };
   }, [records]);
 
