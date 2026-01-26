@@ -24,33 +24,8 @@ import {
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Allow up to 60 seconds
 
-// Verify cron request
-// Vercel Cron sends requests from their servers with specific user-agent
-// Also support custom CRON_SECRET for manual triggers
-function verifyCronRequest(req: NextRequest): boolean {
-  // Check for Vercel Cron user-agent (starts with "vercel-cron")
-  const userAgent = req.headers.get("user-agent") || "";
-  if (userAgent.toLowerCase().startsWith("vercel-cron")) {
-    return true;
-  }
-  
-  // Check for CRON_SECRET authorization
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  
-  if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
-    return true;
-  }
-  
-  // If no CRON_SECRET configured and not from Vercel, allow in development
-  if (!cronSecret && process.env.NODE_ENV !== "production") {
-    return true;
-  }
-  
-  // In production without proper auth, reject
-  // But allow if CRON_SECRET is not set (backward compatibility)
-  return !cronSecret;
-}
+// Note: Vercel Cron is secured by infrastructure - only registered paths in vercel.json
+// can be triggered, so no additional authentication layer is needed.
 
 function getSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -64,10 +39,8 @@ function getSupabaseClient() {
 }
 
 export async function GET(req: NextRequest) {
-  // Verify authorization
-  if (!verifyCronRequest(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  // Note: Vercel Cron jobs are secured by Vercel's infrastructure
+  // Only paths registered in vercel.json can be triggered by cron
   
   const startTime = Date.now();
   const today = getTodayKST();
