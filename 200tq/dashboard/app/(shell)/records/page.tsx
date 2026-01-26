@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Calendar, Download, ChevronRight, CheckCircle, XCircle, Clock, HelpCircle, ArrowLeft, BarChart3, LayoutGrid, Activity, ArrowRight, FlaskConical, Filter, RefreshCw, Database } from "lucide-react";
+import { useDataSource } from "../../../lib/stores/settings-store";
 
 // Supabase record type (from /api/records/list)
 interface TradeExecutionRecord {
@@ -49,6 +50,126 @@ async function fetchRecords(): Promise<RecordEntry[]> {
     return [];
   }
 }
+
+// Mock records for MOCK mode demo
+const MOCK_RECORDS: RecordEntry[] = [
+  {
+    date: "2026-01-24",
+    status: "DONE",
+    record: {
+      id: "mock-1",
+      execution_date: "2026-01-24",
+      verdict_date: "2026-01-23",
+      snapshot_verdict: "ON",
+      snapshot_health: "FRESH",
+      executed: true,
+      lines: [
+        { symbol: "TQQQ", side: "BUY", qty: 150, price: 54.38 },
+        { symbol: "SGOV", side: "SELL", qty: 50, price: 100.25 },
+      ],
+      expected_lines: [
+        { symbol: "TQQQ", side: "BUY", qty: 150, expectedPrice: 54.50 },
+        { symbol: "SGOV", side: "SELL", qty: 50, expectedPrice: 100.20 },
+      ],
+      created_at: "2026-01-24T09:30:00Z",
+      updated_at: "2026-01-24T09:30:00Z",
+    },
+  },
+  {
+    date: "2026-01-23",
+    status: "DONE",
+    record: {
+      id: "mock-2",
+      execution_date: "2026-01-23",
+      verdict_date: "2026-01-22",
+      snapshot_verdict: "OFF10",
+      snapshot_health: "FRESH",
+      executed: true,
+      lines: [
+        { symbol: "TQQQ", side: "SELL", qty: 100, price: 52.80 },
+        { symbol: "SGOV", side: "BUY", qty: 200, price: 100.10 },
+      ],
+      expected_lines: [
+        { symbol: "TQQQ", side: "SELL", qty: 100, expectedPrice: 53.00 },
+        { symbol: "SGOV", side: "BUY", qty: 200, expectedPrice: 100.00 },
+      ],
+      created_at: "2026-01-23T09:30:00Z",
+      updated_at: "2026-01-23T09:30:00Z",
+    },
+  },
+  {
+    date: "2026-01-22",
+    status: "SKIPPED",
+    record: {
+      id: "mock-3",
+      execution_date: "2026-01-22",
+      verdict_date: "2026-01-21",
+      snapshot_verdict: "OFF10",
+      snapshot_health: "STALE",
+      executed: false,
+      lines: [],
+      note: "시장 휴장",
+      created_at: "2026-01-22T09:30:00Z",
+      updated_at: "2026-01-22T09:30:00Z",
+    },
+  },
+  {
+    date: "2026-01-21",
+    status: "DELAY",
+    record: {
+      id: "mock-4",
+      execution_date: "2026-01-21",
+      verdict_date: "2026-01-20",
+      snapshot_verdict: "ON",
+      snapshot_health: "FRESH",
+      executed: true,
+      lines: [
+        { symbol: "TQQQ", side: "BUY", qty: 80, price: 51.20 },
+      ],
+      expected_lines: [
+        { symbol: "TQQQ", side: "BUY", qty: 80, expectedPrice: 51.00 },
+      ],
+      note: "지연 체결",
+      created_at: "2026-01-21T14:00:00Z",
+      updated_at: "2026-01-21T14:00:00Z",
+    },
+  },
+  {
+    date: "2026-01-17",
+    status: "DONE",
+    record: {
+      id: "mock-5",
+      execution_date: "2026-01-17",
+      verdict_date: "2026-01-16",
+      snapshot_verdict: "ON",
+      snapshot_health: "FRESH",
+      executed: true,
+      lines: [
+        { symbol: "TQQQ", side: "BUY", qty: 200, price: 50.50 },
+      ],
+      expected_lines: [
+        { symbol: "TQQQ", side: "BUY", qty: 200, expectedPrice: 50.45 },
+      ],
+      created_at: "2026-01-17T09:30:00Z",
+      updated_at: "2026-01-17T09:30:00Z",
+    },
+  },
+  {
+    date: "2026-01-16",
+    status: "UNKNOWN",
+    record: {
+      id: "mock-6",
+      execution_date: "2026-01-16",
+      verdict_date: "2026-01-15",
+      snapshot_verdict: "OFF10",
+      snapshot_health: "CLOSED",
+      executed: false,
+      lines: [],
+      created_at: "2026-01-16T09:30:00Z",
+      updated_at: "2026-01-16T09:30:00Z",
+    },
+  },
+];
 
 // Status badge component
 function StatusBadge({ status }: { status: RecordEntry["status"] }) {
@@ -186,6 +307,7 @@ function QualityAnalytics({ records }: { records: RecordEntry[] }) {
 }
 
 export default function RecordsPage() {
+  const dataSource = useDataSource();
   const [records, setRecords] = useState<RecordEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -196,13 +318,17 @@ export default function RecordsPage() {
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   
-  // Fetch records from Supabase
+  // Fetch records based on dataSource
   const loadRecords = useCallback(async () => {
     setLoading(true);
-    const data = await fetchRecords();
-    setRecords(data);
+    if (dataSource === "MOCK") {
+      setRecords(MOCK_RECORDS);
+    } else {
+      const data = await fetchRecords();
+      setRecords(data);
+    }
     setLoading(false);
-  }, []);
+  }, [dataSource]);
   
   useEffect(() => {
     loadRecords();
@@ -349,6 +475,15 @@ export default function RecordsPage() {
         <h1 className="text-2xl font-bold text-fg flex items-center gap-3">
           기록
           <span className="text-sm font-normal text-muted bg-neutral-800 px-2.5 py-0.5 rounded-full border border-neutral-700">Records</span>
+          {dataSource === "MOCK" ? (
+            <span className="text-[10px] font-bold text-amber-400 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-900/50">
+              MOCK
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-900/50">
+              REAL
+            </span>
+          )}
         </h1>
                 {records.length > 0 ? (
           <button 

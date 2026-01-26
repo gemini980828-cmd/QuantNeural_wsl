@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { TrendingUp, TrendingDown, BarChart3, Activity, Zap, FlaskConical, Info, LineChart, Play, Loader2, Calendar, DollarSign, Layers, LayoutGrid, PieChart, AlertTriangle, ChevronDown } from "lucide-react";
+import { TrendingUp, TrendingDown, BarChart3, Activity, Zap, FlaskConical, Info, LineChart, Play, Loader2, Calendar, DollarSign, Layers, LayoutGrid, PieChart, AlertTriangle, ChevronDown, Database } from "lucide-react";
+import { useDataSource } from "../../../lib/stores/settings-store";
 
 type Period = "1M" | "3M" | "6M" | "YTD" | "ALL";
 type Strategy = "E03" | "200TQ" | "BOTH";
@@ -285,8 +286,9 @@ function BacktestResults({ results }: { results: ReturnType<typeof runMockBackte
 }
 
 export default function AnalysisPage() {
+  const dataSource = useDataSource();
   const [period, setPeriod] = useState<Period>("YTD");
-  const kpis = useMemo(() => getMockKPIs(period), [period]);
+  const kpis = useMemo(() => dataSource === "MOCK" ? getMockKPIs(period) : null, [period, dataSource]);
 
   // Backtest state
   const [btStartDate, setBtStartDate] = useState("2024-01-01");
@@ -317,6 +319,15 @@ export default function AnalysisPage() {
         <h1 className="text-2xl font-bold text-fg flex items-center gap-3">
           분석
           <span className="text-sm font-normal text-muted bg-neutral-800 px-2.5 py-0.5 rounded-full border border-neutral-700">Analysis</span>
+          {dataSource === "MOCK" ? (
+            <span className="text-[10px] font-bold text-amber-400 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-900/50">
+              MOCK
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-900/50">
+              REAL
+            </span>
+          )}
         </h1>
         <PeriodSelector selected={period} onChange={setPeriod} />
       </div>
@@ -328,35 +339,43 @@ export default function AnalysisPage() {
           성과 요약
           <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Overview</span>
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KPICard 
-            label="CAGR (연환산)" 
-            value={kpis.cagr > 0 ? `+${kpis.cagr}` : String(kpis.cagr)} 
-            unit="%" 
-            trend={kpis.cagr > 0 ? "up" : "down"}
-            description="연간 복리 수익률"
-          />
-          <KPICard 
-            label="MDD (최대낙폭)" 
-            value={String(kpis.mdd)} 
-            unit="%" 
-            trend="down"
-            description="최고점 대비 최대 손실"
-          />
-          <KPICard 
-            label="변동성" 
-            value={String(kpis.volatility)} 
-            unit="%" 
-            trend="neutral"
-            description="연환산 표준편차"
-          />
-          <KPICard 
-            label="샤프 비율" 
-            value={String(kpis.sharpe)} 
-            trend={kpis.sharpe > 1 ? "up" : "neutral"}
-            description="위험 조정 수익률"
-          />
-        </div>
+        {kpis ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <KPICard 
+              label="CAGR (연환산)" 
+              value={kpis.cagr > 0 ? `+${kpis.cagr}` : String(kpis.cagr)} 
+              unit="%" 
+              trend={kpis.cagr > 0 ? "up" : "down"}
+              description="연간 복리 수익률"
+            />
+            <KPICard 
+              label="MDD (최대낙폭)" 
+              value={String(kpis.mdd)} 
+              unit="%" 
+              trend="down"
+              description="최고점 대비 최대 손실"
+            />
+            <KPICard 
+              label="변동성" 
+              value={String(kpis.volatility)} 
+              unit="%" 
+              trend="neutral"
+              description="연환산 표준편차"
+            />
+            <KPICard 
+              label="샤프 비율" 
+              value={String(kpis.sharpe)} 
+              trend={kpis.sharpe > 1 ? "up" : "neutral"}
+              description="위험 조정 수익률"
+            />
+          </div>
+        ) : (
+          <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+            <Database size={24} className="opacity-50" />
+            <span className="text-sm">실제 성과 데이터가 없습니다</span>
+            <span className="text-xs text-neutral-600">거래 기록이 쌓이면 지표가 계산됩니다</span>
+          </div>
+        )}
       </section>
 
       {/* 2. Strategies Comparison */}
@@ -366,39 +385,49 @@ export default function AnalysisPage() {
           전략 비교
           <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Strategies</span>
         </h2>
-        <div className="rounded-xl border border-neutral-800 bg-surface overflow-hidden">
-          {/* Comparison Header */}
-          <div className="grid grid-cols-3 gap-4 p-5 border-b border-neutral-800 bg-neutral-900/50">
-            <div className="text-xs text-muted uppercase tracking-wider">지표</div>
-            <div className="text-xs text-muted uppercase tracking-wider text-center">E03 전략</div>
-            <div className="text-xs text-muted uppercase tracking-wider text-center">200TQ 전략</div>
+        {kpis ? (
+          <>
+            <div className="rounded-xl border border-neutral-800 bg-surface overflow-hidden">
+              {/* Comparison Header */}
+              <div className="grid grid-cols-3 gap-4 p-5 border-b border-neutral-800 bg-neutral-900/50">
+                <div className="text-xs text-muted uppercase tracking-wider">지표</div>
+                <div className="text-xs text-muted uppercase tracking-wider text-center">E03 전략</div>
+                <div className="text-xs text-muted uppercase tracking-wider text-center">200TQ 전략</div>
+              </div>
+              
+              {/* Comparison Rows */}
+              <div className="divide-y divide-neutral-800">
+                <div className="grid grid-cols-3 gap-4 p-5 hover:bg-neutral-800/20">
+                  <div className="text-sm text-muted">수익률</div>
+                  <div className="text-sm font-mono text-positive text-center">+{kpis.cagr}%</div>
+                  <div className="text-sm font-mono text-positive text-center">+{(kpis.cagr * 0.85).toFixed(1)}%</div>
+                </div>
+                <div className="grid grid-cols-3 gap-4 p-5 hover:bg-neutral-800/20">
+                  <div className="text-sm text-muted">MDD</div>
+                  <div className="text-sm font-mono text-negative text-center">{kpis.mdd}%</div>
+                  <div className="text-sm font-mono text-negative text-center">{(kpis.mdd * 1.2).toFixed(1)}%</div>
+                </div>
+                <div className="grid grid-cols-3 gap-4 p-5 hover:bg-neutral-800/20">
+                  <div className="text-sm text-muted">샤프</div>
+                  <div className="text-sm font-mono text-fg text-center">{kpis.sharpe}</div>
+                  <div className="text-sm font-mono text-fg text-center">{(kpis.sharpe * 0.9).toFixed(2)}</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Equity Curve Placeholder */}
+            <div className="mt-4 rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+              <LineChart size={24} className="opacity-50" />
+              <span className="text-sm">Equity Curve 차트 준비 중...</span>
+            </div>
+          </>
+        ) : (
+          <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+            <Layers size={24} className="opacity-50" />
+            <span className="text-sm">전략 비교 데이터가 없습니다</span>
+            <span className="text-xs text-neutral-600">거래 기록이 쌓이면 비교 분석이 가능합니다</span>
           </div>
-          
-          {/* Comparison Rows */}
-          <div className="divide-y divide-neutral-800">
-            <div className="grid grid-cols-3 gap-4 p-5 hover:bg-neutral-800/20">
-              <div className="text-sm text-muted">수익률</div>
-              <div className="text-sm font-mono text-positive text-center">+{kpis.cagr}%</div>
-              <div className="text-sm font-mono text-positive text-center">+{(kpis.cagr * 0.85).toFixed(1)}%</div>
-            </div>
-            <div className="grid grid-cols-3 gap-4 p-5 hover:bg-neutral-800/20">
-              <div className="text-sm text-muted">MDD</div>
-              <div className="text-sm font-mono text-negative text-center">{kpis.mdd}%</div>
-              <div className="text-sm font-mono text-negative text-center">{(kpis.mdd * 1.2).toFixed(1)}%</div>
-            </div>
-            <div className="grid grid-cols-3 gap-4 p-5 hover:bg-neutral-800/20">
-              <div className="text-sm text-muted">샤프</div>
-              <div className="text-sm font-mono text-fg text-center">{kpis.sharpe}</div>
-              <div className="text-sm font-mono text-fg text-center">{(kpis.sharpe * 0.9).toFixed(2)}</div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Equity Curve Placeholder */}
-        <div className="mt-4 rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
-          <LineChart size={24} className="opacity-50" />
-          <span className="text-sm">Equity Curve 차트 준비 중...</span>
-        </div>
+        )}
       </section>
 
       {/* 3. Attribution */}
@@ -408,38 +437,48 @@ export default function AnalysisPage() {
           성과 분해
           <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Attribution</span>
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-surface border border-neutral-800 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Activity size={16} className="text-blue-400" />
-              <span className="text-sm font-bold text-fg">Exposure</span>
+        {kpis ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-surface border border-neutral-800 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Activity size={16} className="text-blue-400" />
+                  <span className="text-sm font-bold text-fg">Exposure</span>
+                </div>
+                <div className="text-2xl font-bold font-mono text-fg mb-1">78%</div>
+                <div className="text-xs text-muted">평균 주식 노출 비중</div>
+              </div>
+              <div className="bg-surface border border-neutral-800 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap size={16} className="text-amber-400" />
+                  <span className="text-sm font-bold text-fg">Timing</span>
+                </div>
+                <div className="text-2xl font-bold font-mono text-positive mb-1">+4.2%</div>
+                <div className="text-xs text-muted">진입/이탈 타이밍 기여분</div>
+              </div>
+              <div className="bg-surface border border-neutral-800 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <TrendingDown size={16} className="text-neutral-400" />
+                  <span className="text-sm font-bold text-fg">Cash Drag</span>
+                </div>
+                <div className="text-2xl font-bold font-mono text-negative mb-1">-1.8%</div>
+                <div className="text-xs text-muted">현금 보유로 인한 기회비용</div>
+              </div>
             </div>
-            <div className="text-2xl font-bold font-mono text-fg mb-1">78%</div>
-            <div className="text-xs text-muted">평균 주식 노출 비중</div>
-          </div>
-          <div className="bg-surface border border-neutral-800 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Zap size={16} className="text-amber-400" />
-              <span className="text-sm font-bold text-fg">Timing</span>
+            
+            {/* Event Analysis Placeholder */}
+            <div className="mt-4 rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+              <BarChart3 size={24} className="opacity-50" />
+              <span className="text-sm">이벤트 기반 분석 (Down/Focus/Overheat) 준비 중...</span>
             </div>
-            <div className="text-2xl font-bold font-mono text-positive mb-1">+4.2%</div>
-            <div className="text-xs text-muted">진입/이탈 타이밍 기여분</div>
+          </>
+        ) : (
+          <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+            <PieChart size={24} className="opacity-50" />
+            <span className="text-sm">성과 분해 데이터가 없습니다</span>
+            <span className="text-xs text-neutral-600">거래 기록이 쌓이면 분석이 가능합니다</span>
           </div>
-          <div className="bg-surface border border-neutral-800 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingDown size={16} className="text-neutral-400" />
-              <span className="text-sm font-bold text-fg">Cash Drag</span>
-            </div>
-            <div className="text-2xl font-bold font-mono text-negative mb-1">-1.8%</div>
-            <div className="text-xs text-muted">현금 보유로 인한 기회비용</div>
-          </div>
-        </div>
-        
-        {/* Event Analysis Placeholder */}
-        <div className="mt-4 rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
-          <BarChart3 size={24} className="opacity-50" />
-          <span className="text-sm">이벤트 기반 분석 (Down/Focus/Overheat) 준비 중...</span>
-        </div>
+        )}
       </section>
 
             {/* 4. Intel Lab (Backtest) - Collapsible */}
