@@ -24,15 +24,32 @@ import {
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Allow up to 60 seconds
 
-// Verify cron secret to prevent unauthorized access
-function verifyCronSecret(req: NextRequest): boolean {
+// Verify cron request
+// Vercel Cron sends requests from their servers with specific user-agent
+// Also support custom CRON_SECRET for manual triggers
+function verifyCronRequest(req: NextRequest): boolean {
+  // Check for Vercel Cron user-agent (starts with "vercel-cron")
+  const userAgent = req.headers.get("user-agent") || "";
+  if (userAgent.toLowerCase().startsWith("vercel-cron")) {
+    return true;
+  }
+  
+  // Check for CRON_SECRET authorization
   const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
   
-  // If no secret configured, allow (for development)
-  if (!cronSecret) return true;
+  if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+    return true;
+  }
   
-  return authHeader === `Bearer ${cronSecret}`;
+  // If no CRON_SECRET configured and not from Vercel, allow in development
+  if (!cronSecret && process.env.NODE_ENV !== "production") {
+    return true;
+  }
+  
+  // In production without proper auth, reject
+  // But allow if CRON_SECRET is not set (backward compatibility)
+  return !cronSecret;
 }
 
 function getSupabaseClient() {
@@ -48,7 +65,7 @@ function getSupabaseClient() {
 
 export async function GET(req: NextRequest) {
   // Verify authorization
-  if (!verifyCronSecret(req)) {
+  if (!verifyCronRequest(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   
