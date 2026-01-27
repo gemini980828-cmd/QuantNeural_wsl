@@ -6,15 +6,35 @@ import { getInputs } from "../../../lib/ops/dataSource";
 import { useDataSource } from "../../../lib/stores/settings-store";
 import PortfolioSummaryStrip from "../../../components/portfolio/PortfolioSummaryStrip";
 import PortfolioPositionsTable from "../../../components/portfolio/PortfolioPositionsTable";
-import { Info, History, LayoutGrid, Layers, TrendingUp, RefreshCw, AlertTriangle } from "lucide-react";
+import { Info, History, LayoutGrid, Layers, TrendingUp, RefreshCw, AlertTriangle, Database } from "lucide-react";
+
+interface TradeRecord {
+  id: string;
+  execution_date: string;
+  ticker: string;
+  action: string;
+  shares: number;
+  price_usd: number;
+  note?: string;
+}
+
+interface EquityPoint {
+  date: string;
+  value: number;
+}
 
 export default function PortfolioPage() {
   const dataSource = useDataSource();
   
-  // Data state
   const [rawInputs, setRawInputs] = useState<E03RawInputs | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const [recentTrades, setRecentTrades] = useState<TradeRecord[]>([]);
+  const [tradesLoading, setTradesLoading] = useState(false);
+  
+  const [equityHistory, setEquityHistory] = useState<EquityPoint[]>([]);
+  const [equityLoading, setEquityLoading] = useState(false);
 
   // Load data based on dataSource
   const loadData = useCallback(async () => {
@@ -38,6 +58,31 @@ export default function PortfolioPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (dataSource === "REAL") {
+      setTradesLoading(true);
+      fetch("/api/records/list?limit=10")
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) setRecentTrades(data.records || []);
+        })
+        .catch(console.error)
+        .finally(() => setTradesLoading(false));
+
+      setEquityLoading(true);
+      fetch("/api/portfolio/equity-history")
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) setEquityHistory(data.equity || []);
+        })
+        .catch(console.error)
+        .finally(() => setEquityLoading(false));
+    } else {
+      setRecentTrades([]);
+      setEquityHistory([]);
+    }
+  }, [dataSource]);
 
   const vm = rawInputs ? buildViewModel(rawInputs) : null;
   const portfolio = vm?.portfolio;
@@ -134,30 +179,134 @@ export default function PortfolioPage() {
           />
         </div>
 
-        {/* 3. Execution Logs (Placeholder for MVP) */}
+        {/* 3. Execution Logs */}
         <div>
              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
             <History size={18} className="text-neutral-400" />
             최근 체결
             <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Execution Logs</span>
+            {dataSource === "REAL" && recentTrades.length > 0 && (
+              <span className="text-[10px] text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-900/50">
+                {recentTrades.length}건
+              </span>
+            )}
           </h2>
-          <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
-             <History size={24} className="opacity-50" />
-             <span className="text-sm">최근 체결 내역이 없습니다.</span>
-          </div>
+          {dataSource === "MOCK" ? (
+            <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+               <Database size={24} className="opacity-50" />
+               <span className="text-sm">MOCK 모드에서는 체결 기록이 표시되지 않습니다</span>
+               <span className="text-xs text-neutral-600">Settings에서 REAL 모드로 전환하세요</span>
+            </div>
+          ) : tradesLoading ? (
+            <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex items-center justify-center text-muted gap-2">
+               <RefreshCw size={20} className="animate-spin" />
+               <span className="text-sm">로딩 중...</span>
+            </div>
+          ) : recentTrades.length === 0 ? (
+            <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+               <History size={24} className="opacity-50" />
+               <span className="text-sm">최근 체결 내역이 없습니다</span>
+               <span className="text-xs text-neutral-600">Command에서 거래를 기록하면 여기에 표시됩니다</span>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-neutral-800 bg-surface overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-neutral-900/50">
+                  <tr className="border-b border-neutral-800">
+                    <th className="text-left py-3 px-4 text-muted font-medium">날짜</th>
+                    <th className="text-left py-3 px-4 text-muted font-medium">종목</th>
+                    <th className="text-left py-3 px-4 text-muted font-medium">구분</th>
+                    <th className="text-right py-3 px-4 text-muted font-medium">수량</th>
+                    <th className="text-right py-3 px-4 text-muted font-medium">단가</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentTrades.map((trade) => (
+                    <tr key={trade.id} className="border-b border-neutral-800/50 hover:bg-neutral-900/30">
+                      <td className="py-3 px-4 font-mono text-xs text-muted">{trade.execution_date}</td>
+                      <td className="py-3 px-4 font-bold text-fg">{trade.ticker}</td>
+                      <td className="py-3 px-4">
+                        <span className={`text-xs px-2 py-0.5 rounded ${
+                          trade.action === "BUY" 
+                            ? "bg-positive/10 text-positive" 
+                            : "bg-negative/10 text-negative"
+                        }`}>
+                          {trade.action}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono">{trade.shares}</td>
+                      <td className="py-3 px-4 text-right font-mono">${trade.price_usd?.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {/* 4. Performance (Placeholder for MVP) */}
+        {/* 4. Performance */}
         <div>
              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
             <TrendingUp size={18} className="text-neutral-400" />
             성과 분석
             <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Performance</span>
+            {dataSource === "REAL" && equityHistory.length > 0 && (
+              <span className="text-[10px] text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-900/50">
+                REAL
+              </span>
+            )}
           </h2>
-          <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
-             <Info size={24} className="opacity-50" />
-             <span className="text-sm">성과 분석 차트 준비 중...</span>
-          </div>
+          {dataSource === "MOCK" ? (
+            <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
+               <Database size={24} className="opacity-50" />
+               <span className="text-sm">MOCK 모드에서는 성과 분석이 표시되지 않습니다</span>
+               <span className="text-xs text-neutral-600">Settings에서 REAL 모드로 전환하세요</span>
+            </div>
+          ) : equityLoading ? (
+            <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex items-center justify-center text-muted gap-2">
+               <RefreshCw size={20} className="animate-spin" />
+               <span className="text-sm">성과 데이터 로딩 중...</span>
+            </div>
+          ) : equityHistory.length === 0 ? (
+            <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
+               <Info size={24} className="opacity-50" />
+               <span className="text-sm">아직 성과 데이터가 없습니다</span>
+               <span className="text-xs text-neutral-600">거래 기록이 쌓이면 성과가 표시됩니다</span>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-neutral-800 bg-surface p-6">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-neutral-900/50 rounded-lg p-4">
+                  <div className="text-xs text-muted mb-1">시작 자산</div>
+                  <div className="font-mono font-bold text-fg">
+                    ${equityHistory[0]?.value.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+                  </div>
+                  <div className="text-[10px] text-muted mt-1">{equityHistory[0]?.date}</div>
+                </div>
+                <div className="bg-neutral-900/50 rounded-lg p-4">
+                  <div className="text-xs text-muted mb-1">현재 자산</div>
+                  <div className="font-mono font-bold text-fg">
+                    ${equityHistory[equityHistory.length - 1]?.value.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+                  </div>
+                  <div className="text-[10px] text-muted mt-1">{equityHistory[equityHistory.length - 1]?.date}</div>
+                </div>
+                <div className="bg-neutral-900/50 rounded-lg p-4">
+                  <div className="text-xs text-muted mb-1">수익률</div>
+                  {(() => {
+                    const startVal = equityHistory[0]?.value || 1;
+                    const endVal = equityHistory[equityHistory.length - 1]?.value || 1;
+                    const returnPct = ((endVal / startVal) - 1) * 100;
+                    return (
+                      <div className={`font-mono font-bold ${returnPct >= 0 ? "text-positive" : "text-negative"}`}>
+                        {returnPct >= 0 ? "+" : ""}{returnPct.toFixed(2)}%
+                      </div>
+                    );
+                  })()}
+                  <div className="text-[10px] text-muted mt-1">{equityHistory.length}개 데이터포인트</div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
       </main>

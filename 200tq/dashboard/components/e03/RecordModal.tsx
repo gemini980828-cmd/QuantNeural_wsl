@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { TradeLine } from "../../lib/ops/e03/types";
-import { X, Check, Sparkles, AlertCircle } from "lucide-react";
+import { X, Check, Sparkles, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 
 interface RecordModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (fills: Record<string, number>, prices: Record<string, number>, note?: string) => void;
+  onSave: (fills: Record<string, number>, prices: Record<string, number>, note?: string) => Promise<void> | void;
   executionDateLabel: string;
   expectedTrades: TradeLine[];
 }
@@ -31,6 +31,8 @@ export default function RecordModal({ isOpen, onClose, onSave, executionDateLabe
   const [note, setNote] = useState("");
   const [autoFilled, setAutoFilled] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Auto-fill when modal opens with expected trades
   useEffect(() => {
@@ -55,12 +57,14 @@ export default function RecordModal({ isOpen, onClose, onSave, executionDateLabe
     if (!isOpen) {
       setAutoFilled(false);
       setValidationError(null);
+      setIsSaving(false);
+      setSaveSuccess(false);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validate: at least one ticker must have both shares and price
     const tickersWithData = uniqueTickers.filter(t => {
       const hasShares = fills[t] && parseInt(fills[t]) > 0;
@@ -83,8 +87,19 @@ export default function RecordModal({ isOpen, onClose, onSave, executionDateLabe
     });
     
     setValidationError(null);
-    onSave(numFills, numPrices, note);
-    onClose();
+    setIsSaving(true);
+    
+    try {
+      await onSave(numFills, numPrices, note);
+      setSaveSuccess(true);
+      // Auto-close after brief success feedback
+      setTimeout(() => {
+        onClose();
+      }, 800);
+    } catch (err) {
+      setValidationError("저장 중 오류가 발생했습니다. 다시 시도해주세요.");
+      setIsSaving(false);
+    }
   };
 
   const hasAutoFillData = Object.keys(tradeSuggestions).length > 0;
@@ -185,10 +200,31 @@ export default function RecordModal({ isOpen, onClose, onSave, executionDateLabe
 
           <button 
              onClick={handleSave}
-             className="w-full py-3 bg-positive hover:bg-positive/90 text-white rounded-lg font-bold font-sans flex items-center justify-center gap-2 transition-colors"
+             disabled={isSaving || saveSuccess}
+             className={`w-full py-3 rounded-lg font-bold font-sans flex items-center justify-center gap-2 transition-colors ${
+               saveSuccess 
+                 ? "bg-positive text-white cursor-default" 
+                 : isSaving
+                 ? "bg-neutral-600 text-neutral-400 cursor-wait"
+                 : "bg-positive hover:bg-positive/90 text-white"
+             }`}
           >
-             <Check size={18} />
-             기록 저장
+             {saveSuccess ? (
+               <>
+                 <CheckCircle2 size={18} />
+                 저장 완료
+               </>
+             ) : isSaving ? (
+               <>
+                 <Loader2 size={18} className="animate-spin" />
+                 저장 중...
+               </>
+             ) : (
+               <>
+                 <Check size={18} />
+                 기록 저장
+               </>
+             )}
           </button>
        </div>
     </div>

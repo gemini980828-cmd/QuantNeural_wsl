@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import type { TradeLine } from "@/lib/types";
+import type { TradeLine, HoldingsJson } from "@/lib/types";
 
 // Force dynamic behavior - no caching for records (always need fresh data)
 export const dynamic = "force-dynamic";
@@ -22,6 +22,86 @@ function getSupabaseClient() {
   }
   
   return createClient(url, key);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function saveHoldingsSnapshot(
+  supabase: any,
+  executionDate: string,
+  lines: TradeLine[]
+): Promise<void> {
+  try {
+    const { data: lastSnapshot } = await supabase
+      .from("holdings_snapshots")
+      .select("holdings_json, total_value_usd")
+      .order("as_of_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const prevHoldings: HoldingsJson = lastSnapshot?.holdings_json || {};
+    const newHoldings: HoldingsJson = { ...prevHoldings };
+
+    for (const line of lines) {
+      const ticker = line.symbol;
+      const prev = newHoldings[ticker] || { shares: 0, price: 0, value: 0 };
+      
+      if (line.side === "BUY") {
+        prev.shares += line.qty;
+      } else if (line.side === "SELL") {
+        prev.shares = Math.max(0, prev.shares - line.qty);
+      }
+      
+      if (line.price) {
+        prev.price = line.price;
+      }
+      prev.value = prev.shares * prev.price;
+      
+      if (prev.shares > 0) {
+        newHoldings[ticker] = prev;
+      } else {
+        delete newHoldings[ticker];
+      }
+    }
+
+    const { data: prices } = await supabase
+      .from("prices_daily")
+      .select("symbol, close")
+      .order("date", { ascending: false })
+      .in("symbol", Object.keys(newHoldings).length > 0 ? Object.keys(newHoldings) : ["TQQQ"]);
+
+    const priceMap: Record<string, number> = {};
+    (prices || []).forEach((p: { symbol: string; close: number }) => {
+      if (!priceMap[p.symbol]) {
+        priceMap[p.symbol] = Number(p.close);
+      }
+    });
+
+    let totalValueUsd = 0;
+    for (const ticker of Object.keys(newHoldings)) {
+      const holding = newHoldings[ticker];
+      if (priceMap[ticker]) {
+        holding.price = priceMap[ticker];
+        holding.value = holding.shares * holding.price;
+      }
+      totalValueUsd += holding.value;
+    }
+
+    const allocJson: Record<string, number> = {};
+    if (totalValueUsd > 0) {
+      for (const ticker of Object.keys(newHoldings)) {
+        allocJson[ticker] = newHoldings[ticker].value / totalValueUsd;
+      }
+    }
+
+    await supabase.from("holdings_snapshots").insert({
+      as_of_date: executionDate,
+      total_value_usd: totalValueUsd,
+      holdings_json: newHoldings,
+      alloc_json: allocJson,
+    });
+  } catch (err) {
+    console.error("saveHoldingsSnapshot error:", err);
+  }
 }
 
 /**
@@ -118,7 +198,9 @@ export async function POST(req: NextRequest) {
       throw error;
     }
     
-    return NextResponse.json({ success: true, data });
+    await saveHoldingsSnapshot(supabase, executionDate, lines);
+    
+    return NextResponse.json({ success: true, data, snapshotSaved: true });
     
   } catch (error) {
     console.error("POST /api/record error:", error);

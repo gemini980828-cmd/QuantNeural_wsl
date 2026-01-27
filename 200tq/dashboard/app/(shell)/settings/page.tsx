@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { 
   Palette, Eye, EyeOff, Monitor, Moon, Sun, Bell, BellOff, 
-  Database, Shield, AlertTriangle, Check, Send, MessageSquare, RefreshCw, CheckCircle2, XCircle
+  Database, Shield, AlertTriangle, Check, Send, MessageSquare, RefreshCw, CheckCircle2, XCircle, Archive
 } from "lucide-react";
 import { useSettingsStore, type AppSettings } from "@/lib/stores/settings-store";
 
@@ -133,9 +133,11 @@ export default function SettingsPage() {
   const [telegramLoading, setTelegramLoading] = useState(false);
   const [telegramTestResult, setTelegramTestResult] = useState<{ success: boolean; message: string } | null>(null);
   
-  // Telegram event toggles (stored locally for now)
   const [telegramEmergency, setTelegramEmergency] = useState(true);
   const [telegramAction, setTelegramAction] = useState(true);
+  
+  const [backfillLoading, setBackfillLoading] = useState(false);
+  const [backfillResult, setBackfillResult] = useState<{ success: boolean; message: string } | null>(null);
   
   // Check Telegram configuration on mount
   useEffect(() => {
@@ -168,6 +170,24 @@ export default function SettingsPage() {
       setTelegramTestResult({ success: false, message: String(e) });
     } finally {
       setTelegramLoading(false);
+    }
+  };
+
+  const runBackfill = async () => {
+    setBackfillLoading(true);
+    setBackfillResult(null);
+    try {
+      const res = await fetch("/api/admin/backfill-snapshots", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setBackfillResult({ success: true, message: data.message });
+      } else {
+        setBackfillResult({ success: false, message: data.error || "Backfill 실패" });
+      }
+    } catch (e) {
+      setBackfillResult({ success: false, message: String(e) });
+    } finally {
+      setBackfillLoading(false);
     }
   };
 
@@ -439,6 +459,30 @@ export default function SettingsPage() {
         </SettingsRow>
         <SettingsRow label="Import/Export" description="데이터 내보내기 형식">
           <span className="text-xs text-muted bg-neutral-800 px-2 py-1 rounded">CSV</span>
+        </SettingsRow>
+        <SettingsRow label="스냅샷 Backfill" description="기존 거래 기록에서 포트폴리오 스냅샷 재생성">
+          <div className="flex items-center gap-2">
+            {backfillResult && (
+              <span className={`text-xs flex items-center gap-1 ${
+                backfillResult.success ? "text-green-400" : "text-red-400"
+              }`}>
+                {backfillResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                {backfillResult.message}
+              </span>
+            )}
+            <button
+              onClick={runBackfill}
+              disabled={backfillLoading}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-blue-600 hover:bg-blue-500 text-white disabled:bg-neutral-700 disabled:text-neutral-400"
+            >
+              {backfillLoading ? (
+                <RefreshCw size={12} className="animate-spin" />
+              ) : (
+                <Archive size={12} />
+              )}
+              Backfill
+            </button>
+          </div>
         </SettingsRow>
       </SettingsSection>
 

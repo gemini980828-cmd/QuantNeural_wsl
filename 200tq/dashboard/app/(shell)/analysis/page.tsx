@@ -1,13 +1,41 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { TrendingUp, TrendingDown, BarChart3, Activity, Zap, FlaskConical, Info, LineChart, Play, Loader2, Calendar, DollarSign, Layers, LayoutGrid, PieChart, AlertTriangle, ChevronDown, Database } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { TrendingUp, TrendingDown, BarChart3, Activity, Zap, FlaskConical, LineChart, Play, Loader2, Calendar, DollarSign, Layers, LayoutGrid, PieChart, AlertTriangle, ChevronDown, Database, Download, Check, ToggleLeft, ToggleRight } from "lucide-react";
 import { useDataSource } from "../../../lib/stores/settings-store";
+import { EquityCurveChart } from "@/components/analysis/EquityCurveChart";
+import { ReturnsHeatmap } from "@/components/analysis/ReturnsHeatmap";
+import { SingleStrategyPanel } from "@/components/analysis/SingleStrategyPanel";
 
 type Period = "1M" | "3M" | "6M" | "YTD" | "ALL";
-type Strategy = "E03" | "200TQ" | "BOTH";
+type Strategy = "200TQ" | "E00" | "E01" | "E02" | "E03" | "E04" | "E05" | "E06" | "E07" | "E08" | "E09" | "E10";
 
-// Mock KPI data
+interface BacktestApiResult {
+  status: "success" | "error";
+  experiment?: string;
+  params?: {
+    strategy: string;
+    startDate: string;
+    endDate: string;
+    capital: number;
+  };
+  metrics?: {
+    CAGR: number;
+    MDD: number;
+    Sharpe: number;
+    Sortino: number;
+    Calmar: number;
+    Final: number;
+    FinalValue: number;
+    TotalTax: number;
+    TradesCount: number;
+    TradingDays: number;
+  };
+  equity?: Array<{ date: string; value: number }>;
+  elapsed_seconds?: number;
+  message?: string;
+}
+
 function getMockKPIs(period: Period) {
   const data: Record<Period, { cagr: number; mdd: number; volatility: number; sharpe: number }> = {
     "1M": { cagr: 12.5, mdd: -3.2, volatility: 18.4, sharpe: 1.24 },
@@ -19,33 +47,50 @@ function getMockKPIs(period: Period) {
   return data[period];
 }
 
-// Mock Backtest Results Generator
-function runMockBacktest(startDate: string, endDate: string, capital: number, strategy: Strategy) {
-  // Simulate processing delay and return mock results
-  const daysDiff = Math.floor((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24));
-  const years = daysDiff / 365;
-  
-  const baseResults = {
-    E03: { cagr: 38.2 + Math.random() * 10, mdd: -12.5 - Math.random() * 5, sharpe: 1.42 + Math.random() * 0.3, volatility: 24.8 + Math.random() * 5 },
-    "200TQ": { cagr: 32.1 + Math.random() * 8, mdd: -15.2 - Math.random() * 4, sharpe: 1.28 + Math.random() * 0.2, volatility: 22.3 + Math.random() * 4 },
-  };
-  
-  const finalValue = capital * Math.pow(1 + (baseResults.E03.cagr / 100), years);
-  const totalReturn = ((finalValue - capital) / capital) * 100;
-  
-  return {
-    strategy,
-    startDate,
-    endDate,
-    initialCapital: capital,
-    finalValue: Math.round(finalValue),
-    totalReturn: totalReturn.toFixed(1),
-    metrics: strategy === "BOTH" ? baseResults : { [strategy]: baseResults[strategy] },
-    trades: Math.floor(daysDiff / 20), // Approx 1 trade per 20 days
-  };
+const STRATEGY_LABELS: Record<Strategy, string> = {
+  "200TQ": "200TQ Original (MA200)",
+  E00: "E00 Base (CASH)",
+  E01: "E01 SGOV",
+  E02: "E02 Ensemble",
+  E03: "E03 Ensemble+SGOV",
+  E04: "E04 Hysteresis 0.25%",
+  E05: "E05 Hysteresis 0.50%",
+  E06: "E06 Hysteresis 1.00%",
+  E07: "E07 MA200Guard CASH",
+  E08: "E08 MA200Guard SGOV",
+  E09: "E09 BuyConfirm 2d",
+  E10: "E10 BuySellConfirm 2d",
+};
+
+const STRATEGY_COLORS: Record<Strategy, string> = {
+  "200TQ": "#ef4444",
+  E00: "#94a3b8",
+  E01: "#10b981",
+  E02: "#f59e0b",
+  E03: "#3b82f6",
+  E04: "#a855f7",
+  E05: "#ec4899",
+  E06: "#84cc16",
+  E07: "#06b6d4",
+  E08: "#f97316",
+  E09: "#6366f1",
+  E10: "#14b8a6",
+};
+
+async function runBacktest(
+  startDate: string,
+  endDate: string,
+  capital: number,
+  strategy: Strategy
+): Promise<BacktestApiResult> {
+  const res = await fetch("/api/backtest/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ strategy, startDate, endDate, capital }),
+  });
+  return res.json();
 }
 
-// Period Selector
 function PeriodSelector({ selected, onChange }: { selected: Period; onChange: (p: Period) => void }) {
   const periods: Period[] = ["1M", "3M", "6M", "YTD", "ALL"];
   
@@ -68,7 +113,6 @@ function PeriodSelector({ selected, onChange }: { selected: Period; onChange: (p
   );
 }
 
-// KPI Card
 function KPICard({ 
   label, 
   value, 
@@ -96,7 +140,6 @@ function KPICard({
   );
 }
 
-// Backtest Input Controls
 function BacktestControls({
   startDate,
   endDate,
@@ -120,15 +163,13 @@ function BacktestControls({
   onStrategyChange: (v: Strategy) => void;
   onRun: () => void;
 }) {
-  const strategies: { value: Strategy; label: string }[] = [
-    { value: "E03", label: "E03 전략" },
-    { value: "200TQ", label: "200TQ 전략" },
-    { value: "BOTH", label: "둘 다 비교" },
-  ];
+  const strategies = Object.entries(STRATEGY_LABELS).map(([value, label]) => ({
+    value: value as Strategy,
+    label,
+  }));
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-      {/* Start Date */}
       <div className="space-y-1.5">
         <label className="text-xs text-muted flex items-center gap-1.5">
           <Calendar size={12} />
@@ -142,7 +183,6 @@ function BacktestControls({
         />
       </div>
 
-      {/* End Date */}
       <div className="space-y-1.5">
         <label className="text-xs text-muted flex items-center gap-1.5">
           <Calendar size={12} />
@@ -156,7 +196,6 @@ function BacktestControls({
         />
       </div>
 
-      {/* Initial Capital */}
       <div className="space-y-1.5">
         <label className="text-xs text-muted flex items-center gap-1.5">
           <DollarSign size={12} />
@@ -172,7 +211,6 @@ function BacktestControls({
         />
       </div>
 
-      {/* Strategy Selector */}
       <div className="space-y-1.5">
         <label className="text-xs text-muted flex items-center gap-1.5">
           <Layers size={12} />
@@ -189,7 +227,6 @@ function BacktestControls({
         </select>
       </div>
 
-      {/* Run Button */}
       <div className="space-y-1.5">
         <label className="text-xs text-muted invisible">실행</label>
         <button
@@ -214,73 +251,247 @@ function BacktestControls({
   );
 }
 
-// Backtest Results Display
-function BacktestResults({ results }: { results: ReturnType<typeof runMockBacktest> | null }) {
-  if (!results) return null;
+function BacktestResults({ results }: { results: BacktestApiResult | null }) {
+  if (!results || results.status !== "success" || !results.metrics) return null;
 
-  const metrics = results.strategy === "BOTH" 
-    ? Object.entries(results.metrics as Record<string, { cagr: number; mdd: number; sharpe: number; volatility: number }>)
-    : Object.entries(results.metrics);
+  const { metrics, params, equity } = results;
+  const totalReturn = ((metrics.Final - 1) * 100).toFixed(1);
 
-    return (
+  return (
     <div className="space-y-4 mt-6">
-      {/* Research Warning Banner */}
       <div className="flex items-center gap-2 px-4 py-2 bg-amber-950/30 border border-amber-900/50 rounded-lg text-amber-400 text-xs">
         <AlertTriangle size={14} />
         <span className="font-bold">오늘 Verdict와 무관</span>
         <span className="text-amber-500/80">— 이 결과는 연구/검증용이며, 오늘 매매 결정에 사용하지 마세요</span>
       </div>
       
-      {/* Summary Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-neutral-900/50 rounded-xl border border-neutral-800">
         <div>
           <div className="text-xs text-muted">초기 자본</div>
-          <div className="text-lg font-bold font-mono text-fg">{(results.initialCapital / 10000).toLocaleString()}만원</div>
+          <div className="text-lg font-bold font-mono text-fg">{((params?.capital ?? 0) / 10000).toLocaleString()}만원</div>
         </div>
         <div>
           <div className="text-xs text-muted">최종 자산</div>
-          <div className="text-lg font-bold font-mono text-positive">{(results.finalValue / 10000).toLocaleString()}만원</div>
+          <div className="text-lg font-bold font-mono text-positive">{(metrics.FinalValue / 10000).toLocaleString()}만원</div>
         </div>
         <div>
           <div className="text-xs text-muted">총 수익률</div>
-          <div className="text-lg font-bold font-mono text-positive">+{results.totalReturn}%</div>
+          <div className={`text-lg font-bold font-mono ${Number(totalReturn) >= 0 ? "text-positive" : "text-negative"}`}>
+            {Number(totalReturn) >= 0 ? "+" : ""}{totalReturn}%
+          </div>
         </div>
         <div>
           <div className="text-xs text-muted">총 매매 횟수</div>
-          <div className="text-lg font-bold font-mono text-fg">{results.trades}회</div>
+          <div className="text-lg font-bold font-mono text-fg">{metrics.TradesCount}회</div>
         </div>
       </div>
 
-      {/* Equity Curve Placeholder */}
-      <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
-        <LineChart size={32} className="text-blue-400 opacity-70" />
-        <span className="text-sm">Equity Curve 차트</span>
-        <p className="text-xs text-neutral-600 text-center">
-          {results.startDate} ~ {results.endDate} 기간의 자산 곡선
-        </p>
-      </div>
+      {equity && equity.length > 0 && (
+        <div className="rounded-xl border border-neutral-800 bg-surface p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <LineChart size={16} className="text-blue-400" />
+            <span className="text-sm font-bold text-fg">Equity Curve</span>
+            <span className="text-xs text-muted ml-auto">{params?.startDate} ~ {params?.endDate}</span>
+          </div>
+          <EquityCurveChart
+            strategies={[{
+              name: results.experiment || "Strategy",
+              color: "#3b82f6",
+              data: equity,
+            }]}
+            height={300}
+          />
+        </div>
+      )}
 
-      {/* Performance Metrics Table */}
       <div className="rounded-xl border border-neutral-800 bg-surface overflow-hidden">
-        <div className="grid grid-cols-5 gap-4 p-4 border-b border-neutral-800 bg-neutral-900/50">
+        <div className="grid grid-cols-6 gap-4 p-4 border-b border-neutral-800 bg-neutral-900/50">
           <div className="text-xs text-muted uppercase tracking-wider">전략</div>
           <div className="text-xs text-muted uppercase tracking-wider text-right">CAGR</div>
           <div className="text-xs text-muted uppercase tracking-wider text-right">MDD</div>
           <div className="text-xs text-muted uppercase tracking-wider text-right">Sharpe</div>
-          <div className="text-xs text-muted uppercase tracking-wider text-right">변동성</div>
+          <div className="text-xs text-muted uppercase tracking-wider text-right">Sortino</div>
+          <div className="text-xs text-muted uppercase tracking-wider text-right">Calmar</div>
         </div>
         <div className="divide-y divide-neutral-800">
-          {metrics.map(([name, data]) => (
-            <div key={name} className="grid grid-cols-5 gap-4 p-4 hover:bg-neutral-800/20 transition-colors">
-              <div className="text-sm font-bold text-fg">{name}</div>
-              <div className="text-sm font-mono text-positive text-right">+{data.cagr.toFixed(1)}%</div>
-              <div className="text-sm font-mono text-negative text-right">{data.mdd.toFixed(1)}%</div>
-              <div className="text-sm font-mono text-fg text-right">{data.sharpe.toFixed(2)}</div>
-              <div className="text-sm font-mono text-muted text-right">{data.volatility.toFixed(1)}%</div>
+          <div className="grid grid-cols-6 gap-4 p-4 hover:bg-neutral-800/20 transition-colors">
+            <div className="text-sm font-bold text-fg">{results.experiment}</div>
+            <div className={`text-sm font-mono text-right ${metrics.CAGR >= 0 ? "text-positive" : "text-negative"}`}>
+              {metrics.CAGR >= 0 ? "+" : ""}{metrics.CAGR.toFixed(1)}%
             </div>
-          ))}
+            <div className="text-sm font-mono text-negative text-right">{metrics.MDD.toFixed(1)}%</div>
+            <div className="text-sm font-mono text-fg text-right">{metrics.Sharpe.toFixed(2)}</div>
+            <div className="text-sm font-mono text-fg text-right">{metrics.Sortino.toFixed(2)}</div>
+            <div className="text-sm font-mono text-fg text-right">{metrics.Calmar.toFixed(2)}</div>
+          </div>
         </div>
       </div>
+
+      <div className="grid grid-cols-3 gap-4 text-xs text-muted">
+        <div className="bg-neutral-900/30 rounded-lg p-3 border border-neutral-800">
+          <span className="text-neutral-500">거래일수:</span> {metrics.TradingDays}일
+        </div>
+        <div className="bg-neutral-900/30 rounded-lg p-3 border border-neutral-800">
+          <span className="text-neutral-500">세금 (22%):</span> {(metrics.TotalTax / 10000).toLocaleString()}만원
+        </div>
+        <div className="bg-neutral-900/30 rounded-lg p-3 border border-neutral-800">
+          <span className="text-neutral-500">실행시간:</span> {results.elapsed_seconds?.toFixed(1)}초
+        </div>
+      </div>
+
+      <div className="flex gap-2 mt-4">
+        <button
+          onClick={() => {
+            const csvRows = ["date,value"];
+            equity?.forEach((p) => csvRows.push(`${p.date},${p.value}`));
+            const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `backtest_${results.experiment}_${params?.startDate}_${params?.endDate}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+          className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg text-xs font-medium transition-colors"
+        >
+          <Download size={14} />
+          Export CSV
+        </button>
+        <button
+          onClick={() => {
+            const exportData = { experiment: results.experiment, params, metrics, equity };
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `backtest_${results.experiment}_${params?.startDate}_${params?.endDate}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+          className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg text-xs font-medium transition-colors"
+        >
+          <Download size={14} />
+          Export JSON
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function StrategyCompareSection({
+  compareStrategies,
+  toggleCompareStrategy,
+  compareResults,
+  compareRunning,
+  compareError,
+  btStartDate,
+  btEndDate,
+  setBtStartDate,
+  setBtEndDate,
+  handleCompareStrategies,
+}: {
+  compareStrategies: Strategy[];
+  toggleCompareStrategy: (s: Strategy) => void;
+  compareResults: Record<Strategy, BacktestApiResult>;
+  compareRunning: boolean;
+  compareError: string | null;
+  btStartDate: string;
+  btEndDate: string;
+  setBtStartDate: (v: string) => void;
+  setBtEndDate: (v: string) => void;
+  handleCompareStrategies: () => void;
+}) {
+  return (
+    <div className="space-y-4 mt-6 pt-6 border-t border-neutral-800">
+      <h3 className="text-sm font-bold text-fg flex items-center gap-2">
+        <Layers size={14} className="text-neutral-400" />
+        복수 전략 비교
+      </h3>
+      <div className="flex flex-wrap gap-2">
+        {(Object.keys(STRATEGY_LABELS) as Strategy[]).map((s) => (
+          <button
+            key={s}
+            onClick={() => toggleCompareStrategy(s)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors flex items-center gap-1.5 ${
+              compareStrategies.includes(s)
+                ? "bg-blue-600/20 border-blue-500 text-blue-400"
+                : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600"
+            }`}
+          >
+            {compareStrategies.includes(s) && <Check size={12} />}
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: STRATEGY_COLORS[s] }} />
+            {s}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-4">
+        <div className="grid grid-cols-2 gap-4 flex-1">
+          <input
+            type="date"
+            value={btStartDate}
+            onChange={(e) => setBtStartDate(e.target.value)}
+            className="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+          />
+          <input
+            type="date"
+            value={btEndDate}
+            onChange={(e) => setBtEndDate(e.target.value)}
+            className="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+          />
+        </div>
+        <button
+          onClick={handleCompareStrategies}
+          disabled={compareRunning || compareStrategies.length === 0}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-700 text-white font-bold rounded-lg text-sm flex items-center gap-2"
+        >
+          {compareRunning ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
+          Compare ({compareStrategies.length})
+        </button>
+      </div>
+      {compareError && (
+        <div className="text-red-400 text-xs">{compareError}</div>
+      )}
+      {Object.keys(compareResults).length > 0 && (
+        <>
+          <div className="rounded-xl border border-neutral-800 overflow-hidden">
+            <div className="grid grid-cols-7 gap-2 p-3 border-b border-neutral-800 bg-neutral-900/50 text-xs text-muted uppercase">
+              <div>전략</div>
+              <div className="text-right">CAGR</div>
+              <div className="text-right">MDD</div>
+              <div className="text-right">Sharpe</div>
+              <div className="text-right">Sortino</div>
+              <div className="text-right">Calmar</div>
+              <div className="text-right">Final</div>
+            </div>
+            {Object.entries(compareResults).map(([s, r]) => r.metrics && (
+              <div key={s} className="grid grid-cols-7 gap-2 p-3 border-b border-neutral-800/50 text-sm">
+                <div className="font-bold flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: STRATEGY_COLORS[s as Strategy] }} />
+                  {s}
+                </div>
+                <div className={`text-right font-mono ${r.metrics.CAGR >= 0 ? "text-positive" : "text-negative"}`}>
+                  {r.metrics.CAGR >= 0 ? "+" : ""}{r.metrics.CAGR.toFixed(1)}%
+                </div>
+                <div className="text-right font-mono text-negative">{r.metrics.MDD.toFixed(1)}%</div>
+                <div className="text-right font-mono">{r.metrics.Sharpe.toFixed(2)}</div>
+                <div className="text-right font-mono">{r.metrics.Sortino.toFixed(2)}</div>
+                <div className="text-right font-mono">{r.metrics.Calmar.toFixed(2)}</div>
+                <div className="text-right font-mono">{r.metrics.Final.toFixed(2)}x</div>
+              </div>
+            ))}
+          </div>
+          <EquityCurveChart
+            strategies={Object.entries(compareResults)
+              .filter(([, r]) => r.equity && r.equity.length > 0)
+              .map(([s, r]) => ({
+                name: s,
+                color: STRATEGY_COLORS[s as Strategy],
+                data: r.equity || [],
+              }))}
+            height={400}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -290,31 +501,108 @@ export default function AnalysisPage() {
   const [period, setPeriod] = useState<Period>("YTD");
   const kpis = useMemo(() => dataSource === "MOCK" ? getMockKPIs(period) : null, [period, dataSource]);
 
-  // Backtest state
-  const [btStartDate, setBtStartDate] = useState("2024-01-01");
+  const [btStartDate, setBtStartDate] = useState("2020-01-01");
   const [btEndDate, setBtEndDate] = useState("2024-12-31");
-  const [btCapital, setBtCapital] = useState(100000000); // 1억원
+  const [btCapital, setBtCapital] = useState(100000000);
   const [btStrategy, setBtStrategy] = useState<Strategy>("E03");
   const [btIsRunning, setBtIsRunning] = useState(false);
-    const [btResults, setBtResults] = useState<ReturnType<typeof runMockBacktest> | null>(null);
+  const [btResults, setBtResults] = useState<BacktestApiResult | null>(null);
+  const [btError, setBtError] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  const [compareStrategies, setCompareStrategies] = useState<Strategy[]>(["200TQ", "E03"]);
+  const [compareResults, setCompareResults] = useState<Record<Strategy, BacktestApiResult>>({} as Record<Strategy, BacktestApiResult>);
+  const [compareRunning, setCompareRunning] = useState(false);
+  const [compareError, setCompareError] = useState<string | null>(null);
+
+  const [heatmapStrategy, setHeatmapStrategy] = useState<Strategy>("E03");
+  const [heatmapEquity, setHeatmapEquity] = useState<Array<{ date: string; value: number }> | null>(null);
+  const [heatmapLoading, setHeatmapLoading] = useState(false);
+  const [realEquity, setRealEquity] = useState<Array<{ date: string; value: number }> | null>(null);
+  const [realEquityLoading, setRealEquityLoading] = useState(false);
+
+  const [compareMode, setCompareMode] = useState(false);
+
+  useEffect(() => {
+    if (dataSource === "REAL") {
+      setRealEquityLoading(true);
+      fetch("/api/portfolio/equity-history")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.equity) {
+            setRealEquity(data.equity);
+          }
+        })
+        .catch((err) => console.error("Failed to fetch real equity:", err))
+        .finally(() => setRealEquityLoading(false));
+    }
+  }, [dataSource]);
 
   const handleRunBacktest = async () => {
     setShowConfirmDialog(false);
     setBtIsRunning(true);
     setBtResults(null);
+    setBtError(null);
     
-    // Simulate async processing
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    const results = runMockBacktest(btStartDate, btEndDate, btCapital, btStrategy);
-    setBtResults(results);
-    setBtIsRunning(false);
+    try {
+      const results = await runBacktest(btStartDate, btEndDate, btCapital, btStrategy);
+      if (results.status === "error") {
+        setBtError(results.message ?? "Unknown error");
+      } else {
+        setBtResults(results);
+      }
+    } catch (err) {
+      setBtError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBtIsRunning(false);
+    }
+  };
+
+  const handleCompareStrategies = async () => {
+    if (compareStrategies.length === 0) return;
+    setCompareRunning(true);
+    setCompareError(null);
+    setCompareResults({} as Record<Strategy, BacktestApiResult>);
+
+    try {
+      const promises = compareStrategies.map((s) => runBacktest(btStartDate, btEndDate, btCapital, s));
+      const results = await Promise.all(promises);
+      const newResults: Record<Strategy, BacktestApiResult> = {} as Record<Strategy, BacktestApiResult>;
+      results.forEach((r, i) => {
+        if (r.status === "success") {
+          newResults[compareStrategies[i]] = r;
+        }
+      });
+      setCompareResults(newResults);
+    } catch (err) {
+      setCompareError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setCompareRunning(false);
+    }
+  };
+
+  const toggleCompareStrategy = (s: Strategy) => {
+    setCompareStrategies((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : prev.length < 5 ? [...prev, s] : prev
+    );
+  };
+
+  const handleRunHeatmap = async () => {
+    setHeatmapLoading(true);
+    try {
+      const result = await runBacktest(btStartDate, btEndDate, btCapital, heatmapStrategy);
+      if (result.status === "success" && result.equity) {
+        setHeatmapEquity(result.equity);
+      }
+    } catch (err) {
+      console.error("Heatmap generation failed:", err);
+    } finally {
+      setHeatmapLoading(false);
+    }
   };
 
   return (
     <div className="space-y-8 pb-20">
-      {/* Page Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-fg flex items-center gap-3">
           분석
@@ -334,7 +622,7 @@ export default function AnalysisPage() {
 
       {/* 1. Overview - KPI Cards */}
       <section>
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
           <LayoutGrid size={18} className="text-neutral-400" />
           성과 요약
           <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Overview</span>
@@ -378,61 +666,97 @@ export default function AnalysisPage() {
         )}
       </section>
 
-      {/* 2. Strategies Comparison */}
+      {/* 2. Returns Heatmap */}
       <section>
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <Layers size={18} className="text-neutral-400" />
-          전략 비교
-          <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Strategies</span>
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <Calendar size={18} className="text-neutral-400" />
+          수익률 히트맵
+          <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Returns</span>
+          {dataSource === "REAL" ? (
+            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-900/50 ml-2">
+              REAL
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold text-amber-400 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-900/50 ml-2">
+              SIMULATED
+            </span>
+          )}
         </h2>
-        {kpis ? (
-          <>
-            <div className="rounded-xl border border-neutral-800 bg-surface overflow-hidden">
-              {/* Comparison Header */}
-              <div className="grid grid-cols-3 gap-4 p-5 border-b border-neutral-800 bg-neutral-900/50">
-                <div className="text-xs text-muted uppercase tracking-wider">지표</div>
-                <div className="text-xs text-muted uppercase tracking-wider text-center">E03 전략</div>
-                <div className="text-xs text-muted uppercase tracking-wider text-center">200TQ 전략</div>
+        <div className="rounded-xl border border-neutral-800 bg-surface p-6 space-y-4">
+          {dataSource === "REAL" ? (
+            <>
+              {realEquity && realEquity.length > 0 ? (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-emerald-950/20 border border-emerald-900/30 rounded-lg text-emerald-400 text-xs">
+                    <TrendingUp size={12} />
+                    <span>실제 운용 성과입니다. 거래 기록 기반으로 계산됩니다.</span>
+                  </div>
+                  <ReturnsHeatmap
+                    equity={realEquity}
+                    isMock={false}
+                    isLoading={realEquityLoading}
+                  />
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-muted gap-2">
+                  <Database size={24} className="opacity-50" />
+                  <span className="text-sm">아직 포트폴리오 스냅샷이 없습니다</span>
+                  <span className="text-xs text-neutral-600">Command에서 거래 기록을 저장하면 성과가 추적됩니다</span>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 px-3 py-2 bg-amber-950/20 border border-amber-900/30 rounded-lg text-amber-400 text-xs">
+                <AlertTriangle size={12} />
+                <span>백테스트 시뮬레이션입니다. REAL 모드로 전환하면 실제 성과가 표시됩니다.</span>
               </div>
-              
-              {/* Comparison Rows */}
-              <div className="divide-y divide-neutral-800">
-                <div className="grid grid-cols-3 gap-4 p-5 hover:bg-neutral-800/20">
-                  <div className="text-sm text-muted">수익률</div>
-                  <div className="text-sm font-mono text-positive text-center">+{kpis.cagr}%</div>
-                  <div className="text-sm font-mono text-positive text-center">+{(kpis.cagr * 0.85).toFixed(1)}%</div>
+              <div className="flex items-center gap-4">
+                <select
+                  value={heatmapStrategy}
+                  onChange={(e) => setHeatmapStrategy(e.target.value as Strategy)}
+                  className="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-fg"
+                >
+                  {Object.entries(STRATEGY_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+                <div className="grid grid-cols-2 gap-2 flex-1 max-w-xs">
+                  <input
+                    type="date"
+                    value={btStartDate}
+                    onChange={(e) => setBtStartDate(e.target.value)}
+                    className="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+                  />
+                  <input
+                    type="date"
+                    value={btEndDate}
+                    onChange={(e) => setBtEndDate(e.target.value)}
+                    className="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+                  />
                 </div>
-                <div className="grid grid-cols-3 gap-4 p-5 hover:bg-neutral-800/20">
-                  <div className="text-sm text-muted">MDD</div>
-                  <div className="text-sm font-mono text-negative text-center">{kpis.mdd}%</div>
-                  <div className="text-sm font-mono text-negative text-center">{(kpis.mdd * 1.2).toFixed(1)}%</div>
-                </div>
-                <div className="grid grid-cols-3 gap-4 p-5 hover:bg-neutral-800/20">
-                  <div className="text-sm text-muted">샤프</div>
-                  <div className="text-sm font-mono text-fg text-center">{kpis.sharpe}</div>
-                  <div className="text-sm font-mono text-fg text-center">{(kpis.sharpe * 0.9).toFixed(2)}</div>
-                </div>
+                <button
+                  onClick={handleRunHeatmap}
+                  disabled={heatmapLoading}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-700 text-white font-bold rounded-lg text-sm flex items-center gap-2"
+                >
+                  {heatmapLoading ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
+                  Generate
+                </button>
               </div>
-            </div>
-            
-            {/* Equity Curve Placeholder */}
-            <div className="mt-4 rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
-              <LineChart size={24} className="opacity-50" />
-              <span className="text-sm">Equity Curve 차트 준비 중...</span>
-            </div>
-          </>
-        ) : (
-          <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
-            <Layers size={24} className="opacity-50" />
-            <span className="text-sm">전략 비교 데이터가 없습니다</span>
-            <span className="text-xs text-neutral-600">거래 기록이 쌓이면 비교 분석이 가능합니다</span>
-          </div>
-        )}
+              <ReturnsHeatmap
+                equity={heatmapEquity}
+                isMock={true}
+                isLoading={heatmapLoading}
+              />
+            </>
+          )}
+        </div>
       </section>
 
       {/* 3. Attribution */}
       <section>
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
           <PieChart size={18} className="text-neutral-400" />
           성과 분해
           <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Attribution</span>
@@ -466,7 +790,6 @@ export default function AnalysisPage() {
               </div>
             </div>
             
-            {/* Event Analysis Placeholder */}
             <div className="mt-4 rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
               <BarChart3 size={24} className="opacity-50" />
               <span className="text-sm">이벤트 기반 분석 (Down/Focus/Overheat) 준비 중...</span>
@@ -481,22 +804,21 @@ export default function AnalysisPage() {
         )}
       </section>
 
-            {/* 4. Intel Lab (Backtest) - Collapsible */}
-      <details className="group">
+      {/* 4. Intel Lab (Backtest) - Collapsible */}
+      <details className="group" open>
         <summary className="list-none cursor-pointer">
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
             <FlaskConical size={18} className="text-neutral-400" />
             Intel Lab
             <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Backtest</span>
             <span className="text-[10px] font-bold text-amber-400 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-900/50 ml-2">
-              NOT FOR TODAY'S EXECUTION
+              NOT FOR TODAY&apos;S EXECUTION
             </span>
             <ChevronDown size={16} className="text-neutral-500 ml-auto group-open:rotate-180 transition-transform" />
           </h2>
         </summary>
         
-        <div className="rounded-xl border border-neutral-800 bg-surface p-6">
-          {/* Confirmation Dialog */}
+        <div className="rounded-xl border border-neutral-800 bg-surface p-6 space-y-6">
           {showConfirmDialog && (
             <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
               <div className="bg-neutral-900 border border-neutral-700 rounded-xl p-6 max-w-md w-full shadow-2xl">
@@ -521,7 +843,7 @@ export default function AnalysisPage() {
                     취소
                   </button>
                   <button
-                    onClick={handleRunBacktest}
+                    onClick={compareMode ? handleCompareStrategies : handleRunBacktest}
                     className="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-medium transition-colors"
                   >
                     계속 실행
@@ -530,33 +852,198 @@ export default function AnalysisPage() {
               </div>
             </div>
           )}
-          
-          {/* Backtest Controls */}
-          <BacktestControls
-            startDate={btStartDate}
-            endDate={btEndDate}
-            capital={btCapital}
-            strategy={btStrategy}
-            isRunning={btIsRunning}
-            onStartDateChange={setBtStartDate}
-            onEndDateChange={setBtEndDate}
-            onCapitalChange={setBtCapital}
-            onStrategyChange={setBtStrategy}
-            onRun={() => setShowConfirmDialog(true)}
-          />
 
-          {/* Results */}
-          <BacktestResults results={btResults} />
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setCompareMode(!compareMode)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                compareMode
+                  ? "bg-blue-600/20 border border-blue-500 text-blue-400"
+                  : "bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-600"
+              }`}
+            >
+              {compareMode ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+              Compare Mode
+              {compareMode && <span className="text-xs">({compareStrategies.length} selected)</span>}
+            </button>
+          </div>
 
-          {/* Empty State */}
-          {!btResults && !btIsRunning && (
-            <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
-              <FlaskConical size={24} className="opacity-50" />
-              <span className="text-sm">파라미터를 설정하고 Run Backtest를 클릭하세요</span>
-              <p className="text-xs text-neutral-600 mt-2 text-center max-w-md">
-                이 섹션은 전략 검증 및 백테스트용입니다. 
-                오늘의 매매 결정에는 Command 페이지를 사용하세요.
-              </p>
+          {compareMode ? (
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(STRATEGY_LABELS) as Strategy[]).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => toggleCompareStrategy(s)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors flex items-center gap-1.5 ${
+                      compareStrategies.includes(s)
+                        ? "bg-blue-600/20 border-blue-500 text-blue-400"
+                        : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600"
+                    }`}
+                  >
+                    {compareStrategies.includes(s) && <Check size={12} />}
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: STRATEGY_COLORS[s] }} />
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted flex items-center gap-1.5">
+                    <Calendar size={12} />
+                    시작일
+                  </label>
+                  <input
+                    type="date"
+                    value={btStartDate}
+                    onChange={(e) => setBtStartDate(e.target.value)}
+                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted flex items-center gap-1.5">
+                    <Calendar size={12} />
+                    종료일
+                  </label>
+                  <input
+                    type="date"
+                    value={btEndDate}
+                    onChange={(e) => setBtEndDate(e.target.value)}
+                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted flex items-center gap-1.5">
+                    <DollarSign size={12} />
+                    초기 자본 (만원)
+                  </label>
+                  <input
+                    type="number"
+                    value={btCapital / 10000}
+                    onChange={(e) => setBtCapital(Number(e.target.value) * 10000)}
+                    min={100}
+                    step={100}
+                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted invisible">실행</label>
+                  <button
+                    onClick={() => setShowConfirmDialog(true)}
+                    disabled={compareRunning || compareStrategies.length === 0}
+                    className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white font-bold rounded-lg px-4 py-2 text-sm flex items-center justify-center gap-2 transition-colors"
+                  >
+                    {compareRunning ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        실행 중...
+                      </>
+                    ) : (
+                      <>
+                        <Play size={16} />
+                        Compare ({compareStrategies.length})
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+              {compareError && (
+                <div className="text-red-400 text-xs">{compareError}</div>
+              )}
+              {Object.keys(compareResults).length > 0 && (
+                <>
+                  <div className="rounded-xl border border-neutral-800 overflow-hidden">
+                    <div className="grid grid-cols-7 gap-2 p-3 border-b border-neutral-800 bg-neutral-900/50 text-xs text-muted uppercase">
+                      <div>전략</div>
+                      <div className="text-right">CAGR</div>
+                      <div className="text-right">MDD</div>
+                      <div className="text-right">Sharpe</div>
+                      <div className="text-right">Sortino</div>
+                      <div className="text-right">Calmar</div>
+                      <div className="text-right">Final</div>
+                    </div>
+                    {Object.entries(compareResults).map(([s, r]) => r.metrics && (
+                      <div key={s} className="grid grid-cols-7 gap-2 p-3 border-b border-neutral-800/50 text-sm">
+                        <div className="font-bold flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: STRATEGY_COLORS[s as Strategy] }} />
+                          {s}
+                        </div>
+                        <div className={`text-right font-mono ${r.metrics.CAGR >= 0 ? "text-positive" : "text-negative"}`}>
+                          {r.metrics.CAGR >= 0 ? "+" : ""}{r.metrics.CAGR.toFixed(1)}%
+                        </div>
+                        <div className="text-right font-mono text-negative">{r.metrics.MDD.toFixed(1)}%</div>
+                        <div className="text-right font-mono">{r.metrics.Sharpe.toFixed(2)}</div>
+                        <div className="text-right font-mono">{r.metrics.Sortino.toFixed(2)}</div>
+                        <div className="text-right font-mono">{r.metrics.Calmar.toFixed(2)}</div>
+                        <div className="text-right font-mono">{r.metrics.Final.toFixed(2)}x</div>
+                      </div>
+                    ))}
+                  </div>
+                  <EquityCurveChart
+                    strategies={Object.entries(compareResults)
+                      .filter(([, r]) => r.equity && r.equity.length > 0)
+                      .map(([s, r]) => ({
+                        name: s,
+                        color: STRATEGY_COLORS[s as Strategy],
+                        data: r.equity || [],
+                      }))}
+                    height={400}
+                  />
+                </>
+              )}
+              {Object.keys(compareResults).length === 0 && !compareRunning && (
+                <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
+                  <Layers size={24} className="opacity-50" />
+                  <span className="text-sm">전략을 선택하고 Compare를 클릭하세요</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <BacktestControls
+                startDate={btStartDate}
+                endDate={btEndDate}
+                capital={btCapital}
+                strategy={btStrategy}
+                isRunning={btIsRunning}
+                onStartDateChange={setBtStartDate}
+                onEndDateChange={setBtEndDate}
+                onCapitalChange={setBtCapital}
+                onStrategyChange={setBtStrategy}
+                onRun={() => setShowConfirmDialog(true)}
+              />
+
+              {btError && (
+                <div className="rounded-xl border border-red-900/50 bg-red-950/20 p-4 flex items-center gap-3 text-red-400">
+                  <AlertTriangle size={20} />
+                  <div>
+                    <div className="font-bold text-sm">백테스트 실행 실패</div>
+                    <div className="text-xs text-red-400/80">{btError}</div>
+                  </div>
+                </div>
+              )}
+
+              {btResults && btResults.status === "success" && btResults.metrics && btResults.equity && (
+                <SingleStrategyPanel
+                  strategyName={btResults.experiment || btStrategy}
+                  strategyColor={STRATEGY_COLORS[btStrategy]}
+                  equity={btResults.equity}
+                  metrics={btResults.metrics}
+                  startDate={btStartDate}
+                  endDate={btEndDate}
+                />
+              )}
+
+              {!btResults && !btIsRunning && !btError && (
+                <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
+                  <FlaskConical size={24} className="opacity-50" />
+                  <span className="text-sm">파라미터를 설정하고 Run Backtest를 클릭하세요</span>
+                  <p className="text-xs text-neutral-600 mt-2 text-center max-w-md">
+                    이 섹션은 전략 검증 및 백테스트용입니다. 
+                    오늘의 매매 결정에는 Command 페이지를 사용하세요.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -564,4 +1051,3 @@ export default function AnalysisPage() {
     </div>
   );
 }
-
