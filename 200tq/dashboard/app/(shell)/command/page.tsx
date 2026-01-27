@@ -14,7 +14,7 @@ import ZoneBSignalCore from "../../../components/e03/ZoneBSignalCore";
 import ZoneCOpsConsole from "../../../components/e03/ZoneCOpsConsole";
 import ZoneDIntelLab from "../../../components/e03/ZoneDIntelLab";
 import PortfolioSummaryStrip from "../../../components/portfolio/PortfolioSummaryStrip";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw, Wallet } from "lucide-react";
 
 export default function CommandPage({
   searchParams,
@@ -37,6 +37,8 @@ export default function CommandPage({
   const [selectedPeriod, setSelectedPeriod] = useState<Period>("1Y");
   const [startCapital, setStartCapital] = useState(10000000);
   const [unresolvedAlerts, setUnresolvedAlerts] = useState(0);
+  
+  const [portfolioState, setPortfolioState] = useState<{ tqqq: number; sgov: number } | null>(null);
   
   // Custom date range for backtest
   const getDefaultDateRange = (): DateRange => {
@@ -119,6 +121,19 @@ export default function CommandPage({
         }
       } catch (e) {
         console.warn("Failed to fetch notification counts", e);
+      }
+      
+      try {
+        const portfolioRes = await fetch("/api/portfolio/state");
+        const portfolioData = await portfolioRes.json();
+        if (portfolioData.state) {
+          setPortfolioState({
+            tqqq: portfolioData.state.tqqq_shares || 0,
+            sgov: portfolioData.state.sgov_shares || 0,
+          });
+        }
+      } catch (e) {
+        console.warn("Failed to fetch portfolio state", e);
       }
     } catch (e) {
       setError(String(e instanceof Error ? e.message : e));
@@ -247,10 +262,16 @@ export default function CommandPage({
     <div className="space-y-6 pb-20">
       {/* REAL mode indicator + STALE warning */}
       {dataSource === "REAL" && (
-        <div className="flex items-center gap-2 text-xs mb-4">
+        <div className="flex items-center gap-2 text-xs mb-4 flex-wrap">
           <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full font-medium">
             REAL DATA
           </span>
+          {portfolioState && (
+            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full font-medium flex items-center gap-1">
+              <Wallet className="w-3 h-3" />
+              TQQQ {portfolioState.tqqq}주 / SGOV {portfolioState.sgov}주
+            </span>
+          )}
           {vmWithRecord.dataState === "STALE" && (
             <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded-full font-medium flex items-center gap-1">
               <AlertTriangle className="w-3 h-3" />
