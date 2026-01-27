@@ -66,3 +66,9 @@ models/
 # Next.js build outputs
 .next/
 out/
+
+# vibe-kit
+.vibe/db/
+.vibe/reports/
+.vibe/locks/
+.vibe/context/LATEST_CONTEXT.md

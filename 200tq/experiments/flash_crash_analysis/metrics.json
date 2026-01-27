@@ -1,0 +1,26 @@
+{
+  "baseline": {
+    "name": "E03_Baseline",
+    "use_flash_crash": false,
+    "Final": 92.83310294215553,
+    "CAGR": 0.3307282297269021,
+    "MDD": -0.5441707755213704,
+    "Sharpe": 0.8593179317481562,
+    "TotalTax": 9.64198940041965,
+    "NumTrades": 52,
+    "FlashCrashTriggers": 0
+  },
+  "flash_crash": {
+    "name": "E03_FlashCrash",
+    "use_flash_crash": true,
+    "Final": 92.83310294215553,
+    "CAGR": 0.3307282297269021,
+    "MDD": -0.5441707755213704,
+    "Sharpe": 0.8593179317481562,
+    "TotalTax": 9.64198940041965,
+    "NumTrades": 52,
+    "FlashCrashTriggers": 3
+  },
+  "delta_cagr_pct": 0.0,
+  "delta_mdd_pct": 0.0
+}

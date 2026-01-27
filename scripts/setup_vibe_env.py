@@ -1,371 +1,234 @@
-#!/usr/bin/env python
-"""Setup the agent-friendly development environment (.vibe).
-
-Design goals:
-- Safe-by-default (no mass code changes unless explicitly requested elsewhere).
-- Windows compatible.
-- No external dependencies besides those in .vibe/brain/requirements.txt.
-
-Usage:
-  python scripts/setup_vibe_env.py --project-name MyProject
-
-Optional:
-  --update-package-json   Add a safe `typecheck` npm script if missing (OFF by default)
-"""
-
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import subprocess
 import sys
-import time
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Tuple
 
-DEFAULT_EXCLUDE_DIRS = [
-    "node_modules",
-    ".git",
-    ".vibe",
-    "dist",
-    "build",
-    "out",
-    "coverage",
-]
-DEFAULT_INCLUDE_GLOBS = ["**/*.js"]
 
-JSCONFIG_TEMPLATE = {
-    "compilerOptions": {"checkJs": True, "target": "ESNext"},
-    "exclude": ["node_modules", ".vibe", "dist", "build", "out"],
-}
-
-TSCONFIG_CHECK_TEMPLATE = {
-    "compilerOptions": {
-        "allowJs": True,
-        "checkJs": True,
-        "noEmit": True,
-        "target": "ESNext",
-        "module": "ESNext",
-        "moduleResolution": "Node",
-        "skipLibCheck": True,
-        "strict": False,
-    },
-    "exclude": ["node_modules", ".vibe", "dist", "build", "out"],
-}
-
-CONFIG_TEMPLATE = {
+DEFAULT_CONFIG = {
     "project_name": "CHANGE_ME",
     "root": ".",
-    "exclude_dirs": DEFAULT_EXCLUDE_DIRS,
-    "include_globs": DEFAULT_INCLUDE_GLOBS,
-    "critical_tags": ["@critical"],
+    "exclude_dirs": [
+        "node_modules",
+        "vendor",
+        "third_party",
+        "external",
+        "extern",
+        "deps",
+        ".git",
+        ".vibe",
+        ".venv",
+        "venv",
+        ".tox",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        ".cache",
+        ".idea",
+        "dist",
+        "build",
+        "out",
+        "coverage",
+        "bin",
+        "obj",
+        "artifacts",
+        "target",
+        ".gradle",
+        ".dart_tool",
+        ".next",
+        ".nuxt",
+        ".svelte-kit",
+        ".turbo",
+        ".tmp",
+        "__pycache__",
+    ],
+    "include_globs": [
+        "**/*.cs",
+        "**/*.xaml",
+        "**/*.fs",
+        "**/*.vb",
+        "**/*.py",
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.go",
+        "**/*.rs",
+        "**/*.java",
+        "**/*.kt",
+        "**/*.c",
+        "**/*.h",
+        "**/*.cpp",
+        "**/*.hpp",
+        "**/*.csproj",
+        "**/*.sln",
+        "**/*.fsproj",
+        "**/*.vbproj",
+        "**/*.md",
+        "**/*.json",
+        "**/*.yml",
+        "**/*.yaml",
+        "**/*.toml",
+        "**/*.xml",
+    ],
+    "critical_tags": ["@critical", "CRITICAL:"],
     "context": {"latest_file": ".vibe/context/LATEST_CONTEXT.md", "max_recent_files": 12},
     "quality_gates": {
         "cycle_block": True,
-        "typecheck_block_on_increase": True,
+        "dotnet_build_block_on_increase": True,
+        "typecheck_prefer_solution": False,
         "complexity_warn_threshold": 15,
+        "max_method_lines_warn": 50,
+        "max_nesting_warn": 4,
+        "max_params_warn": 5,
     },
-    "profiling": {"enabled_by_default": False, "mode": "node", "entry": None},
-    "resolver": {
-        "aliases": {},
-        "root_relative_enabled": False,
-        "use_tsconfig_paths": True,
-        "use_jsconfig_paths": True,
-        "extensions": [".js", ".mjs", ".cjs"],
-        "index_files": ["index.js", "index.mjs", "index.cjs"],
+    "placeholders": {
+        "enabled": True,
+        "target_lang": "korean",
+        "bad_unit_words_ko": ["초", "분", "시간", "포인트", "%", "동안", "초당"],
     },
-    "typecheck": {
-        "incremental": True,
-        "tsconfig": "tsconfig.check.json",
-        "tsbuildinfo": ".vibe/locks/tsc_tsconfig_check_tsbuildinfo",
-    },
+    "profiling": {"enabled_by_default": False, "mode": "dotnet", "entry": None},
 }
 
-DONT_DO_THIS_TEMPLATE = """# DONT_DO_THIS (Agent Memory)
 
-This file is intentionally short. Keep it actionable.
-
-- Do NOT auto-generate or auto-edit JSDoc across the codebase.
-- Do NOT run a repo-wide formatter/linter that creates a massive diff.
-- Do NOT introduce circular dependencies. (pre-commit will block.)
-- Do NOT increase the TypeScript typecheck error baseline.
-- Do NOT run profiling in pre-commit. Profiling is doctor-only.
-"""
-
-AGENT_CHECKLIST_TEMPLATE = """# AGENT_CHECKLIST
-
-## Before you start
-- Read `.vibe/context/LATEST_CONTEXT.md`
-- Read `.vibe/agent_memory/DONT_DO_THIS.md`
-- Run impact analysis for your target file(s):
-  - `python .vibe/brain/impact_analyzer.py path/to/file.js`
-
-## While you work
-- Do NOT auto-generate JSDoc.
-- For exported boundary functions, write JSDoc manually (at least @param/@returns where relevant).
-- If you touch @critical paths, create a checkpoint commit/tag (manual; automation OFF by default).
-
-## Before you finish
-- Ensure typecheck baseline did not increase:
-  - `python .vibe/brain/typecheck_baseline.py`
-- Ensure pre-commit passes:
-  - `git commit` (hook runs staged-only fast checks)
-- (Optional) Run fast smoke tests:
-  - `python .vibe/brain/run_core_tests.py --fast`
-- (Optional) If you suspect perf regressions:
-  - `python .vibe/brain/doctor.py --full --profile --mode node --entry <entry.js>`
-"""
-
-AGENT_SYSTEM_PROMPT_TEMPLATE = """# AGENT_SYSTEM_PROMPT
-
-You are operating inside a large vanilla JavaScript repository with an agent-friendly environment (`.vibe`).
-
-Non-negotiables:
-- I read `.vibe/context/LATEST_CONTEXT.md` before writing code.
-- I do not auto-generate JSDoc. I may detect missing docs and propose templates only.
-- I do not increase typecheck errors (baseline gate).
-- I never introduce circular dependencies. If I do, the commit is blocked.
-- I keep the staged-only fast loop. Full scans run via `doctor`.
-- Performance profiling runs only via `doctor --profile`; source-code injection is forbidden.
-
-Working discipline:
-- Prefer minimal diffs; never mass-format the repo.
-- If a change has high impact (many dependents), I recommend a checkpoint.
-- I log warnings instead of crashing the tooling.
-"""
-
-PROFILE_GUIDE_TEMPLATE = """# PROFILE_GUIDE
-
-This guide covers profiling WITHOUT source-code injection.
-
-## Node (automated via doctor)
-
-1) Identify an entry file (example: `src/index.js` or `server.js`).
-2) Run:
-
-```bash
-python .vibe/brain/doctor.py --full --profile --mode node --entry path/to/entry.js --seconds 10
-```
-
-Artifacts:
-- `.vibe/reports/performance.log`
-- `.vibe/reports/performance_stats.json`
-
-Notes:
-- Node profiling is heuristic. Treat it as a "where to look first" signal.
-- Keep seconds low (5–20) for developer feedback loops.
-
-## Browser (manual)
-
-Automated browser profiling is highly environment-dependent. Use Chrome DevTools:
-
-1) Open DevTools → Performance.
-2) Record a representative interaction.
-3) Export or copy a summary of the hottest functions/files.
-4) Paste the summary into `.vibe/reports/performance.log`.
-
-Then run:
-
-```bash
-python .vibe/brain/summarizer.py --full
-```
-
-The summarizer will extract "Top 5" slow items if a performance report exists.
+DEFAULT_REQUIREMENTS = """watchdog>=4.0.0
+python-dateutil>=2.8.2
 """
 
 
-@dataclass
-class ScanStats:
-    js_files: int = 0
-    total_loc: int = 0
+DEFAULT_DONT_DO_THIS = """# DONT_DO_THIS (vibe-kit)
+
+Avoid these by default:
+- Repo-wide formatting/re-linting.
+- Large “cleanup” refactors unrelated to the task.
+- Editing sample `*.xml` data outputs unless explicitly needed.
+- Changing placeholder/token rules without updating tests.
+"""
 
 
-def _iter_js_files(root: Path, exclude_dirs: List[str], include_globs: List[str]) -> Iterable[Path]:
-    exclude_set = {d.strip("/\\") for d in exclude_dirs}
+DEFAULT_AGENT_CHECKLIST = """# AGENT_CHECKLIST (vibe-kit)
 
-    def is_excluded(p: Path) -> bool:
-        parts = {part for part in p.parts}
-        return any(x in parts for x in exclude_set)
+## Quick start (do this first)
+- Read: `.vibe/context/LATEST_CONTEXT.md`
+- If you run only one command:
+  - (WSL/Linux) `python3 scripts/vibe.py doctor --full`
+  - (Windows) `scripts\\vibe.cmd doctor --full`
 
-    seen = set()
-    for glob_pat in include_globs:
-        for p in root.glob(glob_pat):
-            if not p.is_file():
-                continue
-            if p.suffix.lower() != ".js":
-                continue
-            if is_excluded(p):
-                continue
-            rp = p.resolve()
-            if rp in seen:
-                continue
-            seen.add(rp)
-            yield p
+## Before coding
+- Read: `.vibe/agent_memory/DONT_DO_THIS.md`
+- Check impact for shared/core files: `python3 scripts/vibe.py impact <path>`
+- Find entry points fast:
+  - `python3 scripts/vibe.py search TranslationService`
+  - `python3 scripts/vibe.py search PlaceholderMasker`
 
+## While coding
+- Keep changes small and localized.
+- For placeholder/token logic, add/adjust tests under `tests/XTranslatorAi.Tests`.
+- When validating xTranslator outputs: `python3 scripts/vibe.py qa <file.xml>`
 
-def scan_repo(root: Path, exclude_dirs: List[str], include_globs: List[str]) -> ScanStats:
-    stats = ScanStats()
-    for p in _iter_js_files(root, exclude_dirs, include_globs):
-        stats.js_files += 1
-        try:
-            with p.open("r", encoding="utf-8", errors="ignore") as f:
-                stats.total_loc += sum(1 for _ in f)
-        except Exception:
-            # LOC is best-effort.
-            pass
-    return stats
+## Before finishing
+- Run: `python3 scripts/vibe.py doctor --full` (or at least `python3 scripts/vibe.py doctor`)
+- Run tests (core): `dotnet test tests/XTranslatorAi.Tests/XTranslatorAi.Tests.csproj -c Release`
+"""
 
 
-def write_json(path: Path, obj) -> None:
+DEFAULT_PROFILE_GUIDE = """# PROFILE_GUIDE (vibe-kit)
+
+This project is primarily a Windows WPF app + Core library.
+
+## Recommended (Windows) tooling
+- PerfView (ETW) for CPU sampling
+- `dotnet-trace` for .NET trace collection (optional)
+
+### dotnet-trace quick start
+1) Install (once):
+   - `dotnet tool install --global dotnet-trace`
+2) Run the app (or a target process), find PID, then collect:
+   - `dotnet-trace collect --process-id <PID> --duration 00:00:20 -o trace.nettrace`
+3) Open `trace.nettrace` in Visual Studio / PerfView.
+
+## vibe-kit integration
+- `python3 scripts/vibe.py doctor --full --profile` will only summarize existing logs under `.vibe/reports/`.
+- No source-code injection is performed.
+"""
+
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[1]
+
+
+def _write_if_missing(path: Path, content: str) -> bool:
+    if path.exists():
+        return False
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(obj, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(content, encoding="utf-8")
+    return True
 
 
-def _read_json(path: Path):
-    try:
-        if path.exists():
-            return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
-        return None
-    return None
-
-
-def _write_json_if_missing(path: Path, obj, *, force: bool) -> Tuple[bool, str]:
-    if path.exists() and not force:
-        return False, "exists"
-    write_json(path, obj)
-    return True, "written"
-
-
-def _update_package_json_typecheck(root: Path) -> Tuple[bool, str]:
-    """Best-effort package.json update. Safe-by-default:
-
-    - Only touches package.json when explicitly requested.
-    - Only adds scripts.typecheck when missing.
-    - Never rewrites other fields.
-    """
-    pkg = root / "package.json"
-    if not pkg.exists():
-        return False, "missing"
-
-    obj = _read_json(pkg)
-    if not isinstance(obj, dict):
-        return False, "parse_error"
-    scripts = obj.get("scripts")
-    if scripts is None:
-        scripts = {}
-        obj["scripts"] = scripts
-    if not isinstance(scripts, dict):
-        return False, "bad_scripts"
-    if "typecheck" in scripts:
-        return False, "already"
-
-    scripts["typecheck"] = "tsc -p tsconfig.check.json"
-    try:
-        pkg.write_text(json.dumps(obj, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
-        return True, "updated"
-    except Exception as e:
-        return False, f"write_error:{e}"
-
-
-def ensure_file(path: Path, content: str, *, force: bool) -> Tuple[bool, str]:
-    if path.exists() and not force:
-        return False, "exists"
+def _write_json_if_missing(path: Path, obj: object) -> bool:
+    if path.exists():
+        return False
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8", newline="\n")
-    return True, "written"
+    path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return True
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--project-name", default=None)
-    ap.add_argument("--root", default=".")
-    ap.add_argument("--force", action="store_true", help="Overwrite existing template files")
-    ap.add_argument(
-        "--update-package-json",
-        action="store_true",
-        help="If package.json exists, add scripts.typecheck when missing (OFF by default)",
-    )
-    args = ap.parse_args()
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(description="Initialize repo-local vibe-kit scaffolding.")
+    parser.add_argument("--install-deps", action="store_true", help="Install Python deps via pip.")
+    args = parser.parse_args(argv)
 
-    root = Path(args.root).resolve()
+    root = _repo_root()
     vibe = root / ".vibe"
 
-    # Directories
-    for d in ["brain", "context", "db", "reports", "agent_memory", "locks"]:
-        (vibe / d).mkdir(parents=True, exist_ok=True)
+    created_dirs = 0
+    for rel in ["brain", "context", "db", "reports", "agent_memory", "locks"]:
+        (vibe / rel).mkdir(parents=True, exist_ok=True)
+        created_dirs += 1
 
-    # Config
-    cfg_path = vibe / "config.json"
-    cfg_obj = dict(CONFIG_TEMPLATE)
-    if args.project_name:
-        cfg_obj["project_name"] = args.project_name
-    write_json(cfg_path, cfg_obj) if (not cfg_path.exists() or args.force) else None
+    project_name = root.name
+    config = dict(DEFAULT_CONFIG)
+    if config.get("project_name") == "CHANGE_ME":
+        config["project_name"] = project_name
 
-    # Root TypeScript/JS config (safe: only create if missing unless --force)
-    _write_json_if_missing(root / "jsconfig.json", JSCONFIG_TEMPLATE, force=args.force)
-    _write_json_if_missing(root / "tsconfig.check.json", TSCONFIG_CHECK_TEMPLATE, force=args.force)
+    created_files = []
+    if _write_json_if_missing(vibe / "config.json", config):
+        created_files.append(".vibe/config.json")
+    if _write_if_missing(vibe / "brain" / "requirements.txt", DEFAULT_REQUIREMENTS):
+        created_files.append(".vibe/brain/requirements.txt")
+    if _write_if_missing(vibe / "agent_memory" / "DONT_DO_THIS.md", DEFAULT_DONT_DO_THIS):
+        created_files.append(".vibe/agent_memory/DONT_DO_THIS.md")
+    if _write_if_missing(vibe / "AGENT_CHECKLIST.md", DEFAULT_AGENT_CHECKLIST):
+        created_files.append(".vibe/AGENT_CHECKLIST.md")
+    if _write_if_missing(vibe / "context" / "PROFILE_GUIDE.md", DEFAULT_PROFILE_GUIDE):
+        created_files.append(".vibe/context/PROFILE_GUIDE.md")
+    if _write_if_missing(vibe / "context" / "LATEST_CONTEXT.md", "# LATEST_CONTEXT\n\n(Generated by vibe-kit)\n"):
+        created_files.append(".vibe/context/LATEST_CONTEXT.md")
 
-    # Requirements
-    req_path = vibe / "brain" / "requirements.txt"
-    ensure_file(req_path, "watchdog\npython-dateutil\n", force=args.force)
+    print(f"[vibe-kit] ensured dirs under: {vibe}")
+    if created_files:
+        print("[vibe-kit] created:")
+        for f in created_files:
+            print(f"  - {f}")
+    else:
+        print("[vibe-kit] no new files (already initialized).")
 
-    # Agent docs
-    ensure_file(vibe / "agent_memory" / "DONT_DO_THIS.md", DONT_DO_THIS_TEMPLATE, force=args.force)
-    ensure_file(vibe / "AGENT_CHECKLIST.md", AGENT_CHECKLIST_TEMPLATE, force=args.force)
-
-    # System prompt doc (root-level)
-    ensure_file(root / "AGENT_SYSTEM_PROMPT.md", AGENT_SYSTEM_PROMPT_TEMPLATE, force=args.force)
-
-    # Profiling guide
-    ensure_file(vibe / "context" / "PROFILE_GUIDE.md", PROFILE_GUIDE_TEMPLATE, force=args.force)
-
-    # Initial LATEST_CONTEXT placeholder (summarizer will overwrite; this avoids first-run confusion)
-    ensure_file(
-        vibe / "context" / "LATEST_CONTEXT.md",
-        "# LATEST_CONTEXT\n\nGenerated: (not yet)\n\nRun: `python .vibe/brain/summarizer.py --full`\n",
-        force=False,
-    )
-
-    # Step 0 scan report
-    stats = scan_repo(root, cfg_obj["exclude_dirs"], cfg_obj["include_globs"])
-    scan_report = {
-        "project_root": str(root),
-        "scanned_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "js_files": stats.js_files,
-        "approx_loc": stats.total_loc,
-        "exclude_dirs": cfg_obj["exclude_dirs"],
-        "include_globs": cfg_obj["include_globs"],
-    }
-    write_json(vibe / "reports" / "scan_report.json", scan_report)
-
-    # Optional: safe package.json script addition (explicit flag only)
-    if args.update_package_json:
-        ok, msg = _update_package_json_typecheck(root)
-        if ok:
-            print("[vibe] package.json: added scripts.typecheck")
-        else:
-            if msg == "missing":
-                print("[vibe] package.json: not found (skipped)")
-            elif msg == "already":
-                print("[vibe] package.json: scripts.typecheck already exists (skipped)")
-            else:
-                print(f"[vibe] package.json: could not update ({msg})")
-
-    print("[vibe] setup complete")
-    print(f"[vibe] root: {root}")
-    print(f"[vibe] js files (approx): {stats.js_files}")
-    print(f"[vibe] loc (approx): {stats.total_loc}")
-    print("[vibe] next:")
-    print("  1) pip install -r .vibe/brain/requirements.txt")
-    print("  2) python .vibe/brain/indexer.py --scan-all")
-    print("  3) python .vibe/brain/summarizer.py --full")
-    print("  4) python .vibe/brain/typecheck_baseline.py --init")
-    print("  5) python scripts/install_hooks.py")
+    if args.install_deps:
+        req = vibe / "brain" / "requirements.txt"
+        print(f"[vibe-kit] installing deps: {req}")
+        cmd = [sys.executable, "-m", "pip", "install", "-r", str(req)]
+        try:
+            subprocess.check_call(cmd, cwd=str(root))
+        except subprocess.CalledProcessError as e:
+            print(f"[vibe-kit] pip failed: {e}", file=sys.stderr)
+            return e.returncode
 
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))

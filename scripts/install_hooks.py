@@ -1,14 +1,4 @@
-#!/usr/bin/env python
-"""Install Git hooks for .vibe.
-
-Requirements:
-- Create/update .git/hooks/pre-commit
-- Hook must call: python .vibe/brain/precommit.py
-- Windows compatible; avoid bash dependencies.
-
-This script does NOT enable any auto-commit/auto-rollback behavior.
-"""
-
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import argparse
@@ -17,60 +7,51 @@ import stat
 import sys
 from pathlib import Path
 
-HOOK_BODY = """#!/usr/bin/env python
-import os
-import subprocess
-import sys
+
+HOOK_TEMPLATE = """#!/usr/bin/env python3
+from __future__ import annotations
+
+import runpy
 from pathlib import Path
 
-
-def main() -> int:
-    # Resolve repo root as the directory containing this hook's parent (../..)
-    hook_path = Path(__file__).resolve()
-    repo_root = hook_path.parent.parent
-
-    precommit = repo_root / '.vibe' / 'brain' / 'precommit.py'
-    if not precommit.exists():
-        print('[vibe][hook] missing .vibe/brain/precommit.py', file=sys.stderr)
-        return 1
-
-    cmd = [sys.executable, str(precommit)]
-    return subprocess.call(cmd, cwd=str(repo_root))
-
-
-if __name__ == '__main__':
-    raise SystemExit(main())
+repo_root = Path(__file__).resolve().parents[2]
+runpy.run_path(str(repo_root / ".vibe" / "brain" / "precommit.py"), run_name="__main__")
 """
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--root', default='.')
-    args = ap.parse_args()
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[1]
 
-    root = Path(args.root).resolve()
-    git_dir = root / '.git'
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(description="Install git hooks for vibe-kit.")
+    parser.add_argument("--force", action="store_true", help="Overwrite existing hooks.")
+    args = parser.parse_args(argv)
+
+    root = _repo_root()
+    git_dir = root / ".git"
     if not git_dir.exists():
-        print('[vibe][install_hooks] .git not found. Run this at repo root.', file=sys.stderr)
-        return 1
+        print("[vibe-kit] no .git directory found; skipping hook install.")
+        return 0
 
-    hooks_dir = git_dir / 'hooks'
+    hooks_dir = git_dir / "hooks"
     hooks_dir.mkdir(parents=True, exist_ok=True)
+    precommit_path = hooks_dir / "pre-commit"
 
-    hook_path = hooks_dir / 'pre-commit'
-    hook_path.write_text(HOOK_BODY, encoding='utf-8', newline='\n')
+    if precommit_path.exists() and not args.force:
+        print("[vibe-kit] pre-commit hook already exists (use --force to overwrite).")
+        return 0
 
-    # Best-effort executable bit (harmless on Windows)
+    precommit_path.write_text(HOOK_TEMPLATE, encoding="utf-8", newline="\n")
     try:
-        mode = hook_path.stat().st_mode
-        hook_path.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    except Exception:
+        mode = precommit_path.stat().st_mode
+        precommit_path.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    except OSError:
         pass
 
-    print('[vibe][install_hooks] installed .git/hooks/pre-commit')
-    print('[vibe][install_hooks] hook runs staged-only checks via .vibe/brain/precommit.py')
+    print(f"[vibe-kit] installed: {precommit_path}")
     return 0
 
 
-if __name__ == '__main__':
-    raise SystemExit(main())
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
