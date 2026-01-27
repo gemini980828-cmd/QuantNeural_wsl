@@ -197,10 +197,172 @@ export default function PortfolioPage() {
     );
   }
 
+  // Render portfolio input section regardless of portfolio data availability
+  const renderPortfolioInputSection = () => (
+    <div>
+      <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+        <Wallet size={18} className="text-neutral-400" />
+        보유 현황 입력
+        <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Holdings Input</span>
+      </h2>
+      <div className="rounded-xl border border-neutral-800 bg-surface divide-y divide-neutral-800">
+        <div className="flex items-center justify-between p-4">
+          <div>
+            <div className="text-sm font-medium text-fg">TQQQ 보유량</div>
+            <div className="text-xs text-muted mt-0.5">현재 보유중인 TQQQ 수량</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={0}
+              value={tqqqShares}
+              onChange={(e) => setTqqqShares(Math.max(0, parseInt(e.target.value) || 0))}
+              disabled={portfolioStateLoading}
+              className="w-24 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            />
+            <span className="text-xs text-muted">주</span>
+          </div>
+        </div>
+        <div className="flex items-center justify-between p-4">
+          <div>
+            <div className="text-sm font-medium text-fg">SGOV 보유량</div>
+            <div className="text-xs text-muted mt-0.5">현금 대용 (SGOV 수량)</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={0}
+              value={sgovShares}
+              onChange={(e) => setSgovShares(Math.max(0, parseInt(e.target.value) || 0))}
+              disabled={portfolioStateLoading}
+              className="w-24 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            />
+            <span className="text-xs text-muted">주</span>
+          </div>
+        </div>
+        <div className="flex items-center justify-between p-4">
+          <div>
+            <div className="text-sm font-medium text-fg">스크린샷 OCR</div>
+            <div className="text-xs text-muted mt-0.5">삼성증권 앱 스크린샷에서 보유량 자동 추출</div>
+          </div>
+          <div className="flex items-center gap-2">
+            {ocrResult && (
+              <span className={`text-xs flex items-center gap-1 ${
+                ocrResult.success ? "text-green-400" : "text-red-400"
+              }`}>
+                {ocrResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                {ocrResult.message}
+              </span>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleOcrUpload}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={ocrLoading || portfolioStateLoading}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-purple-600 hover:bg-purple-500 text-white disabled:bg-neutral-700 disabled:text-neutral-400"
+            >
+              {ocrLoading ? (
+                <RefreshCw size={12} className="animate-spin" />
+              ) : (
+                <Camera size={12} />
+              )}
+              스크린샷 분석
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center justify-between p-4">
+          <div>
+            <div className="text-sm font-medium text-fg">저장</div>
+            <div className="text-xs text-muted mt-0.5">
+              {portfolioLastUpdated 
+                ? `마지막 업데이트: ${new Date(portfolioLastUpdated).toLocaleString("ko-KR")}` 
+                : "저장된 데이터 없음"}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {portfolioSaveResult && (
+              <span className={`text-xs flex items-center gap-1 ${
+                portfolioSaveResult.success ? "text-green-400" : "text-red-400"
+              }`}>
+                {portfolioSaveResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                {portfolioSaveResult.message}
+              </span>
+            )}
+            <button
+              onClick={savePortfolioState}
+              disabled={portfolioSaving || portfolioStateLoading}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-blue-600 hover:bg-blue-500 text-white disabled:bg-neutral-700 disabled:text-neutral-400"
+            >
+              {portfolioSaving ? (
+                <RefreshCw size={12} className="animate-spin" />
+              ) : (
+                <Check size={12} />
+              )}
+              저장
+            </button>
+          </div>
+        </div>
+        <div className="p-4 bg-blue-900/10">
+          <div className="text-xs text-blue-400">
+            <strong className="block mb-1">알림 조건:</strong>
+            <ul className="list-disc list-inside space-y-0.5 text-blue-400/80">
+              <li>BUY 신호 + SGOV 보유 → 알림 발송</li>
+              <li>SELL 신호 + TQQQ 보유 → 알림 발송</li>
+              <li>해당 자산이 없으면 알림 없음</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // If no portfolio data, show only the input section
   if (!portfolio) {
     return (
-      <div className="p-4">
-        <div className="mt-8 text-center text-muted">포트폴리오 데이터가 없습니다.</div>
+      <div className="space-y-8 pb-20">
+        {/* Page Header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-fg flex items-center gap-3">
+            포트폴리오
+            <span className="text-sm font-normal text-muted bg-neutral-800 px-2.5 py-0.5 rounded-full border border-neutral-700">Portfolio</span>
+          </h1>
+          
+          {/* Data Source Indicator */}
+          <div className="flex items-center gap-2">
+            <span className={`text-xs px-2 py-1 rounded-full ${
+              dataSource === "REAL" 
+                ? "bg-positive/20 text-positive border border-positive/30" 
+                : "bg-amber-900/30 text-amber-400 border border-amber-700/30"
+            }`}>
+              {dataSource}
+            </span>
+            <button
+              onClick={loadData}
+              disabled={loading}
+              className="p-1.5 rounded-lg hover:bg-neutral-800 text-muted transition-colors"
+              title="새로고침"
+            >
+              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            </button>
+          </div>
+        </div>
+
+        <main className="space-y-8">
+          {/* Portfolio State Input - Always visible */}
+          {renderPortfolioInputSection()}
+          
+          {/* Message for missing portfolio data */}
+          <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+            <Database size={24} className="opacity-50" />
+            <span className="text-sm">포트폴리오 데이터가 없습니다</span>
+            <span className="text-xs text-neutral-600">위에서 보유 현황을 입력하거나 Settings에서 데이터 소스를 확인하세요</span>
+          </div>
+        </main>
       </div>
     );
   }
@@ -247,126 +409,7 @@ export default function PortfolioPage() {
         </div>
 
         {/* Portfolio State Input */}
-        <div>
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <Wallet size={18} className="text-neutral-400" />
-            보유 현황 입력
-            <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Holdings Input</span>
-          </h2>
-          <div className="rounded-xl border border-neutral-800 bg-surface divide-y divide-neutral-800">
-            <div className="flex items-center justify-between p-4">
-              <div>
-                <div className="text-sm font-medium text-fg">TQQQ 보유량</div>
-                <div className="text-xs text-muted mt-0.5">현재 보유중인 TQQQ 수량</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={0}
-                  value={tqqqShares}
-                  onChange={(e) => setTqqqShares(Math.max(0, parseInt(e.target.value) || 0))}
-                  disabled={portfolioStateLoading}
-                  className="w-24 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                />
-                <span className="text-xs text-muted">주</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-4">
-              <div>
-                <div className="text-sm font-medium text-fg">SGOV 보유량</div>
-                <div className="text-xs text-muted mt-0.5">현금 대용 (SGOV 수량)</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={0}
-                  value={sgovShares}
-                  onChange={(e) => setSgovShares(Math.max(0, parseInt(e.target.value) || 0))}
-                  disabled={portfolioStateLoading}
-                  className="w-24 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                />
-                <span className="text-xs text-muted">주</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-4">
-              <div>
-                <div className="text-sm font-medium text-fg">스크린샷 OCR</div>
-                <div className="text-xs text-muted mt-0.5">삼성증권 앱 스크린샷에서 보유량 자동 추출</div>
-              </div>
-              <div className="flex items-center gap-2">
-                {ocrResult && (
-                  <span className={`text-xs flex items-center gap-1 ${
-                    ocrResult.success ? "text-green-400" : "text-red-400"
-                  }`}>
-                    {ocrResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                    {ocrResult.message}
-                  </span>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleOcrUpload}
-                  className="hidden"
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={ocrLoading || portfolioStateLoading}
-                  className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-purple-600 hover:bg-purple-500 text-white disabled:bg-neutral-700 disabled:text-neutral-400"
-                >
-                  {ocrLoading ? (
-                    <RefreshCw size={12} className="animate-spin" />
-                  ) : (
-                    <Camera size={12} />
-                  )}
-                  스크린샷 분석
-                </button>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-4">
-              <div>
-                <div className="text-sm font-medium text-fg">저장</div>
-                <div className="text-xs text-muted mt-0.5">
-                  {portfolioLastUpdated 
-                    ? `마지막 업데이트: ${new Date(portfolioLastUpdated).toLocaleString("ko-KR")}` 
-                    : "저장된 데이터 없음"}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {portfolioSaveResult && (
-                  <span className={`text-xs flex items-center gap-1 ${
-                    portfolioSaveResult.success ? "text-green-400" : "text-red-400"
-                  }`}>
-                    {portfolioSaveResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                    {portfolioSaveResult.message}
-                  </span>
-                )}
-                <button
-                  onClick={savePortfolioState}
-                  disabled={portfolioSaving || portfolioStateLoading}
-                  className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-blue-600 hover:bg-blue-500 text-white disabled:bg-neutral-700 disabled:text-neutral-400"
-                >
-                  {portfolioSaving ? (
-                    <RefreshCw size={12} className="animate-spin" />
-                  ) : (
-                    <Check size={12} />
-                  )}
-                  저장
-                </button>
-              </div>
-            </div>
-            <div className="p-4 bg-blue-900/10">
-              <div className="text-xs text-blue-400">
-                <strong className="block mb-1">알림 조건:</strong>
-                <ul className="list-disc list-inside space-y-0.5 text-blue-400/80">
-                  <li>BUY 신호 + SGOV 보유 → 알림 발송</li>
-                  <li>SELL 신호 + TQQQ 보유 → 알림 발송</li>
-                  <li>해당 자산이 없으면 알림 없음</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
+        {renderPortfolioInputSection()}
 
         {/* 2. Positions Section */}
         <div>
