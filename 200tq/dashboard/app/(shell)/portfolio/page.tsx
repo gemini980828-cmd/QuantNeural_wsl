@@ -24,6 +24,25 @@ interface EquityPoint {
   value: number;
 }
 
+function generateMockEquityHistory(): EquityPoint[] {
+  const points: EquityPoint[] = [];
+  const startDate = new Date();
+  startDate.setMonth(startDate.getMonth() - 12);
+  let value = 50000;
+  
+  for (let i = 0; i < 365; i++) {
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + i);
+    const dailyReturn = (Math.random() - 0.48) * 0.02;
+    value = value * (1 + dailyReturn);
+    points.push({
+      date: date.toISOString().split("T")[0],
+      value: Math.round(value)
+    });
+  }
+  return points;
+}
+
 export default function PortfolioPage() {
   const dataSource = useDataSource();
   
@@ -92,7 +111,8 @@ export default function PortfolioPage() {
         .finally(() => setEquityLoading(false));
     } else {
       setRecentTrades([]);
-      setEquityHistory([]);
+      const mockEquity = generateMockEquityHistory();
+      setEquityHistory(mockEquity);
     }
   }, [dataSource]);
 
@@ -272,19 +292,17 @@ export default function PortfolioPage() {
         <TrendingUp size={18} className="text-neutral-400" />
         성과 분석
         <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Performance</span>
-        {dataSource === "REAL" && equityHistory.length > 0 && (
-          <span className="text-[10px] text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-900/50">
-            REAL
+        {equityHistory.length > 0 && (
+          <span className={`text-[10px] px-2 py-0.5 rounded border ${
+            dataSource === "REAL" 
+              ? "text-emerald-400 bg-emerald-950/30 border-emerald-900/50"
+              : "text-amber-400 bg-amber-950/30 border-amber-900/50"
+          }`}>
+            {dataSource}
           </span>
         )}
       </h2>
-      {dataSource === "MOCK" ? (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
-          <Database size={24} className="opacity-50" />
-          <span className="text-sm">MOCK 모드에서는 성과 분석이 표시되지 않습니다</span>
-          <span className="text-xs text-neutral-600">Settings에서 REAL 모드로 전환하세요</span>
-        </div>
-      ) : equityLoading ? (
+      {equityLoading ? (
         <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex items-center justify-center text-muted gap-2">
           <RefreshCw size={20} className="animate-spin" />
           <span className="text-sm">성과 데이터 로딩 중...</span>
@@ -297,6 +315,11 @@ export default function PortfolioPage() {
         </div>
       ) : (
         <div className="rounded-xl border border-neutral-800 bg-surface p-6">
+          {dataSource === "MOCK" && (
+            <div className="mb-4 text-xs text-amber-400 bg-amber-900/20 border border-amber-800/30 rounded-lg px-3 py-2">
+              MOCK 데이터 - 시뮬레이션 성과입니다
+            </div>
+          )}
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-neutral-900/50 rounded-lg p-4">
               <div className="text-xs text-muted mb-1">시작 자산</div>
@@ -563,7 +586,7 @@ export default function PortfolioPage() {
             요약
             <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Overview</span>
           </h2>
-          <PortfolioSummaryStrip portfolio={portfolio} />
+          <PortfolioSummaryStrip portfolio={portfolio} hideCta />
         </div>
 
         {/* Portfolio State Input */}

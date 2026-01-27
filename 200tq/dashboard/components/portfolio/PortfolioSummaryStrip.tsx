@@ -6,9 +6,10 @@ import { ArrowRight, Info } from "lucide-react";
 
 interface PortfolioSummaryStripProps {
   portfolio?: PortfolioSnapshot;
+  hideCta?: boolean;
 }
 
-export default function PortfolioSummaryStrip({ portfolio }: PortfolioSummaryStripProps) {
+export default function PortfolioSummaryStrip({ portfolio, hideCta = false }: PortfolioSummaryStripProps) {
   if (!portfolio) {
     // Empty State
     return (
@@ -29,6 +30,7 @@ export default function PortfolioSummaryStrip({ portfolio }: PortfolioSummaryStr
 
   const { derived, positions } = portfolio;
   const tqqq = positions.find(p => p.ticker === "TQQQ");
+  const sgov = positions.find(p => p.ticker === "SGOV");
   
   // Formatters
   const fmtKrw = (n: number) => n.toLocaleString();
@@ -102,26 +104,38 @@ export default function PortfolioSummaryStrip({ portfolio }: PortfolioSummaryStr
 
         </div>
 
-        {/* CTA */}
-        <div className="hidden md:flex flex-col justify-center border-l border-neutral-800 pl-4 h-10 w-32 shrink-0">
-           <Link 
-             href="/portfolio" 
-             className="w-full h-full flex items-center justify-center gap-1.5 bg-inset hover:bg-neutral-800 text-muted hover:text-fg text-xs font-bold rounded-lg transition-all"
-           >
-             포트폴리오
-             <ArrowRight size={14} />
-           </Link>
-        </div>
+        {hideCta ? (
+          <div className="hidden md:flex flex-col justify-center border-l border-neutral-800 pl-4 min-w-0">
+            <span className="text-xs text-muted mb-0.5 whitespace-nowrap">SGOV 보유</span>
+            <div className="font-mono font-medium text-fg truncate">
+              {sgov ? `${sgov.qty.toLocaleString()} 주` : "-"}
+              <span className="text-xs text-muted ml-1">
+                ({sgov ? fmtPct(derived.weights["SGOV"] || 0) : "0%"})
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="hidden md:flex flex-col justify-center border-l border-neutral-800 pl-4 h-10 w-32 shrink-0">
+            <Link 
+              href="/portfolio" 
+              className="w-full h-full flex items-center justify-center gap-1.5 bg-inset hover:bg-neutral-800 text-muted hover:text-fg text-xs font-bold rounded-lg transition-all"
+            >
+              포트폴리오
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        )}
       </div>
       
-      {/* Mobile CTA (Full Width) */}
-      <Link 
-        href="/portfolio" 
-        className="md:hidden mt-4 w-full py-3 flex items-center justify-center gap-1.5 bg-inset hover:bg-neutral-800 text-muted text-xs font-bold rounded-lg transition-all"
-      >
-        포트폴리오 자세히 보기
-        <ArrowRight size={14} />
-      </Link>
+      {!hideCta && (
+        <Link 
+          href="/portfolio" 
+          className="md:hidden mt-4 w-full py-3 flex items-center justify-center gap-1.5 bg-inset hover:bg-neutral-800 text-muted text-xs font-bold rounded-lg transition-all"
+        >
+          포트폴리오 자세히 보기
+          <ArrowRight size={14} />
+        </Link>
+      )}
     </section>
   );
 }
