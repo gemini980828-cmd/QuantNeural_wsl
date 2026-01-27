@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { 
   Palette, Eye, EyeOff, Monitor, Moon, Sun, Bell, BellOff, 
-  Database, Shield, AlertTriangle, Check, Send, MessageSquare, RefreshCw, CheckCircle2, XCircle, Archive, Wallet, Camera
+  Database, Shield, AlertTriangle, Check, Send, MessageSquare, RefreshCw, CheckCircle2, XCircle, Archive
 } from "lucide-react";
 import { useSettingsStore, type AppSettings } from "@/lib/stores/settings-store";
 
@@ -139,37 +139,12 @@ export default function SettingsPage() {
   const [backfillLoading, setBackfillLoading] = useState(false);
   const [backfillResult, setBackfillResult] = useState<{ success: boolean; message: string } | null>(null);
   
-  const [portfolioLoading, setPortfolioLoading] = useState(true);
-  const [portfolioSaving, setPortfolioSaving] = useState(false);
-  const [tqqqShares, setTqqqShares] = useState(0);
-  const [sgovShares, setSgovShares] = useState(0);
-  const [portfolioLastUpdated, setPortfolioLastUpdated] = useState<string | null>(null);
-  const [portfolioSaveResult, setPortfolioSaveResult] = useState<{ success: boolean; message: string } | null>(null);
-  
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrResult, setOcrResult] = useState<{ success: boolean; message: string } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
   // Check Telegram configuration on mount
   useEffect(() => {
     fetch("/api/telegram/send")
       .then(res => res.json())
       .then(data => setTelegramConfigured(data.configured))
       .catch(() => setTelegramConfigured(false));
-  }, []);
-  
-  useEffect(() => {
-    fetch("/api/portfolio/state")
-      .then(res => res.json())
-      .then(data => {
-        if (data.state) {
-          setTqqqShares(data.state.tqqq_shares || 0);
-          setSgovShares(data.state.sgov_shares || 0);
-          setPortfolioLastUpdated(data.state.last_updated || null);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setPortfolioLoading(false));
   }, []);
   
   // Send test message
@@ -213,61 +188,6 @@ export default function SettingsPage() {
       setBackfillResult({ success: false, message: String(e) });
     } finally {
       setBackfillLoading(false);
-    }
-  };
-
-  const savePortfolioState = async () => {
-    setPortfolioSaving(true);
-    setPortfolioSaveResult(null);
-    try {
-      const res = await fetch("/api/portfolio/state", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tqqq_shares: tqqqShares, sgov_shares: sgovShares }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setPortfolioSaveResult({ success: true, message: "저장 완료" });
-        setPortfolioLastUpdated(data.state.last_updated);
-      } else {
-        setPortfolioSaveResult({ success: false, message: data.error || "저장 실패" });
-      }
-    } catch (e) {
-      setPortfolioSaveResult({ success: false, message: String(e) });
-    } finally {
-      setPortfolioSaving(false);
-    }
-  };
-
-  const handleOcrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setOcrLoading(true);
-    setOcrResult(null);
-    
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-      
-      const res = await fetch("/api/portfolio/ocr", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      
-      if (data.success) {
-        setTqqqShares(data.tqqq_shares);
-        setSgovShares(data.sgov_shares);
-        setOcrResult({ success: true, message: `TQQQ ${data.tqqq_shares}주, SGOV ${data.sgov_shares}주 추출` });
-      } else {
-        setOcrResult({ success: false, message: data.error || "OCR 분석 실패" });
-      }
-    } catch (e) {
-      setOcrResult({ success: false, message: String(e) });
-    } finally {
-      setOcrLoading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -564,101 +484,6 @@ export default function SettingsPage() {
             </button>
           </div>
         </SettingsRow>
-      </SettingsSection>
-
-      {/* Portfolio State */}
-      <SettingsSection id="portfolio-section" title="포트폴리오 상태" badge="Portfolio" icon={Wallet}>
-        <SettingsRow label="TQQQ 보유량" description="현재 보유중인 TQQQ 수량">
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min={0}
-              value={tqqqShares}
-              onChange={(e) => setTqqqShares(Math.max(0, parseInt(e.target.value) || 0))}
-              disabled={portfolioLoading}
-              className="w-24 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-            />
-            <span className="text-xs text-muted">주</span>
-          </div>
-        </SettingsRow>
-        <SettingsRow label="SGOV 보유량" description="현금 대용 (SGOV 수량)">
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min={0}
-              value={sgovShares}
-              onChange={(e) => setSgovShares(Math.max(0, parseInt(e.target.value) || 0))}
-              disabled={portfolioLoading}
-              className="w-24 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-            />
-            <span className="text-xs text-muted">주</span>
-          </div>
-        </SettingsRow>
-        <SettingsRow label="스크린샷 OCR" description="삼성증권 앱 스크린샷에서 보유량 자동 추출">
-          <div className="flex items-center gap-2">
-            {ocrResult && (
-              <span className={`text-xs flex items-center gap-1 ${
-                ocrResult.success ? "text-green-400" : "text-red-400"
-              }`}>
-                {ocrResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                {ocrResult.message}
-              </span>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleOcrUpload}
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={ocrLoading || portfolioLoading}
-              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-purple-600 hover:bg-purple-500 text-white disabled:bg-neutral-700 disabled:text-neutral-400"
-            >
-              {ocrLoading ? (
-                <RefreshCw size={12} className="animate-spin" />
-              ) : (
-                <Camera size={12} />
-              )}
-              스크린샷 분석
-            </button>
-          </div>
-        </SettingsRow>
-        <SettingsRow label="저장" description={portfolioLastUpdated ? `마지막 업데이트: ${new Date(portfolioLastUpdated).toLocaleString("ko-KR")}` : "저장된 데이터 없음"}>
-          <div className="flex items-center gap-2">
-            {portfolioSaveResult && (
-              <span className={`text-xs flex items-center gap-1 ${
-                portfolioSaveResult.success ? "text-green-400" : "text-red-400"
-              }`}>
-                {portfolioSaveResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                {portfolioSaveResult.message}
-              </span>
-            )}
-            <button
-              onClick={savePortfolioState}
-              disabled={portfolioSaving || portfolioLoading}
-              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-blue-600 hover:bg-blue-500 text-white disabled:bg-neutral-700 disabled:text-neutral-400"
-            >
-              {portfolioSaving ? (
-                <RefreshCw size={12} className="animate-spin" />
-              ) : (
-                <Check size={12} />
-              )}
-              저장
-            </button>
-          </div>
-        </SettingsRow>
-        <div className="p-4 bg-blue-900/10 border-t border-blue-800/20">
-          <div className="text-xs text-blue-400">
-            <strong className="block mb-1">알림 조건:</strong>
-            <ul className="list-disc list-inside space-y-0.5 text-blue-400/80">
-              <li>BUY 신호 + SGOV 보유 → 알림 발송</li>
-              <li>SELL 신호 + TQQQ 보유 → 알림 발송</li>
-              <li>해당 자산이 없으면 알림 없음</li>
-            </ul>
-          </div>
-        </div>
       </SettingsSection>
 
       {/* E. Safety */}
