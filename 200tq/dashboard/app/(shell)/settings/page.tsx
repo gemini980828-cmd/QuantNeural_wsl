@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   Palette, Eye, EyeOff, Monitor, Moon, Sun, Bell, BellOff, 
-  Database, Shield, AlertTriangle, Check, Send, MessageSquare, RefreshCw, CheckCircle2, XCircle, Archive, Wallet
+  Database, Shield, AlertTriangle, Check, Send, MessageSquare, RefreshCw, CheckCircle2, XCircle, Archive, Wallet, Camera
 } from "lucide-react";
 import { useSettingsStore, type AppSettings } from "@/lib/stores/settings-store";
 
@@ -146,6 +146,10 @@ export default function SettingsPage() {
   const [portfolioLastUpdated, setPortfolioLastUpdated] = useState<string | null>(null);
   const [portfolioSaveResult, setPortfolioSaveResult] = useState<{ success: boolean; message: string } | null>(null);
   
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrResult, setOcrResult] = useState<{ success: boolean; message: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   // Check Telegram configuration on mount
   useEffect(() => {
     fetch("/api/telegram/send")
@@ -232,6 +236,38 @@ export default function SettingsPage() {
       setPortfolioSaveResult({ success: false, message: String(e) });
     } finally {
       setPortfolioSaving(false);
+    }
+  };
+
+  const handleOcrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setOcrLoading(true);
+    setOcrResult(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      
+      const res = await fetch("/api/portfolio/ocr", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setTqqqShares(data.tqqq_shares);
+        setSgovShares(data.sgov_shares);
+        setOcrResult({ success: true, message: `TQQQ ${data.tqqq_shares}주, SGOV ${data.sgov_shares}주 추출` });
+      } else {
+        setOcrResult({ success: false, message: data.error || "OCR 분석 실패" });
+      }
+    } catch (e) {
+      setOcrResult({ success: false, message: String(e) });
+    } finally {
+      setOcrLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -556,6 +592,37 @@ export default function SettingsPage() {
               className="w-24 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
             <span className="text-xs text-muted">주</span>
+          </div>
+        </SettingsRow>
+        <SettingsRow label="스크린샷 OCR" description="삼성증권 앱 스크린샷에서 보유량 자동 추출">
+          <div className="flex items-center gap-2">
+            {ocrResult && (
+              <span className={`text-xs flex items-center gap-1 ${
+                ocrResult.success ? "text-green-400" : "text-red-400"
+              }`}>
+                {ocrResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                {ocrResult.message}
+              </span>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleOcrUpload}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={ocrLoading || portfolioLoading}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-purple-600 hover:bg-purple-500 text-white disabled:bg-neutral-700 disabled:text-neutral-400"
+            >
+              {ocrLoading ? (
+                <RefreshCw size={12} className="animate-spin" />
+              ) : (
+                <Camera size={12} />
+              )}
+              스크린샷 분석
+            </button>
           </div>
         </SettingsRow>
         <SettingsRow label="저장" description={portfolioLastUpdated ? `마지막 업데이트: ${new Date(portfolioLastUpdated).toLocaleString("ko-KR")}` : "저장된 데이터 없음"}>
