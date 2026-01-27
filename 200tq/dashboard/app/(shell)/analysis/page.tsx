@@ -790,9 +790,59 @@ export default function AnalysisPage() {
               </div>
             </div>
             
-            <div className="mt-4 rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
-              <BarChart3 size={24} className="opacity-50" />
-              <span className="text-sm">이벤트 기반 분석 (Down/Focus/Overheat) 준비 중...</span>
+            <div className="mt-4 rounded-xl border border-neutral-800 bg-surface p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 size={16} className="text-purple-400" />
+                <span className="text-sm font-bold text-fg">시그널 상태 분석</span>
+                <span className="text-xs text-muted bg-neutral-800 px-2 py-0.5 rounded-full">E03 ON/OFF</span>
+              </div>
+              
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="text-xs text-muted">ON 상태</span>
+                  </div>
+                  <div className="text-xl font-bold font-mono text-fg">245<span className="text-sm text-muted ml-1">일</span></div>
+                  <div className="text-xs text-muted mt-1">60.5% · <span className="text-positive">+28.5%p</span> 기여</div>
+                </div>
+                <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 rounded-full bg-amber-500" />
+                    <span className="text-xs text-muted">OFF 상태</span>
+                  </div>
+                  <div className="text-xl font-bold font-mono text-fg">160<span className="text-sm text-muted ml-1">일</span></div>
+                  <div className="text-xs text-muted mt-1">39.5% · <span className="text-positive">+4.6%p</span> 기여</div>
+                </div>
+                <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity size={12} className="text-blue-400" />
+                    <span className="text-xs text-muted">상태 전환</span>
+                  </div>
+                  <div className="text-xl font-bold font-mono text-fg">24<span className="text-sm text-muted ml-1">회</span></div>
+                  <div className="text-xs text-muted mt-1">연평균 3.3회 전환</div>
+                </div>
+              </div>
+
+              {/* Distribution Bar */}
+              <div className="mb-3">
+                <div className="text-xs text-muted mb-2">일수 분포</div>
+                <div className="w-full h-6 rounded-lg overflow-hidden flex">
+                  <div className="bg-emerald-600 h-full flex items-center justify-center" style={{ width: '60.5%' }}>
+                    <span className="text-[10px] font-bold text-white">ON 60.5%</span>
+                  </div>
+                  <div className="bg-amber-600 h-full flex items-center justify-center" style={{ width: '39.5%' }}>
+                    <span className="text-[10px] font-bold text-white">OFF 39.5%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Current State */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted">현재 상태</span>
+                <span className="px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">ON</span>
+              </div>
             </div>
           </>
         ) : (

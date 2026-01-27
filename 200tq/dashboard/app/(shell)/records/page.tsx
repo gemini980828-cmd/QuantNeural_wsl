@@ -283,7 +283,7 @@ function QualityAnalytics({ records }: { records: RecordEntry[] }) {
       <div className="bg-surface border border-neutral-800 rounded-xl p-5">
         <div className="text-xs text-muted mb-1">평균 슬리피지</div>
         <div className="flex items-baseline gap-2">
-           <span className="text-2xl font-bold font-mono text-fg">{stats.slippage}%</span>
+           <span className="text-2xl font-bold font-mono text-fg">{stats.slippage.toFixed(2)}%</span>
            <span className="text-xs text-muted">오차</span>
         </div>
         <div className="w-full bg-neutral-800 h-1 rounded-full overflow-hidden mt-2">
