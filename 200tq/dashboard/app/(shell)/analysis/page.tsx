@@ -95,7 +95,7 @@ function PeriodSelector({ selected, onChange }: { selected: Period; onChange: (p
   const periods: Period[] = ["1M", "3M", "6M", "YTD", "ALL"];
   
   return (
-    <div className="flex gap-1 bg-neutral-900 p-1 rounded-lg">
+    <div className="flex gap-1 bg-inset p-1 rounded-lg">
       {periods.map((p) => (
         <button
           key={p}
@@ -103,7 +103,7 @@ function PeriodSelector({ selected, onChange }: { selected: Period; onChange: (p
           className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
             selected === p 
               ? "bg-neutral-700 text-white" 
-              : "text-neutral-500 hover:text-neutral-300"
+              : "text-muted hover:text-fg"
           }`}
         >
           {p}
@@ -129,13 +129,13 @@ function KPICard({
   const trendColor = trend === "up" ? "text-positive" : trend === "down" ? "text-negative" : "text-fg";
   
   return (
-    <div className="bg-surface border border-neutral-800 rounded-xl p-5">
+    <div className="bg-surface border border-border rounded-xl p-5">
       <div className="text-xs text-muted mb-1">{label}</div>
       <div className={`text-2xl font-bold font-mono ${trendColor} flex items-baseline gap-1`}>
         {value}
         {unit && <span className="text-sm text-muted font-normal">{unit}</span>}
       </div>
-      {description && <div className="text-xs text-neutral-600 mt-2">{description}</div>}
+      {description && <div className="text-xs text-muted mt-2">{description}</div>}
     </div>
   );
 }
@@ -179,7 +179,7 @@ function BacktestControls({
           type="date"
           value={startDate}
           onChange={(e) => onStartDateChange(e.target.value)}
-          className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
+          className="w-full bg-inset border border-border rounded-lg px-3 py-2 text-sm font-mono text-fg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
         />
       </div>
 
@@ -192,7 +192,7 @@ function BacktestControls({
           type="date"
           value={endDate}
           onChange={(e) => onEndDateChange(e.target.value)}
-          className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
+          className="w-full bg-inset border border-border rounded-lg px-3 py-2 text-sm font-mono text-fg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
         />
       </div>
 
@@ -207,7 +207,7 @@ function BacktestControls({
           onChange={(e) => onCapitalChange(Number(e.target.value) * 10000)}
           min={100}
           step={100}
-          className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
+          className="w-full bg-inset border border-border rounded-lg px-3 py-2 text-sm font-mono text-fg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
         />
       </div>
 
@@ -219,7 +219,7 @@ function BacktestControls({
         <select
           value={strategy}
           onChange={(e) => onStrategyChange(e.target.value as Strategy)}
-          className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
+          className="w-full bg-inset border border-border rounded-lg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
         >
           {strategies.map((s) => (
             <option key={s.value} value={s.value}>{s.label}</option>
@@ -265,7 +265,7 @@ function BacktestResults({ results }: { results: BacktestApiResult | null }) {
         <span className="text-amber-500/80">— 이 결과는 연구/검증용이며, 오늘 매매 결정에 사용하지 마세요</span>
       </div>
       
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-neutral-900/50 rounded-xl border border-neutral-800">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-inset/50 rounded-xl border border-border">
         <div>
           <div className="text-xs text-muted">초기 자본</div>
           <div className="text-lg font-bold font-mono text-fg">{((params?.capital ?? 0) / 10000).toLocaleString()}만원</div>
@@ -287,7 +287,7 @@ function BacktestResults({ results }: { results: BacktestApiResult | null }) {
       </div>
 
       {equity && equity.length > 0 && (
-        <div className="rounded-xl border border-neutral-800 bg-surface p-6">
+        <div className="rounded-xl border border-border bg-surface p-6">
           <div className="flex items-center gap-2 mb-4">
             <LineChart size={16} className="text-blue-400" />
             <span className="text-sm font-bold text-fg">Equity Curve</span>
@@ -304,8 +304,8 @@ function BacktestResults({ results }: { results: BacktestApiResult | null }) {
         </div>
       )}
 
-      <div className="rounded-xl border border-neutral-800 bg-surface overflow-hidden">
-        <div className="grid grid-cols-6 gap-4 p-4 border-b border-neutral-800 bg-neutral-900/50">
+      <div className="rounded-xl border border-border bg-surface overflow-hidden">
+        <div className="grid grid-cols-6 gap-4 p-4 border-b border-border bg-inset/50">
           <div className="text-xs text-muted uppercase tracking-wider">전략</div>
           <div className="text-xs text-muted uppercase tracking-wider text-right">CAGR</div>
           <div className="text-xs text-muted uppercase tracking-wider text-right">MDD</div>
@@ -314,7 +314,7 @@ function BacktestResults({ results }: { results: BacktestApiResult | null }) {
           <div className="text-xs text-muted uppercase tracking-wider text-right">Calmar</div>
         </div>
         <div className="divide-y divide-neutral-800">
-          <div className="grid grid-cols-6 gap-4 p-4 hover:bg-neutral-800/20 transition-colors">
+          <div className="grid grid-cols-6 gap-4 p-4 hover:bg-surface/20 transition-colors">
             <div className="text-sm font-bold text-fg">{results.experiment}</div>
             <div className={`text-sm font-mono text-right ${metrics.CAGR >= 0 ? "text-positive" : "text-negative"}`}>
               {metrics.CAGR >= 0 ? "+" : ""}{metrics.CAGR.toFixed(1)}%
@@ -328,14 +328,14 @@ function BacktestResults({ results }: { results: BacktestApiResult | null }) {
       </div>
 
       <div className="grid grid-cols-3 gap-4 text-xs text-muted">
-        <div className="bg-neutral-900/30 rounded-lg p-3 border border-neutral-800">
-          <span className="text-neutral-500">거래일수:</span> {metrics.TradingDays}일
+        <div className="bg-inset/30 rounded-lg p-3 border border-border">
+          <span className="text-muted">거래일수:</span> {metrics.TradingDays}일
         </div>
-        <div className="bg-neutral-900/30 rounded-lg p-3 border border-neutral-800">
-          <span className="text-neutral-500">세금 (22%):</span> {(metrics.TotalTax / 10000).toLocaleString()}만원
+        <div className="bg-inset/30 rounded-lg p-3 border border-border">
+          <span className="text-muted">세금 (22%):</span> {(metrics.TotalTax / 10000).toLocaleString()}만원
         </div>
-        <div className="bg-neutral-900/30 rounded-lg p-3 border border-neutral-800">
-          <span className="text-neutral-500">실행시간:</span> {results.elapsed_seconds?.toFixed(1)}초
+        <div className="bg-inset/30 rounded-lg p-3 border border-border">
+          <span className="text-muted">실행시간:</span> {results.elapsed_seconds?.toFixed(1)}초
         </div>
       </div>
 
@@ -352,7 +352,7 @@ function BacktestResults({ results }: { results: BacktestApiResult | null }) {
             a.click();
             URL.revokeObjectURL(url);
           }}
-          className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg text-xs font-medium transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 bg-surface hover:bg-surface text-fg rounded-lg text-xs font-medium transition-colors"
         >
           <Download size={14} />
           Export CSV
@@ -368,7 +368,7 @@ function BacktestResults({ results }: { results: BacktestApiResult | null }) {
             a.click();
             URL.revokeObjectURL(url);
           }}
-          className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg text-xs font-medium transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 bg-surface hover:bg-surface text-fg rounded-lg text-xs font-medium transition-colors"
         >
           <Download size={14} />
           Export JSON
@@ -402,9 +402,9 @@ function StrategyCompareSection({
   handleCompareStrategies: () => void;
 }) {
   return (
-    <div className="space-y-4 mt-6 pt-6 border-t border-neutral-800">
+    <div className="space-y-4 mt-6 pt-6 border-t border-border">
       <h3 className="text-sm font-bold text-fg flex items-center gap-2">
-        <Layers size={14} className="text-neutral-400" />
+        <Layers size={14} className="text-muted" />
         복수 전략 비교
       </h3>
       <div className="flex flex-wrap gap-2">
@@ -415,7 +415,7 @@ function StrategyCompareSection({
             className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors flex items-center gap-1.5 ${
               compareStrategies.includes(s)
                 ? "bg-blue-600/20 border-blue-500 text-blue-400"
-                : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600"
+                : "bg-surface border-border text-muted hover:border-neutral-600"
             }`}
           >
             {compareStrategies.includes(s) && <Check size={12} />}
@@ -430,13 +430,13 @@ function StrategyCompareSection({
             type="date"
             value={btStartDate}
             onChange={(e) => setBtStartDate(e.target.value)}
-            className="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+            className="bg-inset border border-border rounded-lg px-3 py-2 text-sm font-mono text-fg"
           />
           <input
             type="date"
             value={btEndDate}
             onChange={(e) => setBtEndDate(e.target.value)}
-            className="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+            className="bg-inset border border-border rounded-lg px-3 py-2 text-sm font-mono text-fg"
           />
         </div>
         <button
@@ -453,8 +453,8 @@ function StrategyCompareSection({
       )}
       {Object.keys(compareResults).length > 0 && (
         <>
-          <div className="rounded-xl border border-neutral-800 overflow-hidden">
-            <div className="grid grid-cols-7 gap-2 p-3 border-b border-neutral-800 bg-neutral-900/50 text-xs text-muted uppercase">
+          <div className="rounded-xl border border-border overflow-hidden">
+            <div className="grid grid-cols-7 gap-2 p-3 border-b border-border bg-inset/50 text-xs text-muted uppercase">
               <div>전략</div>
               <div className="text-right">CAGR</div>
               <div className="text-right">MDD</div>
@@ -464,7 +464,7 @@ function StrategyCompareSection({
               <div className="text-right">Final</div>
             </div>
             {Object.entries(compareResults).map(([s, r]) => r.metrics && (
-              <div key={s} className="grid grid-cols-7 gap-2 p-3 border-b border-neutral-800/50 text-sm">
+              <div key={s} className="grid grid-cols-7 gap-2 p-3 border-b border-border/50 text-sm">
                 <div className="font-bold flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: STRATEGY_COLORS[s as Strategy] }} />
                   {s}
@@ -606,7 +606,7 @@ export default function AnalysisPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-fg flex items-center gap-3">
           분석
-          <span className="text-sm font-normal text-muted bg-neutral-800 px-2.5 py-0.5 rounded-full border border-neutral-700">Analysis</span>
+          <span className="text-sm font-normal text-muted bg-surface px-2.5 py-0.5 rounded-full border border-border">Analysis</span>
           {dataSource === "MOCK" ? (
             <span className="text-[10px] font-bold text-amber-400 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-900/50">
               MOCK
@@ -623,9 +623,9 @@ export default function AnalysisPage() {
       {/* 1. Overview - KPI Cards */}
       <section>
         <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <LayoutGrid size={18} className="text-neutral-400" />
+          <LayoutGrid size={18} className="text-muted" />
           성과 요약
-          <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Overview</span>
+          <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Overview</span>
         </h2>
         {kpis ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -658,10 +658,10 @@ export default function AnalysisPage() {
             />
           </div>
         ) : (
-          <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+          <div className="rounded-xl border border-border bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
             <Database size={24} className="opacity-50" />
             <span className="text-sm">실제 성과 데이터가 없습니다</span>
-            <span className="text-xs text-neutral-600">거래 기록이 쌓이면 지표가 계산됩니다</span>
+            <span className="text-xs text-muted">거래 기록이 쌓이면 지표가 계산됩니다</span>
           </div>
         )}
       </section>
@@ -669,9 +669,9 @@ export default function AnalysisPage() {
       {/* 2. Returns Heatmap */}
       <section>
         <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <Calendar size={18} className="text-neutral-400" />
+          <Calendar size={18} className="text-muted" />
           수익률 히트맵
-          <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Returns</span>
+          <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Returns</span>
           {dataSource === "REAL" ? (
             <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-900/50 ml-2">
               REAL
@@ -682,7 +682,7 @@ export default function AnalysisPage() {
             </span>
           )}
         </h2>
-        <div className="rounded-xl border border-neutral-800 bg-surface p-6 space-y-4">
+        <div className="rounded-xl border border-border bg-surface p-6 space-y-4">
           {dataSource === "REAL" ? (
             <>
               {realEquity && realEquity.length > 0 ? (
@@ -701,7 +701,7 @@ export default function AnalysisPage() {
                 <div className="flex flex-col items-center justify-center py-12 text-muted gap-2">
                   <Database size={24} className="opacity-50" />
                   <span className="text-sm">아직 포트폴리오 스냅샷이 없습니다</span>
-                  <span className="text-xs text-neutral-600">Command에서 거래 기록을 저장하면 성과가 추적됩니다</span>
+                  <span className="text-xs text-muted">Command에서 거래 기록을 저장하면 성과가 추적됩니다</span>
                 </div>
               )}
             </>
@@ -715,7 +715,7 @@ export default function AnalysisPage() {
                 <select
                   value={heatmapStrategy}
                   onChange={(e) => setHeatmapStrategy(e.target.value as Strategy)}
-                  className="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-fg"
+                  className="bg-inset border border-border rounded-lg px-3 py-2 text-sm text-fg"
                 >
                   {Object.entries(STRATEGY_LABELS).map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
@@ -726,13 +726,13 @@ export default function AnalysisPage() {
                     type="date"
                     value={btStartDate}
                     onChange={(e) => setBtStartDate(e.target.value)}
-                    className="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+                    className="bg-inset border border-border rounded-lg px-3 py-2 text-sm font-mono text-fg"
                   />
                   <input
                     type="date"
                     value={btEndDate}
                     onChange={(e) => setBtEndDate(e.target.value)}
-                    className="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+                    className="bg-inset border border-border rounded-lg px-3 py-2 text-sm font-mono text-fg"
                   />
                 </div>
                 <button
@@ -757,14 +757,14 @@ export default function AnalysisPage() {
       {/* 3. Attribution */}
       <section>
         <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <PieChart size={18} className="text-neutral-400" />
+          <PieChart size={18} className="text-muted" />
           성과 분해
-          <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Attribution</span>
+          <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Attribution</span>
         </h2>
         {kpis ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-surface border border-neutral-800 rounded-xl p-5">
+              <div className="bg-surface border border-border rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Activity size={16} className="text-blue-400" />
                   <span className="text-sm font-bold text-fg">Exposure</span>
@@ -772,7 +772,7 @@ export default function AnalysisPage() {
                 <div className="text-2xl font-bold font-mono text-fg mb-1">78%</div>
                 <div className="text-xs text-muted">평균 주식 노출 비중</div>
               </div>
-              <div className="bg-surface border border-neutral-800 rounded-xl p-5">
+              <div className="bg-surface border border-border rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Zap size={16} className="text-amber-400" />
                   <span className="text-sm font-bold text-fg">Timing</span>
@@ -780,9 +780,9 @@ export default function AnalysisPage() {
                 <div className="text-2xl font-bold font-mono text-positive mb-1">+4.2%</div>
                 <div className="text-xs text-muted">진입/이탈 타이밍 기여분</div>
               </div>
-              <div className="bg-surface border border-neutral-800 rounded-xl p-5">
+              <div className="bg-surface border border-border rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <TrendingDown size={16} className="text-neutral-400" />
+                  <TrendingDown size={16} className="text-muted" />
                   <span className="text-sm font-bold text-fg">Cash Drag</span>
                 </div>
                 <div className="text-2xl font-bold font-mono text-negative mb-1">-1.8%</div>
@@ -790,16 +790,16 @@ export default function AnalysisPage() {
               </div>
             </div>
             
-            <div className="mt-4 rounded-xl border border-neutral-800 bg-surface p-5">
+            <div className="mt-4 rounded-xl border border-border bg-surface p-5">
               <div className="flex items-center gap-2 mb-4">
                 <BarChart3 size={16} className="text-purple-400" />
                 <span className="text-sm font-bold text-fg">시그널 상태 분석</span>
-                <span className="text-xs text-muted bg-neutral-800 px-2 py-0.5 rounded-full">E03 ON/OFF</span>
+                <span className="text-xs text-muted bg-surface px-2 py-0.5 rounded-full">E03 ON/OFF</span>
               </div>
               
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-4">
+                <div className="bg-inset/50 border border-border rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
                     <span className="text-xs text-muted">ON 상태</span>
@@ -807,7 +807,7 @@ export default function AnalysisPage() {
                   <div className="text-xl font-bold font-mono text-fg">245<span className="text-sm text-muted ml-1">일</span></div>
                   <div className="text-xs text-muted mt-1">60.5% · <span className="text-positive">+28.5%p</span> 기여</div>
                 </div>
-                <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-4">
+                <div className="bg-inset/50 border border-border rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2 h-2 rounded-full bg-amber-500" />
                     <span className="text-xs text-muted">OFF 상태</span>
@@ -815,7 +815,7 @@ export default function AnalysisPage() {
                   <div className="text-xl font-bold font-mono text-fg">160<span className="text-sm text-muted ml-1">일</span></div>
                   <div className="text-xs text-muted mt-1">39.5% · <span className="text-positive">+4.6%p</span> 기여</div>
                 </div>
-                <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-4">
+                <div className="bg-inset/50 border border-border rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Activity size={12} className="text-blue-400" />
                     <span className="text-xs text-muted">상태 전환</span>
@@ -846,10 +846,10 @@ export default function AnalysisPage() {
             </div>
           </>
         ) : (
-          <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+          <div className="rounded-xl border border-border bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
             <PieChart size={24} className="opacity-50" />
             <span className="text-sm">성과 분해 데이터가 없습니다</span>
-            <span className="text-xs text-neutral-600">거래 기록이 쌓이면 분석이 가능합니다</span>
+            <span className="text-xs text-muted">거래 기록이 쌓이면 분석이 가능합니다</span>
           </div>
         )}
       </section>
@@ -858,20 +858,20 @@ export default function AnalysisPage() {
       <details className="group" open>
         <summary className="list-none cursor-pointer">
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <FlaskConical size={18} className="text-neutral-400" />
+            <FlaskConical size={18} className="text-muted" />
             Intel Lab
-            <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Backtest</span>
+            <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Backtest</span>
             <span className="text-[10px] font-bold text-amber-400 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-900/50 ml-2">
               NOT FOR TODAY&apos;S EXECUTION
             </span>
-            <ChevronDown size={16} className="text-neutral-500 ml-auto group-open:rotate-180 transition-transform" />
+            <ChevronDown size={16} className="text-muted ml-auto group-open:rotate-180 transition-transform" />
           </h2>
         </summary>
         
-        <div className="rounded-xl border border-neutral-800 bg-surface p-6 space-y-6">
+        <div className="rounded-xl border border-border bg-surface p-6 space-y-6">
           {showConfirmDialog && (
             <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-              <div className="bg-neutral-900 border border-neutral-700 rounded-xl p-6 max-w-md w-full shadow-2xl">
+              <div className="bg-inset border border-border rounded-xl p-6 max-w-md w-full shadow-2xl">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 bg-amber-500/20 rounded-full">
                     <AlertTriangle size={24} className="text-amber-400" />
@@ -888,7 +888,7 @@ export default function AnalysisPage() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowConfirmDialog(false)}
-                    className="flex-1 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg text-sm font-medium transition-colors"
+                    className="flex-1 px-4 py-2 bg-surface hover:bg-surface text-fg rounded-lg text-sm font-medium transition-colors"
                   >
                     취소
                   </button>
@@ -909,7 +909,7 @@ export default function AnalysisPage() {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 compareMode
                   ? "bg-blue-600/20 border border-blue-500 text-blue-400"
-                  : "bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-600"
+                  : "bg-surface border border-border text-muted hover:border-neutral-600"
               }`}
             >
               {compareMode ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
@@ -928,7 +928,7 @@ export default function AnalysisPage() {
                     className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors flex items-center gap-1.5 ${
                       compareStrategies.includes(s)
                         ? "bg-blue-600/20 border-blue-500 text-blue-400"
-                        : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600"
+                        : "bg-surface border-border text-muted hover:border-neutral-600"
                     }`}
                   >
                     {compareStrategies.includes(s) && <Check size={12} />}
@@ -947,7 +947,7 @@ export default function AnalysisPage() {
                     type="date"
                     value={btStartDate}
                     onChange={(e) => setBtStartDate(e.target.value)}
-                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+                    className="w-full bg-inset border border-border rounded-lg px-3 py-2 text-sm font-mono text-fg"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -959,7 +959,7 @@ export default function AnalysisPage() {
                     type="date"
                     value={btEndDate}
                     onChange={(e) => setBtEndDate(e.target.value)}
-                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+                    className="w-full bg-inset border border-border rounded-lg px-3 py-2 text-sm font-mono text-fg"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -973,7 +973,7 @@ export default function AnalysisPage() {
                     onChange={(e) => setBtCapital(Number(e.target.value) * 10000)}
                     min={100}
                     step={100}
-                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono text-fg"
+                    className="w-full bg-inset border border-border rounded-lg px-3 py-2 text-sm font-mono text-fg"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -1002,8 +1002,8 @@ export default function AnalysisPage() {
               )}
               {Object.keys(compareResults).length > 0 && (
                 <>
-                  <div className="rounded-xl border border-neutral-800 overflow-hidden">
-                    <div className="grid grid-cols-7 gap-2 p-3 border-b border-neutral-800 bg-neutral-900/50 text-xs text-muted uppercase">
+                  <div className="rounded-xl border border-border overflow-hidden">
+                    <div className="grid grid-cols-7 gap-2 p-3 border-b border-border bg-inset/50 text-xs text-muted uppercase">
                       <div>전략</div>
                       <div className="text-right">CAGR</div>
                       <div className="text-right">MDD</div>
@@ -1013,7 +1013,7 @@ export default function AnalysisPage() {
                       <div className="text-right">Final</div>
                     </div>
                     {Object.entries(compareResults).map(([s, r]) => r.metrics && (
-                      <div key={s} className="grid grid-cols-7 gap-2 p-3 border-b border-neutral-800/50 text-sm">
+                      <div key={s} className="grid grid-cols-7 gap-2 p-3 border-b border-border/50 text-sm">
                         <div className="font-bold flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full" style={{ backgroundColor: STRATEGY_COLORS[s as Strategy] }} />
                           {s}
@@ -1042,7 +1042,7 @@ export default function AnalysisPage() {
                 </>
               )}
               {Object.keys(compareResults).length === 0 && !compareRunning && (
-                <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
+                <div className="rounded-xl border border-border bg-inset/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
                   <Layers size={24} className="opacity-50" />
                   <span className="text-sm">전략을 선택하고 Compare를 클릭하세요</span>
                 </div>
@@ -1085,10 +1085,10 @@ export default function AnalysisPage() {
               )}
 
               {!btResults && !btIsRunning && !btError && (
-                <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
+                <div className="rounded-xl border border-border bg-inset/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
                   <FlaskConical size={24} className="opacity-50" />
                   <span className="text-sm">파라미터를 설정하고 Run Backtest를 클릭하세요</span>
-                  <p className="text-xs text-neutral-600 mt-2 text-center max-w-md">
+                  <p className="text-xs text-muted mt-2 text-center max-w-md">
                     이 섹션은 전략 검증 및 백테스트용입니다. 
                     오늘의 매매 결정에는 Command 페이지를 사용하세요.
                   </p>

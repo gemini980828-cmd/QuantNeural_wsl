@@ -209,7 +209,7 @@ export default function PortfolioPage() {
           <span>데이터 로드 실패: {error}</span>
           <button 
             onClick={loadData}
-            className="mt-2 px-4 py-2 bg-neutral-800 rounded-lg text-sm hover:bg-neutral-700"
+            className="mt-2 px-4 py-2 bg-surface rounded-lg text-sm hover:bg-surface"
           >
             다시 시도
           </button>
@@ -222,9 +222,9 @@ export default function PortfolioPage() {
   const renderExecutionLogsSection = () => (
     <div>
       <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-        <History size={18} className="text-neutral-400" />
+        <History size={18} className="text-muted" />
         최근 체결
-        <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Execution Logs</span>
+        <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Execution Logs</span>
         {dataSource === "REAL" && recentTrades.length > 0 && (
           <span className="text-[10px] text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-900/50">
             {recentTrades.length}건
@@ -232,27 +232,27 @@ export default function PortfolioPage() {
         )}
       </h2>
       {dataSource === "MOCK" ? (
-        <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+        <div className="rounded-xl border border-border bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
           <Database size={24} className="opacity-50" />
           <span className="text-sm">MOCK 모드에서는 체결 기록이 표시되지 않습니다</span>
-          <span className="text-xs text-neutral-600">Settings에서 REAL 모드로 전환하세요</span>
+          <span className="text-xs text-muted">Settings에서 REAL 모드로 전환하세요</span>
         </div>
       ) : tradesLoading ? (
-        <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex items-center justify-center text-muted gap-2">
+        <div className="rounded-xl border border-border bg-surface p-8 flex items-center justify-center text-muted gap-2">
           <RefreshCw size={20} className="animate-spin" />
           <span className="text-sm">로딩 중...</span>
         </div>
       ) : recentTrades.length === 0 ? (
-        <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+        <div className="rounded-xl border border-border bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
           <History size={24} className="opacity-50" />
           <span className="text-sm">최근 체결 내역이 없습니다</span>
-          <span className="text-xs text-neutral-600">Command에서 거래를 기록하면 여기에 표시됩니다</span>
+          <span className="text-xs text-muted">Command에서 거래를 기록하면 여기에 표시됩니다</span>
         </div>
       ) : (
-        <div className="rounded-xl border border-neutral-800 bg-surface overflow-hidden">
+        <div className="rounded-xl border border-border bg-surface overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-neutral-900/50">
-              <tr className="border-b border-neutral-800">
+            <thead className="bg-inset/50">
+              <tr className="border-b border-border">
                 <th className="text-left py-3 px-4 text-muted font-medium">날짜</th>
                 <th className="text-left py-3 px-4 text-muted font-medium">종목</th>
                 <th className="text-left py-3 px-4 text-muted font-medium">구분</th>
@@ -262,7 +262,7 @@ export default function PortfolioPage() {
             </thead>
             <tbody>
               {recentTrades.map((trade) => (
-                <tr key={trade.id} className="border-b border-neutral-800/50 hover:bg-neutral-900/30">
+                <tr key={trade.id} className="border-b border-border/50 hover:bg-inset/30">
                   <td className="py-3 px-4 font-mono text-xs text-muted">{trade.execution_date}</td>
                   <td className="py-3 px-4 font-bold text-fg">{trade.ticker}</td>
                   <td className="py-3 px-4">
@@ -289,9 +289,9 @@ export default function PortfolioPage() {
   const renderPerformanceSection = () => (
     <div>
       <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-        <TrendingUp size={18} className="text-neutral-400" />
+        <TrendingUp size={18} className="text-muted" />
         성과 분석
-        <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Performance</span>
+        <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Performance</span>
         {equityHistory.length > 0 && (
           <span className={`text-[10px] px-2 py-0.5 rounded border ${
             dataSource === "REAL" 
@@ -303,39 +303,39 @@ export default function PortfolioPage() {
         )}
       </h2>
       {equityLoading ? (
-        <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex items-center justify-center text-muted gap-2">
+        <div className="rounded-xl border border-border bg-surface p-8 flex items-center justify-center text-muted gap-2">
           <RefreshCw size={20} className="animate-spin" />
           <span className="text-sm">성과 데이터 로딩 중...</span>
         </div>
       ) : equityHistory.length === 0 ? (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
+        <div className="rounded-xl border border-border bg-inset/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
           <Info size={24} className="opacity-50" />
           <span className="text-sm">아직 성과 데이터가 없습니다</span>
-          <span className="text-xs text-neutral-600">거래 기록이 쌓이면 성과가 표시됩니다</span>
+          <span className="text-xs text-muted">거래 기록이 쌓이면 성과가 표시됩니다</span>
         </div>
       ) : (
-        <div className="rounded-xl border border-neutral-800 bg-surface p-6">
+        <div className="rounded-xl border border-border bg-surface p-6">
           {dataSource === "MOCK" && (
             <div className="mb-4 text-xs text-amber-400 bg-amber-900/20 border border-amber-800/30 rounded-lg px-3 py-2">
               MOCK 데이터 - 시뮬레이션 성과입니다
             </div>
           )}
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-neutral-900/50 rounded-lg p-4">
+            <div className="bg-inset/50 rounded-lg p-4">
               <div className="text-xs text-muted mb-1">시작 자산</div>
               <div className="font-mono font-bold text-fg">
                 ${equityHistory[0]?.value.toLocaleString(undefined, { minimumFractionDigits: 0 })}
               </div>
               <div className="text-[10px] text-muted mt-1">{equityHistory[0]?.date}</div>
             </div>
-            <div className="bg-neutral-900/50 rounded-lg p-4">
+            <div className="bg-inset/50 rounded-lg p-4">
               <div className="text-xs text-muted mb-1">현재 자산</div>
               <div className="font-mono font-bold text-fg">
                 ${equityHistory[equityHistory.length - 1]?.value.toLocaleString(undefined, { minimumFractionDigits: 0 })}
               </div>
               <div className="text-[10px] text-muted mt-1">{equityHistory[equityHistory.length - 1]?.date}</div>
             </div>
-            <div className="bg-neutral-900/50 rounded-lg p-4">
+            <div className="bg-inset/50 rounded-lg p-4">
               <div className="text-xs text-muted mb-1">수익률</div>
               {(() => {
                 const startVal = equityHistory[0]?.value || 1;
@@ -376,11 +376,11 @@ export default function PortfolioPage() {
   const renderPortfolioInputSection = () => (
     <div>
       <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-        <Wallet size={18} className="text-neutral-400" />
+        <Wallet size={18} className="text-muted" />
         보유 현황 입력
-        <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Holdings Input</span>
+        <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Holdings Input</span>
       </h2>
-      <div className="rounded-xl border border-neutral-800 bg-surface divide-y divide-neutral-800">
+      <div className="rounded-xl border border-border bg-surface divide-y divide-neutral-800">
         <div className="flex items-center justify-between p-4">
           <div>
             <div className="text-sm font-medium text-fg">TQQQ 보유량</div>
@@ -393,7 +393,7 @@ export default function PortfolioPage() {
               value={tqqqShares}
               onChange={(e) => setTqqqShares(Math.max(0, parseInt(e.target.value) || 0))}
               disabled={portfolioStateLoading}
-              className="w-24 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="w-24 bg-inset border border-border rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
             <span className="text-xs text-muted">주</span>
           </div>
@@ -410,7 +410,7 @@ export default function PortfolioPage() {
               value={sgovShares}
               onChange={(e) => setSgovShares(Math.max(0, parseInt(e.target.value) || 0))}
               disabled={portfolioStateLoading}
-              className="w-24 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="w-24 bg-inset border border-border rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
             <span className="text-xs text-muted">주</span>
           </div>
@@ -439,7 +439,7 @@ export default function PortfolioPage() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={ocrLoading || portfolioStateLoading}
-              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-purple-600 hover:bg-purple-500 text-white disabled:bg-neutral-700 disabled:text-neutral-400"
+              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-purple-600 hover:bg-purple-500 text-white disabled:bg-neutral-700 disabled:text-muted"
             >
               {ocrLoading ? (
                 <RefreshCw size={12} className="animate-spin" />
@@ -471,7 +471,7 @@ export default function PortfolioPage() {
             <button
               onClick={savePortfolioState}
               disabled={portfolioSaving || portfolioStateLoading}
-              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-blue-600 hover:bg-blue-500 text-white disabled:bg-neutral-700 disabled:text-neutral-400"
+              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-blue-600 hover:bg-blue-500 text-white disabled:bg-neutral-700 disabled:text-muted"
             >
               {portfolioSaving ? (
                 <RefreshCw size={12} className="animate-spin" />
@@ -504,7 +504,7 @@ export default function PortfolioPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-fg flex items-center gap-3">
             포트폴리오
-            <span className="text-sm font-normal text-muted bg-neutral-800 px-2.5 py-0.5 rounded-full border border-neutral-700">Portfolio</span>
+            <span className="text-sm font-normal text-muted bg-surface px-2.5 py-0.5 rounded-full border border-border">Portfolio</span>
           </h1>
           
           {/* Data Source Indicator */}
@@ -519,7 +519,7 @@ export default function PortfolioPage() {
             <button
               onClick={loadData}
               disabled={loading}
-              className="p-1.5 rounded-lg hover:bg-neutral-800 text-muted transition-colors"
+              className="p-1.5 rounded-lg hover:bg-surface text-muted transition-colors"
               title="새로고침"
             >
               <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
@@ -532,10 +532,10 @@ export default function PortfolioPage() {
           {renderPortfolioInputSection()}
           
           {/* Message for missing portfolio data */}
-          <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+          <div className="rounded-xl border border-border bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
             <Database size={24} className="opacity-50" />
             <span className="text-sm">포트폴리오 데이터가 없습니다</span>
-            <span className="text-xs text-neutral-600">위에서 보유 현황을 입력하거나 Settings에서 데이터 소스를 확인하세요</span>
+            <span className="text-xs text-muted">위에서 보유 현황을 입력하거나 Settings에서 데이터 소스를 확인하세요</span>
           </div>
 
           {/* Execution Logs - always visible */}
@@ -554,7 +554,7 @@ export default function PortfolioPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-fg flex items-center gap-3">
           포트폴리오
-          <span className="text-sm font-normal text-muted bg-neutral-800 px-2.5 py-0.5 rounded-full border border-neutral-700">Portfolio</span>
+          <span className="text-sm font-normal text-muted bg-surface px-2.5 py-0.5 rounded-full border border-border">Portfolio</span>
         </h1>
         
         {/* Data Source Indicator */}
@@ -569,7 +569,7 @@ export default function PortfolioPage() {
           <button
             onClick={loadData}
             disabled={loading}
-            className="p-1.5 rounded-lg hover:bg-neutral-800 text-muted transition-colors"
+            className="p-1.5 rounded-lg hover:bg-surface text-muted transition-colors"
             title="새로고침"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
@@ -582,9 +582,9 @@ export default function PortfolioPage() {
         {/* 1. Summary Section */}
         <div>
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <LayoutGrid size={18} className="text-neutral-400" />
+            <LayoutGrid size={18} className="text-muted" />
             요약
-            <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Overview</span>
+            <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Overview</span>
           </h2>
           <PortfolioSummaryStrip portfolio={portfolio} hideCta />
         </div>
@@ -595,9 +595,9 @@ export default function PortfolioPage() {
         {/* 2. Positions Section */}
         <div>
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <Layers size={18} className="text-neutral-400" />
+            <Layers size={18} className="text-muted" />
             보유 종목
-            <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Holdings</span>
+            <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Holdings</span>
           </h2>
           <PortfolioPositionsTable 
              positions={portfolio.positions} 

@@ -49,15 +49,15 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
 
   return (
-    <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-3 shadow-xl">
-      <p className="text-xs text-neutral-400 mb-2 font-mono">{label}</p>
+    <div className="bg-surface border border-border rounded-lg p-3 shadow-xl">
+      <p className="text-xs text-muted mb-2 font-mono">{label}</p>
       {payload.map((entry, i) => (
         <div key={i} className="flex items-center gap-2 text-sm">
           <div
             className="w-2 h-2 rounded-full"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-neutral-300">{entry.name}:</span>
+          <span className="text-fg">{entry.name}:</span>
           <span className="font-mono font-bold" style={{ color: entry.color }}>
             {entry.dataKey === "return" 
               ? `${(entry.value * 100).toFixed(1)}%`
@@ -112,7 +112,7 @@ export function RollingMetricsChart({
   if (!equity || equity.length < windowDays || chartData.length === 0) {
     return (
       <div 
-        className="flex items-center justify-center text-neutral-500 text-sm"
+        className="flex items-center justify-center text-muted text-sm"
         style={{ height }}
       >
         Not enough data for {windowDays}-day rolling metrics
@@ -127,20 +127,20 @@ export function RollingMetricsChart({
     <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border))" opacity={0.3} vertical={false} />
           <XAxis
             dataKey="date"
-            stroke="#475569"
-            tick={{ fill: "#94a3b8", fontSize: 11 }}
+            stroke="rgb(var(--border))"
+            tick={{ fill: "rgb(var(--muted))", fontSize: 11 }}
             tickFormatter={formatDate}
-            tickLine={{ stroke: "#475569" }}
+            tickLine={{ stroke: "rgb(var(--border))" }}
           />
           {showReturn && (
             <YAxis
               yAxisId="return"
               stroke="#3b82f6"
-              tick={{ fill: "#94a3b8", fontSize: 11 }}
-              tickLine={{ stroke: "#475569" }}
+              tick={{ fill: "rgb(var(--muted))", fontSize: 11 }}
+              tickLine={{ stroke: "rgb(var(--border))" }}
               tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
               orientation="left"
             />
@@ -149,8 +149,8 @@ export function RollingMetricsChart({
             <YAxis
               yAxisId="sharpe"
               stroke="#f59e0b"
-              tick={{ fill: "#94a3b8", fontSize: 11 }}
-              tickLine={{ stroke: "#475569" }}
+              tick={{ fill: "rgb(var(--muted))", fontSize: 11 }}
+              tickLine={{ stroke: "rgb(var(--border))" }}
               tickFormatter={(v: number) => v.toFixed(1)}
               orientation={showReturn ? "right" : "left"}
             />
@@ -159,7 +159,7 @@ export function RollingMetricsChart({
             <ReferenceLine
               yAxisId="return"
               y={0}
-              stroke="#475569"
+              stroke="rgb(var(--border))"
               strokeDasharray="5 5"
             />
           )}
@@ -177,9 +177,9 @@ export function RollingMetricsChart({
               }}
             />
           )}
-          <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#475569", strokeWidth: 1 }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgb(var(--border))", strokeWidth: 1 }} />
           <Legend
-            wrapperStyle={{ color: "#94a3b8", paddingTop: "8px" }}
+            wrapperStyle={{ color: "rgb(var(--muted))", paddingTop: "8px" }}
             iconType="line"
           />
           {showReturn && (
@@ -191,7 +191,7 @@ export function RollingMetricsChart({
               stroke="#3b82f6"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: "#3b82f6", stroke: "#1e293b", strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: "#3b82f6", stroke: "rgb(var(--bg))", strokeWidth: 2 }}
             />
           )}
           {showSharpe && (
@@ -204,7 +204,7 @@ export function RollingMetricsChart({
               strokeWidth={2}
               strokeDasharray="5 5"
               dot={false}
-              activeDot={{ r: 4, fill: "#f59e0b", stroke: "#1e293b", strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: "#f59e0b", stroke: "rgb(var(--bg))", strokeWidth: 2 }}
             />
           )}
         </LineChart>

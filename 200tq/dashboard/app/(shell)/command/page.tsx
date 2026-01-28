@@ -290,7 +290,7 @@ export default function CommandPage({
       {/* Dev Tools: Scenario Switcher (only in MOCK mode or when devScenario enabled) */}
       {(dataSource === "MOCK" || devScenarioEnabled) && (
         <div className="flex gap-3 text-xs items-center mb-6 pl-1 opacity-70 hover:opacity-100 transition-opacity duration-300">
-            <span className="uppercase font-bold tracking-widest text-neutral-500 dark:text-neutral-400 select-none">Dev Scenario</span>
+            <span className="uppercase font-bold tracking-widest text-muted dark:text-muted select-none">Dev Scenario</span>
             <div className="flex gap-1">
               {scenarios.map((id) => (
                 <Link
@@ -298,8 +298,8 @@ export default function CommandPage({
                   href={`/command?scenario=${id}`}
                   className={`px-2 py-0.5 rounded-full transition-all ${
                     currentScenario === id 
-                      ? "bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-200 font-medium shadow-sm" 
-                      : "text-neutral-500 dark:text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 hover:bg-neutral-200/50 dark:hover:bg-neutral-900/50"
+                      ? "bg-neutral-200 dark:bg-surface text-neutral-900 dark:text-neutral-200 font-medium shadow-sm" 
+                      : "text-muted dark:text-muted hover:text-neutral-900 dark:hover:text-fg hover:bg-neutral-200/50 dark:hover:bg-inset/50"
                   }`}
                 >
                   {scenarioLabels[id]}
@@ -367,7 +367,7 @@ export default function CommandPage({
         <summary className="text-xs text-muted cursor-pointer hover:text-fg">
            Debug JSON View
         </summary>
-        <pre suppressHydrationWarning className="mt-4 p-4 bg-black rounded-lg border border-neutral-800 text-green-900 text-[10px] overflow-auto max-h-[400px] font-mono whitespace-pre">
+        <pre suppressHydrationWarning className="mt-4 p-4 bg-black rounded-lg border border-border text-green-900 text-[10px] overflow-auto max-h-[400px] font-mono whitespace-pre">
            {JSON.stringify({ 
              ...vmWithRecord,
              dataSource,

@@ -403,9 +403,9 @@ export default function MarketChartPanel({
       {/* Header: State Badges + Trades Toggle */}
       <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <h4 className="text-xs sm:text-sm font-semibold text-neutral-300 whitespace-nowrap">Market Charts</h4>
+          <h4 className="text-xs sm:text-sm font-semibold text-fg whitespace-nowrap">Market Charts</h4>
           {/* Strategy Mode Selector */}
-          <div className="flex bg-neutral-900 rounded-lg p-0.5 border border-neutral-800 shrink-0">
+          <div className="flex bg-surface dark:bg-neutral-900 rounded-lg p-0.5 border border-border shrink-0">
             <button
                onClick={() => handleStrategyChange("200TQ")}
                className={`px-2 sm:px-3 py-1 text-[10px] font-bold rounded-md transition-all ${
@@ -459,7 +459,7 @@ export default function MarketChartPanel({
 
 
       {/* Controls Container using Segmented Groups */}
-      <div className="flex flex-col gap-3 pb-2 border-b border-e03-border/50 mb-4">
+      <div className="flex flex-col gap-3 pb-2 border-b border-border mb-4">
         <div className="flex flex-wrap items-center justify-between gap-y-3">
           
           {/* Group 1: Tickers */}
@@ -471,8 +471,8 @@ export default function MarketChartPanel({
                   onClick={() => toggleTicker(t)}
                   className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
                     activeTickers.has(t)
-                      ? "bg-neutral-700 text-white shadow-sm"
-                      : "text-neutral-500 hover:text-neutral-300"
+                      ? "bg-surface dark:bg-neutral-700 text-fg shadow-sm"
+                      : "text-muted hover:text-fg"
                   }`}
                 >
                   {t}
@@ -507,15 +507,15 @@ export default function MarketChartPanel({
         <div className="flex flex-wrap items-center justify-between gap-y-2">
           {/* Group 3: Indicators (All visible) */}
           <div className="flex flex-wrap items-center gap-1.5 flex-1">
-             <span className="text-[10px] text-neutral-600 uppercase tracking-wider font-semibold mr-1">Overlay</span>
+             <span className="text-[10px] text-muted uppercase tracking-wider font-semibold mr-1">Overlay</span>
              {OVERLAY_CONFIGS.map(o => (
                 <button
                   key={o.key}
                   onClick={() => toggleOverlay(o.key)}
                   className={`px-2 py-0.5 text-[10px] rounded border transition-all ${
                     activeOverlays.has(o.key)
-                      ? "bg-neutral-200 border-neutral-300 text-neutral-900 font-bold shadow-sm"
-                      : "bg-transparent border-transparent text-neutral-600 hover:bg-neutral-800/50"
+                      ? "bg-surface dark:bg-neutral-200 border-border text-fg font-bold shadow-sm"
+                      : "bg-transparent border-transparent text-muted hover:bg-surface/50"
                   }`}
                   style={{ borderColor: activeOverlays.has(o.key) ? COLORS[o.key] : undefined, color: activeOverlays.has(o.key) ? COLORS[o.key] : undefined }}
                 >
@@ -559,13 +559,13 @@ export default function MarketChartPanel({
       <div className="grid grid-cols-2 gap-3 text-xs">
         <div className="bg-surface p-3 rounded-xl shadow-sm">
           <div className="text-muted mb-1">Focus: {focusTicker}</div>
-          <div className="text-neutral-300">
+          <div className="text-fg">
             Close: <span className="font-sans tabular-nums">${chartData.currentClose?.toFixed(2)}</span>
           </div>
-          <div className="text-neutral-300">
+          <div className="text-fg">
             SMA200: <span className="font-sans tabular-nums">${chartData.currentSma200?.toFixed(2) ?? "-"}</span>
           </div>
-          <div className="text-neutral-300">
+          <div className="text-fg">
             Margin: <span className={`font-mono tabular-nums ${Number(chartData.margin200) > 0 ? "text-positive" : "text-negative"}`}>
               {chartData.margin200}%
             </span>
@@ -575,11 +575,11 @@ export default function MarketChartPanel({
           <div className="text-muted mb-1">Performance ({selectedPeriod})</div>
           <div className={perf.tq200.returnPct >= 0 ? "text-positive" : "text-negative"}>
             200TQ: <span className="font-mono">{perf.tq200.returnPct > 0 ? "+" : ""}{perf.tq200.returnPct.toFixed(1)}%</span>
-            <span className="text-neutral-600 ml-1">({formatKrw(perf.tq200.pnl)})</span>
+            <span className="text-muted ml-1">({formatKrw(perf.tq200.pnl)})</span>
           </div>
           <div className={perf.e03.returnPct >= 0 ? "text-positive" : "text-negative"}>
             E03: <span className="font-mono">{perf.e03.returnPct > 0 ? "+" : ""}{perf.e03.returnPct.toFixed(1)}%</span>
-            <span className="text-neutral-600 ml-1">({formatKrw(perf.e03.pnl)})</span>
+            <span className="text-muted ml-1">({formatKrw(perf.e03.pnl)})</span>
           </div>
         </div>
       </div>

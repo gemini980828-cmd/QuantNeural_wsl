@@ -48,7 +48,7 @@ export default function StrategyStrip({
         <text
           x={-8}
           y={height / 2}
-          fill="#9ca3af"
+          fill="rgb(var(--muted))"
           fontSize={9}
           textAnchor="end"
           dominantBaseline="middle"

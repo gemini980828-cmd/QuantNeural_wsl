@@ -182,7 +182,7 @@ export default function SvgLineChart({
 
   if (lines.length === 0 || lines.every(l => l.data.length === 0)) {
     return (
-      <div className="flex items-center justify-center text-neutral-600 text-sm" style={{ width, height }}>
+      <div className="flex items-center justify-center text-muted text-sm" style={{ width, height }}>
         No data
       </div>
     );
@@ -402,7 +402,7 @@ export default function SvgLineChart({
             v.value !== null && v.value !== undefined && (
               <span key={i} className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: v.color }} />
-                <span className="text-neutral-400 font-medium">{v.label}</span>
+                <span className="text-muted font-medium">{v.label}</span>
                 <span className="font-mono font-bold" style={{ color: v.color }}>{v.value.toFixed(2)}</span>
               </span>
             )
@@ -501,7 +501,7 @@ export default function SvgLineChart({
         <g transform={`translate(${padding.left},${padding.top})`}>
           {/* Grid lines (primary scale) */}
           {yTicks.map((tick, i) => (
-            <line key={`grid-${i}`} x1={0} y1={yScale(tick)} x2={chartW} y2={yScale(tick)} stroke="#404040" strokeOpacity="0.08" strokeDasharray="3,3" />
+            <line key={`grid-${i}`} x1={0} y1={yScale(tick)} x2={chartW} y2={yScale(tick)} stroke="rgb(var(--border))" strokeOpacity="0.3" strokeDasharray="3,3" />
           ))}
           
           {/* Y-axis tick labels - PRIMARY (right side for main ticker) */}
@@ -511,7 +511,7 @@ export default function SvgLineChart({
             if (y > chartH - 15) return null;
             const label = tick >= 1000 ? `${(tick / 1000).toFixed(0)}K` : tick.toFixed(tick >= 100 ? 0 : 1);
             return (
-              <text key={`y-${i}`} x={chartW + 8} y={y} fill="#9ca3af" fontSize={10} textAnchor="start" dominantBaseline="middle" className="font-mono">
+              <text key={`y-${i}`} x={chartW + 8} y={y} fill="rgb(var(--muted))" fontSize={10} textAnchor="start" dominantBaseline="middle" className="font-mono">
                 {label}
               </text>
             );
@@ -668,7 +668,7 @@ export default function SvgLineChart({
             // Skip labels too close to right edge
             if (x > chartW - 20) return null;
             return (
-              <text key={i} x={x} y={chartH + 20} fill="#737373" fontSize={10} textAnchor="middle">
+              <text key={i} x={x} y={chartH + 20} fill="rgb(var(--muted))" fontSize={10} textAnchor="middle">
                 {t.label}
               </text>
             );

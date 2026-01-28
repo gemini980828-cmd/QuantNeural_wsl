@@ -61,19 +61,19 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
 
   return (
-    <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-3 shadow-xl">
-      <p className="text-xs text-neutral-400 mb-2 font-mono">{label}</p>
+    <div className="bg-surface border border-border rounded-lg p-3 shadow-xl">
+      <p className="text-xs text-muted mb-2 font-mono">{label}</p>
       {payload.map((entry, i) => (
         <div key={i} className="flex items-center gap-2 text-sm">
           <div
             className="w-2 h-2 rounded-full"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-neutral-300">{entry.name}:</span>
+          <span className="text-fg">{entry.name}:</span>
           <span className="font-mono font-bold" style={{ color: entry.color }}>
             {entry.value.toFixed(2)}x
           </span>
-          <span className="text-xs text-neutral-500">
+          <span className="text-xs text-muted">
             ({((entry.value - 1) * 100).toFixed(1)}%)
           </span>
         </div>
@@ -114,18 +114,18 @@ export function EquityCurveChart({ strategies, height = 400 }: EquityCurveChartP
     <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={sampledData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border))" opacity={0.3} vertical={false} />
           <XAxis
             dataKey="date"
-            stroke="#475569"
-            tick={{ fill: "#94a3b8", fontSize: 11 }}
+            stroke="rgb(var(--border))"
+            tick={{ fill: "rgb(var(--muted))", fontSize: 11 }}
             tickFormatter={formatDate}
-            tickLine={{ stroke: "#475569" }}
+            tickLine={{ stroke: "rgb(var(--border))" }}
           />
           <YAxis
-            stroke="#475569"
-            tick={{ fill: "#94a3b8", fontSize: 11 }}
-            tickLine={{ stroke: "#475569" }}
+            stroke="rgb(var(--border))"
+            tick={{ fill: "rgb(var(--muted))", fontSize: 11 }}
+            tickLine={{ stroke: "rgb(var(--border))" }}
             tickFormatter={(v: number) => `${v.toFixed(1)}x`}
             domain={[yMin, yMax]}
           />
@@ -141,9 +141,9 @@ export function EquityCurveChart({ strategies, height = 400 }: EquityCurveChartP
               position: "insideTopRight",
             }}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#475569", strokeWidth: 1 }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgb(var(--border))", strokeWidth: 1 }} />
           <Legend
-            wrapperStyle={{ color: "#94a3b8", paddingTop: "12px" }}
+            wrapperStyle={{ color: "rgb(var(--muted))", paddingTop: "12px" }}
             iconType="line"
           />
           {strategies.map((s, i) => (
@@ -155,7 +155,7 @@ export function EquityCurveChart({ strategies, height = 400 }: EquityCurveChartP
               strokeWidth={2}
               dot={false}
               name={s.name}
-              activeDot={{ r: 5, fill: s.color || COLORS[i % COLORS.length], stroke: "#1e293b", strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: s.color || COLORS[i % COLORS.length], stroke: "rgb(var(--bg))", strokeWidth: 2 }}
             />
           ))}
         </LineChart>

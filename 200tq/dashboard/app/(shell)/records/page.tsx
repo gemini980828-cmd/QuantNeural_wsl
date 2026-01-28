@@ -175,9 +175,9 @@ const MOCK_RECORDS: RecordEntry[] = [
 function StatusBadge({ status }: { status: RecordEntry["status"] }) {
   const config = {
     DONE: { icon: CheckCircle, color: "text-emerald-400 bg-emerald-950/30 border border-emerald-900/50", label: "완료" },
-    SKIPPED: { icon: XCircle, color: "text-neutral-400 bg-neutral-800 border border-neutral-700", label: "스킵" },
+    SKIPPED: { icon: XCircle, color: "text-muted bg-surface border border-border", label: "스킵" },
     DELAY: { icon: Clock, color: "text-amber-400 bg-amber-950/30 border border-amber-900/50", label: "지연" },
-    UNKNOWN: { icon: HelpCircle, color: "text-neutral-500 bg-neutral-900 border border-neutral-800", label: "미확인" },
+    UNKNOWN: { icon: HelpCircle, color: "text-muted bg-inset border border-border", label: "미확인" },
   };
   
   const { icon: Icon, color, label } = config[status];
@@ -200,7 +200,7 @@ function RecordsSummaryStrip({ records }: { records: RecordEntry[] }) {
   }, [records]);
 
   return (
-    <div className="rounded-xl border border-neutral-800 bg-surface p-5 grid grid-cols-2 md:grid-cols-4 gap-6">
+    <div className="rounded-xl border border-border bg-surface p-5 grid grid-cols-2 md:grid-cols-4 gap-6">
       <div>
         <div className="text-xs text-muted mb-1">전체 기록</div>
         <div className="text-2xl font-bold font-mono text-fg">{stats.total}</div>
@@ -259,7 +259,7 @@ function QualityAnalytics({ records }: { records: RecordEntry[] }) {
   // Show placeholder if no records
   if (records.length === 0) {
     return (
-      <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
+      <div className="rounded-xl border border-border bg-surface p-8 flex flex-col items-center justify-center text-muted gap-2">
         <BarChart3 size={24} className="opacity-50" />
         <span className="text-sm">기록이 쌓이면 품질 분석이 표시됩니다.</span>
       </div>
@@ -269,30 +269,30 @@ function QualityAnalytics({ records }: { records: RecordEntry[] }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Accuracy Score */}
-      <div className="bg-surface border border-neutral-800 rounded-xl p-5">
+      <div className="bg-surface border border-border rounded-xl p-5">
         <div className="text-xs text-muted mb-1">체결 정확도</div>
         <div className="flex items-baseline gap-2">
            <span className="text-2xl font-bold font-mono text-blue-400">{stats.accuracy}%</span>
         </div>
-        <div className="w-full bg-neutral-800 h-1 rounded-full overflow-hidden mt-2">
+        <div className="w-full bg-surface h-1 rounded-full overflow-hidden mt-2">
            <div className="bg-blue-500 h-full rounded-full" style={{ width: `${stats.accuracy}%` }}></div>
         </div>
       </div>
 
       {/* Slippage */}
-      <div className="bg-surface border border-neutral-800 rounded-xl p-5">
+      <div className="bg-surface border border-border rounded-xl p-5">
         <div className="text-xs text-muted mb-1">평균 슬리피지</div>
         <div className="flex items-baseline gap-2">
            <span className="text-2xl font-bold font-mono text-fg">{stats.slippage.toFixed(2)}%</span>
            <span className="text-xs text-muted">오차</span>
         </div>
-        <div className="w-full bg-neutral-800 h-1 rounded-full overflow-hidden mt-2">
+        <div className="w-full bg-surface h-1 rounded-full overflow-hidden mt-2">
            <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${Math.min(stats.slippage * 200, 100)}%` }}></div>
         </div>
       </div>
 
       {/* Delay */}
-      <div className="bg-surface border border-neutral-800 rounded-xl p-5">
+      <div className="bg-surface border border-border rounded-xl p-5">
         <div className="text-xs text-muted mb-1">지연 기록</div>
         <div className="flex items-baseline gap-2">
            <span className="text-2xl font-bold font-mono text-fg">{stats.delayed}</span>
@@ -377,7 +377,7 @@ export default function RecordsPage() {
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setSelectedDate(null)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-lg bg-inset border border-border text-muted hover:text-white hover:border-border transition-colors"
           >
             <ArrowLeft size={18} />
           </button>
@@ -389,11 +389,11 @@ export default function RecordsPage() {
         <div>
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
             체결 내역
-            <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Executed Trades</span>
+            <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Executed Trades</span>
           </h2>
-          <div className="rounded-xl border border-neutral-800 bg-surface overflow-hidden">
+          <div className="rounded-xl border border-border bg-surface overflow-hidden">
             <table className="w-full text-sm text-left">
-              <thead className="text-xs text-muted uppercase bg-neutral-900 border-b border-neutral-800">
+              <thead className="text-xs text-muted uppercase bg-inset border-b border-border">
                 <tr>
                   <th className="px-4 py-3 font-medium">티커</th>
                   <th className="px-4 py-3 font-medium text-right">수량</th>
@@ -403,7 +403,7 @@ export default function RecordsPage() {
               <tbody className="divide-y divide-neutral-800">
                 {selectedRecord.record.lines && selectedRecord.record.lines.length > 0 ? (
                   selectedRecord.record.lines.map((line, idx) => (
-                    <tr key={idx} className="hover:bg-neutral-800/30 transition-colors">
+                    <tr key={idx} className="hover:bg-surface/30 transition-colors">
                       <td className="px-4 py-3 font-bold text-fg">
                         <span className={line.side === 'BUY' ? 'text-positive' : 'text-negative'}>
                           {line.side}
@@ -430,9 +430,9 @@ export default function RecordsPage() {
         <div>
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
             기록 정보
-            <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Meta</span>
+            <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Meta</span>
           </h2>
-          <div className="rounded-xl border border-neutral-800 bg-surface p-5 space-y-4">
+          <div className="rounded-xl border border-border bg-surface p-5 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="text-xs text-muted mb-1">판정일</div>
@@ -456,7 +456,7 @@ export default function RecordsPage() {
               </div>
             </div>
             {selectedRecord.record.note && (
-              <div className="pt-2 border-t border-neutral-800">
+              <div className="pt-2 border-t border-border">
                 <div className="text-xs text-muted mb-1">메모</div>
                 <div className="text-fg whitespace-pre-wrap">{selectedRecord.record.note}</div>
               </div>
@@ -474,7 +474,7 @@ export default function RecordsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-fg flex items-center gap-3">
           기록
-          <span className="text-sm font-normal text-muted bg-neutral-800 px-2.5 py-0.5 rounded-full border border-neutral-700">Records</span>
+          <span className="text-sm font-normal text-muted bg-surface px-2.5 py-0.5 rounded-full border border-border">Records</span>
           {dataSource === "MOCK" ? (
             <span className="text-[10px] font-bold text-amber-400 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-900/50">
               MOCK
@@ -488,7 +488,7 @@ export default function RecordsPage() {
                 {records.length > 0 ? (
           <button 
             onClick={handleDownload}
-            className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg text-xs font-medium transition-colors border border-neutral-700"
+            className="flex items-center gap-2 px-3 py-1.5 bg-surface hover:bg-surface text-fg rounded-lg text-xs font-medium transition-colors border border-border"
           >
             <Download size={14} />
             CSV Export
@@ -497,12 +497,12 @@ export default function RecordsPage() {
           <div className="relative group">
             <button 
               disabled
-              className="flex items-center gap-2 px-3 py-1.5 bg-neutral-900 text-neutral-600 rounded-lg text-xs font-medium border border-neutral-800 cursor-not-allowed"
+              className="flex items-center gap-2 px-3 py-1.5 bg-inset text-muted rounded-lg text-xs font-medium border border-border cursor-not-allowed"
             >
               <Download size={14} />
               CSV Export
             </button>
-            <div className="absolute right-0 top-full mt-1 px-2 py-1 bg-neutral-800 text-neutral-400 text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+            <div className="absolute right-0 top-full mt-1 px-2 py-1 bg-surface text-muted text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
               기록이 없어 내보내기 불가
             </div>
           </div>
@@ -512,9 +512,9 @@ export default function RecordsPage() {
       {/* 1. Summary */}
       <div>
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <LayoutGrid size={18} className="text-neutral-400" />
+          <LayoutGrid size={18} className="text-muted" />
           요약
-          <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Summary</span>
+          <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Summary</span>
         </h2>
         <RecordsSummaryStrip records={records} />
       </div>
@@ -522,9 +522,9 @@ export default function RecordsPage() {
       {/* 2. Quality Check */}
       <div>
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <Activity size={18} className="text-neutral-400" />
+          <Activity size={18} className="text-muted" />
           운영 품질
-          <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Quality</span>
+          <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Quality</span>
         </h2>
         <QualityAnalytics records={records} />
       </div>
@@ -532,14 +532,14 @@ export default function RecordsPage() {
       {/* 3. Timeline */}
       <div>
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <Clock size={18} className="text-neutral-400" />
+          <Clock size={18} className="text-muted" />
           최근 기록
-          <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Timeline</span>
+          <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Timeline</span>
         </h2>
         
                         {records.length === 0 ? (
-          <div className="rounded-xl border border-neutral-800 bg-surface p-8 flex flex-col items-center justify-center text-center gap-4">
-            <Database size={32} className="text-neutral-600" />
+          <div className="rounded-xl border border-border bg-surface p-8 flex flex-col items-center justify-center text-center gap-4">
+            <Database size={32} className="text-muted" />
             <div>
               <div className="text-fg font-medium mb-1">아직 기록이 없습니다</div>
               <div className="text-sm text-muted">Command 페이지에서 실행 완료 후 기록하세요</div>
@@ -554,7 +554,7 @@ export default function RecordsPage() {
               </a>
               <button
                 onClick={loadRecords}
-                className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg text-sm font-medium transition-colors border border-neutral-700"
+                className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-surface text-fg rounded-lg text-sm font-medium transition-colors border border-border"
               >
                 <RefreshCw size={16} />
                 새로고침
@@ -564,11 +564,11 @@ export default function RecordsPage() {
         ) : (
           <>
             {/* Filter Controls */}
-            <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-neutral-900/50 rounded-lg border border-neutral-800">
-              <Filter size={14} className="text-neutral-500" />
+            <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-inset/50 rounded-lg border border-border">
+              <Filter size={14} className="text-muted" />
               
               {/* Period Filter */}
-              <div className="flex gap-1 bg-neutral-900 p-0.5 rounded-md">
+              <div className="flex gap-1 bg-inset p-0.5 rounded-md">
                 {(["30d", "3mo", "all"] as const).map((p) => (
                   <button
                     key={p}
@@ -576,7 +576,7 @@ export default function RecordsPage() {
                     className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                       periodFilter === p
                         ? "bg-neutral-700 text-white"
-                        : "text-neutral-500 hover:text-neutral-300"
+                        : "text-muted hover:text-fg"
                     }`}
                   >
                     {p === "30d" ? "30일" : p === "3mo" ? "3개월" : "전체"}
@@ -587,7 +587,7 @@ export default function RecordsPage() {
               <div className="w-px h-4 bg-neutral-700" />
               
               {/* Status Filter */}
-              <div className="flex gap-1 bg-neutral-900 p-0.5 rounded-md">
+              <div className="flex gap-1 bg-inset p-0.5 rounded-md">
                 {(["all", "DONE", "SKIPPED", "DELAY", "UNKNOWN"] as const).map((s) => (
                   <button
                     key={s}
@@ -595,7 +595,7 @@ export default function RecordsPage() {
                     className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                       statusFilter === s
                         ? "bg-neutral-700 text-white"
-                        : "text-neutral-500 hover:text-neutral-300"
+                        : "text-muted hover:text-fg"
                     }`}
                   >
                     {s === "all" ? "전체" : s === "DONE" ? "완료" : s === "SKIPPED" ? "스킵" : s === "DELAY" ? "지연" : "미확인"}
@@ -608,10 +608,10 @@ export default function RecordsPage() {
                 {filteredRecords.length}개 / 전체 {records.length}개
               </span>
             </div>
-          <div className="rounded-xl border border-neutral-800 bg-surface overflow-hidden">
+          <div className="rounded-xl border border-border bg-surface overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-xs text-muted uppercase bg-neutral-900 border-b border-neutral-800">
+                <thead className="text-xs text-muted uppercase bg-inset border-b border-border">
                   <tr>
                     <th className="px-4 py-3 font-medium">날짜</th>
                     <th className="px-4 py-3 font-medium text-right">TQQQ</th>
@@ -628,7 +628,7 @@ export default function RecordsPage() {
                       <tr 
                         key={entry.date} 
                         onClick={() => setSelectedDate(entry.date)}
-                        className="hover:bg-neutral-800/30 transition-colors cursor-pointer group"
+                        className="hover:bg-surface/30 transition-colors cursor-pointer group"
                       >
                         <td className="px-4 py-3 font-bold text-fg font-mono">{entry.date}</td>
                         <td className="px-4 py-3 text-right font-mono">{tqqq.qty.toLocaleString()}</td>
@@ -637,7 +637,7 @@ export default function RecordsPage() {
                           <StatusBadge status={entry.status} />
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <ChevronRight size={16} className="text-neutral-600 group-hover:text-neutral-400" />
+                          <ChevronRight size={16} className="text-muted group-hover:text-muted" />
                         </td>
                       </tr>
                     );
@@ -653,16 +653,16 @@ export default function RecordsPage() {
       {/* 4. Export (placeholder like Portfolio's 성과 분석) */}
       <div>
         <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <Download size={18} className="text-neutral-400" />
+          <Download size={18} className="text-muted" />
           내보내기
-          <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">Export</span>
+          <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Export</span>
         </h2>
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
+        <div className="rounded-xl border border-border bg-inset/50 p-8 flex flex-col items-center justify-center text-muted gap-2 border-dashed">
           <Download size={24} className="opacity-50" />
           <span className="text-sm">CSV 다운로드</span>
           <button 
             onClick={handleDownload}
-            className="mt-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg text-xs font-medium transition-colors border border-neutral-700"
+            className="mt-2 px-4 py-2 bg-surface hover:bg-surface text-fg rounded-lg text-xs font-medium transition-colors border border-border"
           >
             다운로드
           </button>

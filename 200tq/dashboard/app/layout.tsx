@@ -17,14 +17,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 (function() {
   try {
     var stored = localStorage.getItem("200tq-settings");
+    var theme = "system";
+    var compactMode = false;
+    
     if (stored) {
       var settings = JSON.parse(stored);
       var state = settings.state || settings;
-      if (state.theme === "dark") document.documentElement.classList.add("dark");
-      else document.documentElement.classList.remove("dark");
-      if (state.compactMode) document.documentElement.classList.add("compact");
+      theme = state.theme || "system";
+      compactMode = state.compactMode;
+    }
+    
+    var isDark = false;
+    if (theme === "system") {
+      isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     } else {
+      isDark = theme === "dark";
+    }
+    
+    if (isDark) {
       document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    
+    if (compactMode) {
+      document.documentElement.classList.add("compact");
     }
   } catch (e) {
     document.documentElement.classList.add("dark");

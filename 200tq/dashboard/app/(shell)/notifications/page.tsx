@@ -154,7 +154,7 @@ export default function NotificationsPage() {
         <h1 className="text-2xl font-bold text-fg flex items-center gap-3">
           <Bell size={24} />
           알림센터
-          <span className="text-sm font-normal text-muted bg-neutral-800 px-2.5 py-0.5 rounded-full border border-neutral-700">
+          <span className="text-sm font-normal text-muted bg-surface px-2.5 py-0.5 rounded-full border border-border">
             Notifications
           </span>
           {unresolvedCounts.total > 0 && (
@@ -166,7 +166,7 @@ export default function NotificationsPage() {
         <button
           onClick={loadData}
           disabled={loading}
-          className="p-2 rounded-lg hover:bg-neutral-800 text-muted transition-colors"
+          className="p-2 rounded-lg hover:bg-surface text-muted transition-colors"
         >
           <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
         </button>
@@ -179,7 +179,7 @@ export default function NotificationsPage() {
           {/* DATA Card */}
           <div className="bg-surface rounded-xl border border-border p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Database size={16} className="text-neutral-500" />
+              <Database size={16} className="text-muted" />
               <span className="text-sm font-medium text-muted">DATA</span>
             </div>
             <div className={`text-lg font-bold ${meta?.health === "FRESH" ? "text-positive" : "text-amber-400"}`}>
@@ -196,7 +196,7 @@ export default function NotificationsPage() {
           {/* OPS Card */}
           <div className="bg-surface rounded-xl border border-border p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Server size={16} className="text-neutral-500" />
+              <Server size={16} className="text-muted" />
               <span className="text-sm font-medium text-muted">OPS</span>
             </div>
             {meta?.lastIngestSuccess ? (
@@ -227,7 +227,7 @@ export default function NotificationsPage() {
           {/* EXEC Card */}
           <div className="bg-surface rounded-xl border border-border p-4">
             <div className="flex items-center gap-2 mb-2">
-              <ClipboardList size={16} className="text-neutral-500" />
+              <ClipboardList size={16} className="text-muted" />
               <span className="text-sm font-medium text-muted">EXEC</span>
             </div>
             <div className="text-lg font-bold text-fg">
@@ -259,7 +259,7 @@ export default function NotificationsPage() {
               className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                 tab === t 
                   ? "bg-neutral-700 text-white" 
-                  : "text-muted hover:bg-neutral-800"
+                  : "text-muted hover:bg-surface"
               }`}
             >
               {t === "all" && "전체"}
@@ -282,7 +282,7 @@ export default function NotificationsPage() {
               <div 
                 key={notif.id}
                 className={`bg-surface rounded-xl border p-4 ${
-                  notif.resolved ? "border-border opacity-60" : "border-neutral-700"
+                  notif.resolved ? "border-border opacity-60" : "border-border"
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -304,7 +304,7 @@ export default function NotificationsPage() {
                   {!notif.resolved && (
                     <button
                       onClick={() => handleAck(notif.id)}
-                      className="flex items-center gap-1 px-3 py-1.5 text-xs bg-neutral-800 hover:bg-neutral-700 rounded-lg text-muted transition-colors"
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs bg-surface hover:bg-surface rounded-lg text-muted transition-colors"
                     >
                       <Check size={12} />
                       확인
@@ -338,7 +338,7 @@ export default function NotificationsPage() {
         ) : (
           <div className="bg-surface rounded-xl border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-neutral-800/50">
+              <thead className="bg-surface/50">
                 <tr>
                   <th className="text-left px-4 py-2 text-muted font-medium">작업</th>
                   <th className="text-left px-4 py-2 text-muted font-medium">시작</th>

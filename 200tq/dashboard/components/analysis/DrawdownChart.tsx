@@ -47,10 +47,10 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   const drawdown = payload[0]?.value ?? 0;
 
   return (
-    <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-3 shadow-xl">
-      <p className="text-xs text-neutral-400 mb-1 font-mono">{label}</p>
+    <div className="bg-surface border border-border rounded-lg p-3 shadow-xl">
+      <p className="text-xs text-muted mb-1 font-mono">{label}</p>
       <div className="flex items-center gap-2 text-sm">
-        <span className="text-neutral-300">Drawdown:</span>
+        <span className="text-fg">Drawdown:</span>
         <span className="font-mono font-bold text-red-400">
           {(drawdown * 100).toFixed(1)}%
         </span>
@@ -96,7 +96,7 @@ export function DrawdownChart({
   if (!equity || equity.length === 0 || chartData.length === 0) {
     return (
       <div 
-        className="flex items-center justify-center text-neutral-500 text-sm"
+        className="flex items-center justify-center text-muted text-sm"
         style={{ height }}
       >
         No drawdown data available
@@ -116,27 +116,27 @@ export function DrawdownChart({
               <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border))" opacity={0.3} vertical={false} />
           <XAxis
             dataKey="date"
-            stroke="#475569"
-            tick={{ fill: "#94a3b8", fontSize: 11 }}
+            stroke="rgb(var(--border))"
+            tick={{ fill: "rgb(var(--muted))", fontSize: 11 }}
             tickFormatter={formatDate}
-            tickLine={{ stroke: "#475569" }}
+            tickLine={{ stroke: "rgb(var(--border))" }}
           />
           <YAxis
-            stroke="#475569"
-            tick={{ fill: "#94a3b8", fontSize: 11 }}
-            tickLine={{ stroke: "#475569" }}
+            stroke="rgb(var(--border))"
+            tick={{ fill: "rgb(var(--muted))", fontSize: 11 }}
+            tickLine={{ stroke: "rgb(var(--border))" }}
             tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
             domain={[minDrawdown * 1.1, 0]}
           />
           <ReferenceLine
             y={0}
-            stroke="#475569"
+            stroke="rgb(var(--border))"
             strokeWidth={1}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#475569", strokeWidth: 1 }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgb(var(--border))", strokeWidth: 1 }} />
           <Area
             type="monotone"
             dataKey="drawdown"
@@ -151,7 +151,7 @@ export function DrawdownChart({
               y={mddPoint.drawdown}
               r={6}
               fill="#dc2626"
-              stroke="#1e293b"
+              stroke="rgb(var(--bg))"
               strokeWidth={2}
               label={{
                 value: `MDD: ${(mddPoint.drawdown * 100).toFixed(1)}%`,

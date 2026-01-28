@@ -51,11 +51,11 @@ function SettingsSection({
   return (
     <section id={id}>
       <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-        <Icon size={18} className="text-neutral-400" />
+        <Icon size={18} className="text-muted" />
         {title}
-        <span className="text-xs font-normal text-muted bg-neutral-800 px-2 py-0.5 rounded-full">{badge}</span>
+        <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">{badge}</span>
       </h2>
-      <div className="rounded-xl border border-neutral-800 bg-surface divide-y divide-neutral-800">
+      <div className="rounded-xl border border-border bg-surface divide-y divide-neutral-800">
         {children}
       </div>
     </section>
@@ -73,7 +73,7 @@ function SettingsRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between p-4 hover:bg-neutral-800/20 transition-colors">
+    <div className="flex items-center justify-between p-4 hover:bg-surface/20 transition-colors">
       <div>
         <div className="text-sm font-medium text-fg">{label}</div>
         {description && <div className="text-xs text-muted mt-0.5">{description}</div>}
@@ -97,7 +97,7 @@ function Select<T extends string>({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value as T)}
-      className="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-1.5 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+      className="bg-inset border border-border rounded-lg px-3 py-1.5 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-blue-500/50"
     >
       {options.map((opt) => (
         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -197,12 +197,12 @@ export default function SettingsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-fg flex items-center gap-3">
           설정
-          <span className="text-sm font-normal text-muted bg-neutral-800 px-2.5 py-0.5 rounded-full border border-neutral-700">Settings</span>
+          <span className="text-sm font-normal text-muted bg-surface px-2.5 py-0.5 rounded-full border border-border">Settings</span>
         </h1>
       </div>
 
       {/* Current Mode Summary Strip */}
-      <div className="rounded-xl border border-neutral-800 bg-surface p-4">
+      <div className="rounded-xl border border-border bg-surface p-4">
         <div className="text-xs text-muted mb-2 font-medium">현재 모드</div>
         <div className="flex flex-wrap gap-2">
           <a 
@@ -210,7 +210,7 @@ export default function SettingsPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               simulationMode 
                 ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30" 
-                : "bg-neutral-800 text-neutral-500 hover:bg-neutral-700"
+                : "bg-surface text-muted hover:bg-surface"
             }`}
           >
             SIM: {simulationMode ? "ON" : "OFF"}
@@ -220,7 +220,7 @@ export default function SettingsPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               devScenario 
                 ? "bg-purple-500/20 text-purple-400 border border-purple-500/30 hover:bg-purple-500/30" 
-                : "bg-neutral-800 text-neutral-500 hover:bg-neutral-700"
+                : "bg-surface text-muted hover:bg-surface"
             }`}
           >
             DEV: {devScenario ? "ON" : "OFF"}
@@ -230,7 +230,7 @@ export default function SettingsPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               privacyMode 
                 ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/30" 
-                : "bg-neutral-800 text-neutral-500 hover:bg-neutral-700"
+                : "bg-surface text-muted hover:bg-surface"
             }`}
           >
             Privacy: {privacyMode ? "ON" : "OFF"}
@@ -240,7 +240,7 @@ export default function SettingsPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               notificationsEnabled 
                 ? "bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30" 
-                : "bg-neutral-800 text-neutral-500 hover:bg-neutral-700"
+                : "bg-surface text-muted hover:bg-surface"
             }`}
           >
             Notifications: {notificationsEnabled ? "ON" : "OFF"}
@@ -250,12 +250,21 @@ export default function SettingsPage() {
 
       {/* A. App */}
       <SettingsSection id="app-section" title="앱" badge="App" icon={Palette}>
-        <SettingsRow label="테마" description="다크/라이트 모드 전환">
-          <div className="flex gap-1 bg-neutral-900 p-1 rounded-lg">
+        <SettingsRow label="테마" description="시스템/다크/라이트 모드 전환">
+          <div className="flex gap-1 bg-inset dark:bg-inset p-1 rounded-lg">
+            <button
+              onClick={() => setSetting("theme", "system")}
+              className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${
+                theme === "system" ? "bg-neutral-700 text-white" : "text-muted"
+              }`}
+            >
+              <Monitor size={12} />
+              System
+            </button>
             <button
               onClick={() => setSetting("theme", "dark")}
               className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${
-                theme === "dark" ? "bg-neutral-700 text-white" : "text-neutral-500"
+                theme === "dark" ? "bg-neutral-700 text-white" : "text-muted"
               }`}
             >
               <Moon size={12} />
@@ -264,7 +273,7 @@ export default function SettingsPage() {
             <button
               onClick={() => setSetting("theme", "light")}
               className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${
-                theme === "light" ? "bg-neutral-700 text-white" : "text-neutral-500"
+                theme === "light" ? "bg-neutral-700 text-white" : "text-muted"
               }`}
             >
               <Sun size={12} />
@@ -402,7 +411,7 @@ export default function SettingsPage() {
               className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
                 telegramConfigured 
                   ? "bg-blue-600 hover:bg-blue-500 text-white" 
-                  : "bg-neutral-800 text-neutral-500 cursor-not-allowed"
+                  : "bg-surface text-muted cursor-not-allowed"
               }`}
             >
               {telegramLoading ? (
@@ -420,8 +429,8 @@ export default function SettingsPage() {
               <strong className="block mb-1">설정 방법:</strong>
               Vercel Dashboard → Settings → Environment Variables에서:
               <ul className="list-disc list-inside mt-1 space-y-0.5 text-amber-400/80">
-                <li><code className="bg-neutral-800 px-1 rounded">TELEGRAM_BOT_TOKEN</code></li>
-                <li><code className="bg-neutral-800 px-1 rounded">TELEGRAM_CHAT_ID</code></li>
+                <li><code className="bg-surface px-1 rounded">TELEGRAM_BOT_TOKEN</code></li>
+                <li><code className="bg-surface px-1 rounded">TELEGRAM_CHAT_ID</code></li>
               </ul>
             </div>
           </div>
@@ -437,7 +446,7 @@ export default function SettingsPage() {
               className={`text-xs font-bold px-3 py-1 rounded transition-all ${
                 dataSource === "MOCK"
                   ? "text-amber-400 bg-amber-950/50 border border-amber-800"
-                  : "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800"
+                  : "text-muted hover:text-fg hover:bg-surface"
               }`}
             >
               MOCK
@@ -447,7 +456,7 @@ export default function SettingsPage() {
               className={`text-xs font-bold px-3 py-1 rounded transition-all ${
                 dataSource === "REAL"
                   ? "text-emerald-400 bg-emerald-950/50 border border-emerald-800"
-                  : "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800"
+                  : "text-muted hover:text-fg hover:bg-surface"
               }`}
             >
               REAL
@@ -455,10 +464,10 @@ export default function SettingsPage() {
           </div>
         </SettingsRow>
         <SettingsRow label="API 연동" description="브로커, 가격 데이터">
-          <span className="text-xs text-muted bg-neutral-800 px-2 py-1 rounded">추후 지원</span>
+          <span className="text-xs text-muted bg-surface px-2 py-1 rounded">추후 지원</span>
         </SettingsRow>
         <SettingsRow label="Import/Export" description="데이터 내보내기 형식">
-          <span className="text-xs text-muted bg-neutral-800 px-2 py-1 rounded">CSV</span>
+          <span className="text-xs text-muted bg-surface px-2 py-1 rounded">CSV</span>
         </SettingsRow>
         <SettingsRow label="스냅샷 Backfill" description="기존 거래 기록에서 포트폴리오 스냅샷 재생성">
           <div className="flex items-center gap-2">
@@ -473,7 +482,7 @@ export default function SettingsPage() {
             <button
               onClick={runBackfill}
               disabled={backfillLoading}
-              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-blue-600 hover:bg-blue-500 text-white disabled:bg-neutral-700 disabled:text-neutral-400"
+              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-blue-600 hover:bg-blue-500 text-white disabled:bg-neutral-700 disabled:text-muted"
             >
               {backfillLoading ? (
                 <RefreshCw size={12} className="animate-spin" />

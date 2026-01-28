@@ -12,17 +12,31 @@ export function SettingsEffects() {
   const compactMode = useSettingsStore((s) => s.compactMode);
   const hasHydrated = useSettingsStore((s) => s._hasHydrated);
 
-  // Apply theme
+  // Apply theme (supports system/dark/light)
   useEffect(() => {
     if (!hasHydrated) return;
     
     const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.remove("light");
-      root.classList.add("dark");
+    
+    const applyTheme = (isDark: boolean) => {
+      if (isDark) {
+        root.classList.remove("light");
+        root.classList.add("dark");
+      } else {
+        root.classList.remove("dark");
+        root.classList.add("light");
+      }
+    };
+    
+    if (theme === "system") {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      applyTheme(mediaQuery.matches);
+      
+      const handler = (e: MediaQueryListEvent) => applyTheme(e.matches);
+      mediaQuery.addEventListener('change', handler);
+      return () => mediaQuery.removeEventListener('change', handler);
     } else {
-      root.classList.remove("dark");
-      root.classList.add("light");
+      applyTheme(theme === "dark");
     }
   }, [theme, hasHydrated]);
 
