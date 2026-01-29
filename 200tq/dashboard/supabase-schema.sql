@@ -246,3 +246,14 @@ execute format(
 );
 end loop;
 end $$;
+
+-- =========================
+-- 6) MACRO CACHE TABLE
+-- =========================
+create table if not exists macro_cache (
+  id text primary key default 'latest',
+  data_json jsonb not null,
+  updated_at timestamptz default now()
+);
+
+create index if not exists macro_cache_updated_idx on macro_cache(updated_at desc);

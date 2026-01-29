@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/ingest-close",
       "schedule": "0 22 * * 1-5"
+    },
+    {
+      "path": "/api/macro?refresh=true",
+      "schedule": "30 22 * * *"
     }
   ]
 }

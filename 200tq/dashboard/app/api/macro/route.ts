@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -40,7 +41,7 @@ function getFngColor(value: number): ColorTone {
 function getYieldCurveColor(value: number): ColorTone {
   if (value > 0.5) return 'ok';
   if (value >= 0) return 'action';
-  return 'danger'; // Inverted
+  return 'danger';
 }
 
 function getHySpreadColor(value: number): ColorTone {
@@ -200,7 +201,7 @@ async function fetchTreasury2Y(): Promise<{ value: number | null; change: number
   return await fetchFredSeries('DGS2');
 }
 
-export async function GET() {
+async function fetchAllMacroData(): Promise<MacroData> {
   const [vix, fng, treasury, dxy, nq, usdkrw, vix3m, sp500, esFutures, gold, oil, btc, yieldCurveData, hySpreadData, treasury2y] = await Promise.all([
     fetchVix(),
     fetchFearGreed(),
@@ -255,5 +256,66 @@ export async function GET() {
     data.treasury2y = treasury2y;
   }
 
+  return data;
+}
+
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
+
+async function getCachedMacro(): Promise<MacroData | null> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return null;
+  
+  try {
+    const { data, error } = await supabase
+      .from('macro_cache')
+      .select('data_json, updated_at')
+      .eq('id', 'latest')
+      .single();
+    
+    if (error || !data) return null;
+    return data.data_json as MacroData;
+  } catch {
+    return null;
+  }
+}
+
+async function saveMacroCache(macroData: MacroData): Promise<void> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+  
+  try {
+    await supabase
+      .from('macro_cache')
+      .upsert({
+        id: 'latest',
+        data_json: macroData,
+        updated_at: new Date().toISOString(),
+      });
+  } catch (error) {
+    console.error('Failed to save macro cache:', error);
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const refresh = searchParams.get('refresh') === 'true';
+  
+  if (!refresh) {
+    const cached = await getCachedMacro();
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+  }
+  
+  const data = await fetchAllMacroData();
+  
+  await saveMacroCache(data);
+  
   return NextResponse.json(data);
 }

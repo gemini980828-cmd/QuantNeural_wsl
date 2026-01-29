@@ -34,10 +34,11 @@ export default function MacroPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabId>("indicators");
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (forceRefresh = false) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/macro");
+      const url = forceRefresh ? "/api/macro?refresh=true" : "/api/macro";
+      const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
         setData(json);
@@ -52,6 +53,10 @@ export default function MacroPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleRefresh = () => {
+    fetchData(true);
+  };
 
   const getCircleColor = (color: ColorTone): string => {
     switch (color) {
@@ -111,7 +116,7 @@ export default function MacroPage() {
           </span>
         </h1>
         <button
-          onClick={fetchData}
+          onClick={handleRefresh}
           disabled={loading}
           className="p-2 rounded-lg hover:bg-surface text-muted transition-colors"
         >
