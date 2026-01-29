@@ -143,8 +143,24 @@ export async function POST(req: NextRequest): Promise<NextResponse<CheckResult>>
         .limit(1);
       
       const hasRecord = !!(records && records.length > 0);
-      const missing = await checkRecordMissing(executionDate, hasRecord);
-      if (missing) alerts.push("RECORD_MISSING");
+      if (!hasRecord) {
+        const isOnToOff = currentVerdict === "OFF10";
+        const isOffToOn = currentVerdict === "ON";
+        
+        const shouldAlert = 
+          (isOnToOff && portfolioState.tqqq_shares > 0) ||
+          (isOffToOn && portfolioState.sgov_shares > 0);
+        
+        if (shouldAlert) {
+          const missing = await checkRecordMissing(executionDate, hasRecord);
+          if (missing) alerts.push("RECORD_MISSING");
+        } else {
+          const reason = isOnToOff 
+            ? `SELL 실행일이나 TQQQ 미보유 (${portfolioState.tqqq_shares}주)`
+            : `BUY 실행일이나 SGOV 미보유 (${portfolioState.sgov_shares}주)`;
+          skipped.push(`RECORD_MISSING: ${reason}`);
+        }
+      }
     }
     
     return NextResponse.json({

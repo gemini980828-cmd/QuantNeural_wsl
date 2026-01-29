@@ -27,7 +27,7 @@ export const maxDuration = 60; // Allow up to 60 seconds
 // Note: Vercel Cron is secured by infrastructure - only registered paths in vercel.json
 // can be triggered, so no additional authentication layer is needed.
 
-function getSupabaseClient() {
+function getSupabaseConfig() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
@@ -35,7 +35,32 @@ function getSupabaseClient() {
     throw new Error("Supabase not configured");
   }
   
+  return { url, key };
+}
+
+function getSupabaseClient() {
+  const { url, key } = getSupabaseConfig();
   return createClient(url, key);
+}
+
+interface PortfolioState {
+  tqqq_shares: number;
+  sgov_shares: number;
+}
+
+async function getPortfolioState(): Promise<PortfolioState> {
+  const supabase = getSupabaseClient();
+  const { data } = await supabase
+    .from("portfolio_state")
+    .select("tqqq_shares, sgov_shares")
+    .eq("user_id", "default")
+    .maybeSingle();
+  
+  const row = data as { tqqq_shares?: number; sgov_shares?: number } | null;
+  return {
+    tqqq_shares: row?.tqqq_shares ?? 0,
+    sgov_shares: row?.sgov_shares ?? 0,
+  };
 }
 
 export async function GET(req: NextRequest) {
@@ -120,7 +145,7 @@ export async function GET(req: NextRequest) {
           }
         }
         
-        // 6. Check RECORD_MISSING
+        // 6. Check RECORD_MISSING (only if portfolio has assets to trade)
         const executionDate = currentSnapshot.execution_date;
         if (executionDate === today) {
           const { data: records } = await supabase
@@ -131,8 +156,19 @@ export async function GET(req: NextRequest) {
           
           const hasRecord = !!(records && records.length > 0);
           if (!hasRecord) {
-            await checkRecordMissing(executionDate, hasRecord);
-            alerts.push("RECORD_MISSING");
+            // Check portfolio state - only alert if there's something to trade
+            const portfolioState = await getPortfolioState();
+            const isOnToOff = currentVerdict === "OFF10"; // Selling TQQQ -> need TQQQ
+            const isOffToOn = currentVerdict === "ON";    // Buying TQQQ -> need SGOV/cash
+            
+            const shouldAlert = 
+              (isOnToOff && portfolioState.tqqq_shares > 0) ||
+              (isOffToOn && portfolioState.sgov_shares > 0);
+            
+            if (shouldAlert) {
+              await checkRecordMissing(executionDate, hasRecord);
+              alerts.push("RECORD_MISSING");
+            }
           }
         }
         
