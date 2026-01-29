@@ -54,7 +54,7 @@ function formatChange(change: number | null | undefined, isPoints: boolean = fal
 }
 
 function Separator() {
-  return <span className="text-border mx-2">|</span>;
+  return <span className="text-border mx-4">|</span>;
 }
 
 export default function MacroStrip({ data, isLoading }: MacroStripProps) {
