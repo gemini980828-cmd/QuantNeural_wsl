@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Command, PieChart, ClipboardList, BarChart3, Settings, Bell } from "lucide-react";
+import { Menu, X, Command, PieChart, Globe, ClipboardList, BarChart3, Settings, Bell } from "lucide-react";
 import { useSettingsStore } from "@/lib/stores/settings-store";
 
 export default function AppHeader() {
@@ -15,6 +15,7 @@ export default function AppHeader() {
   const navItems = [
     { name: "Command", href: "/command", icon: Command },
     { name: "Portfolio", href: "/portfolio", icon: PieChart },
+    { name: "Macro", href: "/macro", icon: Globe },
     { name: "Records", href: "/records", icon: ClipboardList },
     { name: "Notifications", href: "/notifications", icon: Bell },
     { name: "Analysis", href: "/analysis", icon: BarChart3 },
