@@ -2,9 +2,22 @@ import { E03ViewModel, EvidenceItem } from "../../lib/ops/e03/types";
 import { CheckCircle2, XCircle, AlertTriangle, TrendingUp, Wallet, Settings, ChevronDown } from "lucide-react";
 import { Period } from "../../lib/ops/e03/mockPrices";
 import { PerfSummary } from "../../lib/ops/e03/performance";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { getClosePrices } from "../../lib/ops/e03/mockPrices";
 import { sma } from "../../lib/ops/e03/indicators";
+import MacroStrip from "./MacroStrip";
+
+type ColorTone = 'ok' | 'action' | 'danger';
+
+interface MacroData {
+  vix: { value: number | null; color: ColorTone };
+  fng: { value: number | null; label: string; color: ColorTone };
+  treasury: { value: number | null };
+  dxy: { value: number | null };
+  nq: { value: number | null };
+  usdkrw: { value: number | null };
+  updatedAt: string;
+}
 
 interface ZoneBSignalCoreProps {
   vm: E03ViewModel;
@@ -126,6 +139,20 @@ export default function ZoneBSignalCore({
       onDateRangeChange?.(localStartDate, value);
     }
   };
+  
+  const [macroData, setMacroData] = useState<MacroData | null>(null);
+  const [macroLoading, setMacroLoading] = useState(true);
+  
+  useEffect(() => {
+    fetch('/api/macro')
+      .then(res => res.ok ? res.json() : Promise.reject('API Error'))
+      .then(data => setMacroData(data))
+      .catch(err => {
+        console.error('Macro fetch failed:', err);
+        setMacroData(null);
+      })
+      .finally(() => setMacroLoading(false));
+  }, []);
   
 
 
@@ -427,6 +454,8 @@ export default function ZoneBSignalCore({
           )}
         </div>
       )}
+      
+      <MacroStrip data={macroData} isLoading={macroLoading} />
     </section>
   );
 }
