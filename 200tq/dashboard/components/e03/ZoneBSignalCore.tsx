@@ -10,12 +10,12 @@ import MacroStrip from "./MacroStrip";
 type ColorTone = 'ok' | 'action' | 'danger';
 
 interface MacroData {
-  vix: { value: number | null; color: ColorTone };
-  fng: { value: number | null; label: string; color: ColorTone };
-  treasury: { value: number | null };
-  dxy: { value: number | null };
-  nq: { value: number | null };
-  usdkrw: { value: number | null };
+  vix: { value: number | null; color: ColorTone; change: number | null };
+  fng: { value: number | null; label: string; color: ColorTone; change: number | null };
+  treasury: { value: number | null; change: number | null };
+  dxy: { value: number | null; change: number | null };
+  nq: { value: number | null; change: number | null };
+  usdkrw: { value: number | null; change: number | null };
   updatedAt: string;
 }
 
