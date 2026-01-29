@@ -8,12 +8,13 @@ import { loadToggle, saveToggle, loadRecord, STORAGE_KEYS } from "../../../lib/o
 import { Period, PricePoint } from "../../../lib/ops/e03/mockPrices";
 import { summarizePerf, summarizePerfWithDateRange, DateRange, PriceData } from "../../../lib/ops/e03/performance";
 import { getInputs, DataSourceMode } from "../../../lib/ops/dataSource";
-import { useDataSource, useDevScenario } from "../../../lib/stores/settings-store";
+import { useDataSource, useDevScenario, useViewMode, useSettingsStore } from "../../../lib/stores/settings-store";
 import ZoneAHeader from "../../../components/e03/ZoneAHeader";
 import ZoneBSignalCore from "../../../components/e03/ZoneBSignalCore";
 import ZoneCOpsConsole from "../../../components/e03/ZoneCOpsConsole";
 import ZoneDIntelLab from "../../../components/e03/ZoneDIntelLab";
 import PortfolioSummaryStrip from "../../../components/portfolio/PortfolioSummaryStrip";
+import SimpleView from "../../../components/e03/SimpleView";
 import { AlertTriangle, RefreshCw, Wallet } from "lucide-react";
 
 export default function CommandPage({
@@ -24,6 +25,8 @@ export default function CommandPage({
   const currentScenario = (searchParams.scenario as ScenarioId) || "fresh_normal";
   const dataSource = useDataSource();
   const devScenarioEnabled = useDevScenario();
+  const viewMode = useViewMode();
+  const settingsStore = useSettingsStore();
 
   // Data state
   const [rawInputs, setRawInputs] = useState<E03RawInputs | null>(null);
@@ -39,6 +42,20 @@ export default function CommandPage({
   const [unresolvedAlerts, setUnresolvedAlerts] = useState(0);
   
   const [portfolioState, setPortfolioState] = useState<{ tqqq: number; sgov: number } | null>(null);
+  
+  // Macro data for SimpleView
+  type ColorTone = 'ok' | 'action' | 'danger';
+  interface MacroData {
+    vix: { value: number | null; color: ColorTone; change: number | null };
+    fng: { value: number | null; label: string; color: ColorTone; change: number | null };
+    treasury: { value: number | null; change: number | null };
+    dxy: { value: number | null; change: number | null };
+    nq: { value: number | null; change: number | null };
+    usdkrw: { value: number | null; change: number | null };
+    updatedAt: string;
+  }
+  const [macroData, setMacroData] = useState<MacroData | null>(null);
+  const [macroLoading, setMacroLoading] = useState(true);
   
   // Custom date range for backtest
   const getDefaultDateRange = (): DateRange => {
@@ -149,6 +166,23 @@ export default function CommandPage({
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Fetch macro data for SimpleView
+  useEffect(() => {
+    const fetchMacro = async () => {
+      setMacroLoading(true);
+      try {
+        const res = await fetch("/api/macro");
+        const data = await res.json();
+        setMacroData(data);
+      } catch (e) {
+        console.warn("Failed to fetch macro data", e);
+      } finally {
+        setMacroLoading(false);
+      }
+    };
+    fetchMacro();
+  }, []);
 
   // Load persisted toggles on mount
   useEffect(() => {
@@ -327,38 +361,46 @@ export default function CommandPage({
              unresolvedAlerts={unresolvedAlerts}
           />
           
-          <div>
-            <ZoneBSignalCore 
-              vm={vmWithRecord} 
-              selectedPeriod={selectedPeriod}
-              perfSummary={perfSummary}
-              startCapital={startCapital}
-              onCapitalChange={setStartCapital}
-              realPrices={rawInputs?.inputPrices}
-              onDateRangeChange={handleDateRangeChange}
+          {viewMode === 'simple' ? (
+            <SimpleView 
+              vm={vmWithRecord}
+              macroData={macroData}
+              macroLoading={macroLoading}
+              onSwitchToPro={() => settingsStore.setSetting('viewMode', 'pro')}
             />
-            
-            <div className="h-8" /> {/* Spacer */}
+          ) : (
+            <div>
+              <ZoneBSignalCore 
+                vm={vmWithRecord} 
+                selectedPeriod={selectedPeriod}
+                perfSummary={perfSummary}
+                startCapital={startCapital}
+                onCapitalChange={setStartCapital}
+                realPrices={rawInputs?.inputPrices}
+                onDateRangeChange={handleDateRangeChange}
+              />
+              
+              <div className="h-8" />
 
-            {/* Portfolio Summary Strip */}
-            <PortfolioSummaryStrip portfolio={vmWithRecord.portfolio} />
-            
-            <div className="h-4" /> {/* Spacer */}
-            
-            <ZoneCOpsConsole 
-               vm={vmWithRecord} 
-               onRecordSuccess={() => setRecordUpdateTrigger(p => p + 1)} 
-            />
-            
-            <div className="h-24" /> {/* Large Spacer for Zone D separation */}
-            
-            <ZoneDIntelLab 
-              vm={vmWithRecord} 
-              selectedPeriod={selectedPeriod}
-              onPeriodChange={setSelectedPeriod}
-              startCapital={startCapital}
-            />
-          </div>
+              <PortfolioSummaryStrip portfolio={vmWithRecord.portfolio} />
+              
+              <div className="h-4" />
+              
+              <ZoneCOpsConsole 
+                 vm={vmWithRecord} 
+                 onRecordSuccess={() => setRecordUpdateTrigger(p => p + 1)} 
+              />
+              
+              <div className="h-24" />
+              
+              <ZoneDIntelLab 
+                vm={vmWithRecord} 
+                selectedPeriod={selectedPeriod}
+                onPeriodChange={setSelectedPeriod}
+                startCapital={startCapital}
+              />
+            </div>
+          )}
         </div>
       </div>
 

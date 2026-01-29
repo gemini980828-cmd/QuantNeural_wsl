@@ -18,6 +18,7 @@ interface MacroData {
 interface MacroStripProps {
   data: MacroData | null;
   isLoading: boolean;
+  condensed?: boolean;
 }
 
 function getCircleColor(color: ColorTone): string {
@@ -57,7 +58,7 @@ function Separator() {
   return <span className="text-border mx-4">|</span>;
 }
 
-export default function MacroStrip({ data, isLoading }: MacroStripProps) {
+export default function MacroStrip({ data, isLoading, condensed = false }: MacroStripProps) {
   const formatValue = (val: number | null | undefined, decimals: number = 1, suffix: string = '') => {
     if (val === null || val === undefined) return '--';
     return val.toFixed(decimals) + suffix;
@@ -115,29 +116,33 @@ export default function MacroStrip({ data, isLoading }: MacroStripProps) {
             </span>
           </div>
           
-          <Separator />
-          
-          <div className="flex items-center gap-1.5">
-            <span className="text-muted text-xs">10Y</span>
-            <span className="text-fg font-mono font-medium">
-              {formatValue(data?.treasury.value, 2, '%')}
-            </span>
-            <span className={`text-xs font-mono ${getChangeColor(data?.treasury.change, true)}`}>
-              {formatChange(data?.treasury.change)}
-            </span>
-          </div>
-          
-          <Separator />
-          
-          <div className="flex items-center gap-1.5">
-            <span className="text-muted text-xs">DXY</span>
-            <span className="text-fg font-mono font-medium">
-              {formatValue(data?.dxy.value, 1)}
-            </span>
-            <span className={`text-xs font-mono ${getChangeColor(data?.dxy.change, true)}`}>
-              {formatChange(data?.dxy.change)}
-            </span>
-          </div>
+          {!condensed && (
+            <>
+              <Separator />
+              
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted text-xs">10Y</span>
+                <span className="text-fg font-mono font-medium">
+                  {formatValue(data?.treasury.value, 2, '%')}
+                </span>
+                <span className={`text-xs font-mono ${getChangeColor(data?.treasury.change, true)}`}>
+                  {formatChange(data?.treasury.change)}
+                </span>
+              </div>
+              
+              <Separator />
+              
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted text-xs">DXY</span>
+                <span className="text-fg font-mono font-medium">
+                  {formatValue(data?.dxy.value, 1)}
+                </span>
+                <span className={`text-xs font-mono ${getChangeColor(data?.dxy.change, true)}`}>
+                  {formatChange(data?.dxy.change)}
+                </span>
+              </div>
+            </>
+          )}
 
           <Separator />
 
@@ -151,17 +156,21 @@ export default function MacroStrip({ data, isLoading }: MacroStripProps) {
             </span>
           </div>
 
-          <Separator />
+          {!condensed && (
+            <>
+              <Separator />
 
-          <div className="flex items-center gap-1.5">
-            <span className="text-muted text-xs">환율</span>
-            <span className="text-fg font-mono font-medium">
-              {formatWithCommas(data?.usdkrw.value, 0)}
-            </span>
-            <span className={`text-xs font-mono ${getChangeColor(data?.usdkrw.change, true)}`}>
-              {formatChange(data?.usdkrw.change)}
-            </span>
-          </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted text-xs">환율</span>
+                <span className="text-fg font-mono font-medium">
+                  {formatWithCommas(data?.usdkrw.value, 0)}
+                </span>
+                <span className={`text-xs font-mono ${getChangeColor(data?.usdkrw.change, true)}`}>
+                  {formatChange(data?.usdkrw.change)}
+                </span>
+              </div>
+            </>
+          )}
         </div>
         
         <Link 

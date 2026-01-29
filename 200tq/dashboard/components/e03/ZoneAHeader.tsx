@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { E03ViewModel, HeaderBadge, BadgeTone } from "../../lib/ops/e03/types";
-import { AlertCircle, CheckCircle, Info, Shield, ShieldAlert, MonitorPlay, Clock, Database, AlertTriangle, Bell } from "lucide-react";
+import { E03ViewModel } from "../../lib/ops/e03/types";
+import { AlertCircle, Shield, MonitorPlay, Clock, Database, AlertTriangle, Bell, LayoutDashboard, Minimize2 } from "lucide-react";
 import { ThemeToggle } from "../ThemeToggle";
+import { useViewMode, useSettingsStore } from "@/lib/stores/settings-store";
 
 interface ZoneAHeaderProps {
   vm: E03ViewModel;
@@ -13,6 +14,8 @@ interface ZoneAHeaderProps {
 }
 
 export default function ZoneAHeader({ vm, onToggleSimulation, onTogglePrivacy, unresolvedAlerts = 0 }: ZoneAHeaderProps) {
+  const viewMode = useViewMode();
+  const store = useSettingsStore();
   const needsRecord = vm.executionState === "DUE_TODAY" || vm.executionState === "UNKNOWN";
   
   // Determine emergency state
@@ -71,6 +74,17 @@ export default function ZoneAHeader({ vm, onToggleSimulation, onTogglePrivacy, u
               )}
               <span className="hidden lg:inline">알림</span>
             </Link>
+            
+            {/* View Mode Toggle */}
+            <button 
+               onClick={() => store.setSetting('viewMode', viewMode === 'simple' ? 'pro' : 'simple')}
+               className={`flex items-center gap-1.5 px-2 py-1 rounded border transition-colors text-xs sm:text-sm ${
+                 viewMode === 'pro' ? "bg-purple-900/40 text-purple-400 border-purple-800" : "border-neutral-800 hover:border-neutral-700"
+               }`}
+            >
+              {viewMode === 'simple' ? <LayoutDashboard size={14} /> : <Minimize2 size={14} />}
+              <span className="hidden xs:inline">{viewMode === 'simple' ? "Simple" : "Pro"}</span>
+            </button>
           </div>
         </div>
 
