@@ -1,17 +1,29 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Globe, RefreshCw, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
+import { Globe, RefreshCw, ArrowUpRight, ArrowDownRight, Minus, TrendingUp, Percent, DollarSign, BarChart3 } from "lucide-react";
 
 type ColorTone = 'ok' | 'action' | 'danger';
 
 interface MacroData {
+  // Core
   vix: { value: number | null; color: ColorTone; change: number | null };
   fng: { value: number | null; label: string; color: ColorTone; change: number | null };
   treasury: { value: number | null; change: number | null };
   dxy: { value: number | null; change: number | null };
   nq: { value: number | null; change: number | null };
   usdkrw: { value: number | null; change: number | null };
+  // New Yahoo Finance
+  vix3m: { value: number | null; change: number | null };
+  sp500: { value: number | null; change: number | null };
+  esFutures: { value: number | null; change: number | null };
+  gold: { value: number | null; change: number | null };
+  oil: { value: number | null; change: number | null };
+  btc: { value: number | null; change: number | null };
+  // FRED (optional)
+  yieldCurve?: { value: number | null; color: ColorTone; change: number | null };
+  hySpread?: { value: number | null; color: ColorTone; change: number | null };
+  treasury2y?: { value: number | null; change: number | null };
   updatedAt: string;
 }
 
@@ -129,60 +141,155 @@ export default function MacroPage() {
 
       {/* Content */}
       {tab === "indicators" ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4">
-          {/* VIX */}
-          <IndicatorCard 
-            title="VIX" 
-            value={formatValue(data?.vix.value)} 
-            change={formatChange(data?.vix.change)}
-            changeColor={getChangeColor(data?.vix.change, true)}
-            statusColor={getCircleColor(data?.vix.color || 'action')}
-            valueColor={getTextColor(data?.vix.color || 'action')}
-            loading={loading}
-          />
-          {/* F&G */}
-          <IndicatorCard 
-            title="Fear & Greed" 
-            value={data?.fng.value?.toString() || '--'} 
-            label={data?.fng.label}
-            change={formatChange(data?.fng.change, true)}
-            changeColor={getChangeColor(data?.fng.change, false)}
-            statusColor={getCircleColor(data?.fng.color || 'action')}
-            valueColor={getTextColor(data?.fng.color || 'action')}
-            loading={loading}
-          />
-          {/* 10Y */}
-          <IndicatorCard 
-            title="US 10Y" 
-            value={formatValue(data?.treasury.value, 2, '%')} 
-            change={formatChange(data?.treasury.change)}
-            changeColor={getChangeColor(data?.treasury.change, true)}
-            loading={loading}
-          />
-          {/* DXY */}
-          <IndicatorCard 
-            title="DXY (Dollar)" 
-            value={formatValue(data?.dxy.value, 1)} 
-            change={formatChange(data?.dxy.change)}
-            changeColor={getChangeColor(data?.dxy.change, true)}
-            loading={loading}
-          />
-          {/* NQ */}
-          <IndicatorCard 
-            title="Nasdaq Futures" 
-            value={formatWithCommas(data?.nq.value)} 
-            change={formatChange(data?.nq.change)}
-            changeColor={getChangeColor(data?.nq.change, false)}
-            loading={loading}
-          />
-          {/* USD/KRW */}
-          <IndicatorCard 
-            title="USD/KRW" 
-            value={formatWithCommas(data?.usdkrw.value)} 
-            change={formatChange(data?.usdkrw.change)}
-            changeColor={getChangeColor(data?.usdkrw.change, true)}
-            loading={loading}
-          />
+        <div className="space-y-6">
+          {/* Category 1: Volatility & Sentiment */}
+          <CategorySection 
+            icon={<BarChart3 size={16} className="text-amber-400" />} 
+            title="변동성 & 센티먼트"
+          >
+            <IndicatorCard 
+              title="VIX" 
+              value={formatValue(data?.vix.value)} 
+              change={formatChange(data?.vix.change)}
+              changeColor={getChangeColor(data?.vix.change, true)}
+              statusColor={getCircleColor(data?.vix.color || 'action')}
+              valueColor={getTextColor(data?.vix.color || 'action')}
+              loading={loading}
+            />
+            <IndicatorCard 
+              title="VIX 3M" 
+              value={formatValue(data?.vix3m?.value)} 
+              change={formatChange(data?.vix3m?.change)}
+              changeColor={getChangeColor(data?.vix3m?.change, true)}
+              loading={loading}
+            />
+            <IndicatorCard 
+              title="Fear & Greed" 
+              value={data?.fng.value?.toString() || '--'} 
+              label={data?.fng.label}
+              change={formatChange(data?.fng.change, true)}
+              changeColor={getChangeColor(data?.fng.change, false)}
+              statusColor={getCircleColor(data?.fng.color || 'action')}
+              valueColor={getTextColor(data?.fng.color || 'action')}
+              loading={loading}
+            />
+          </CategorySection>
+
+          {/* Category 2: Rates & Credit */}
+          <CategorySection 
+            icon={<Percent size={16} className="text-blue-400" />} 
+            title="금리 & 크레딧"
+          >
+            <IndicatorCard 
+              title="US 10Y" 
+              value={formatValue(data?.treasury.value, 2, '%')} 
+              change={formatChange(data?.treasury.change)}
+              changeColor={getChangeColor(data?.treasury.change, true)}
+              loading={loading}
+            />
+            {data?.treasury2y && (
+              <IndicatorCard 
+                title="US 2Y" 
+                value={formatValue(data.treasury2y.value, 2, '%')} 
+                change={formatChange(data.treasury2y.change)}
+                changeColor={getChangeColor(data.treasury2y.change, true)}
+                loading={loading}
+              />
+            )}
+            {data?.yieldCurve && (
+              <IndicatorCard 
+                title="Yield Curve" 
+                subtitle="10Y-2Y"
+                value={formatValue(data.yieldCurve.value, 2, '%')} 
+                change={formatChange(data.yieldCurve.change)}
+                changeColor={getChangeColor(data.yieldCurve.change, false)}
+                statusColor={getCircleColor(data.yieldCurve.color)}
+                valueColor={getTextColor(data.yieldCurve.color)}
+                loading={loading}
+              />
+            )}
+            {data?.hySpread && (
+              <IndicatorCard 
+                title="HY Spread" 
+                value={formatValue(data.hySpread.value, 2, '%')} 
+                change={formatChange(data.hySpread.change)}
+                changeColor={getChangeColor(data.hySpread.change, true)}
+                statusColor={getCircleColor(data.hySpread.color)}
+                valueColor={getTextColor(data.hySpread.color)}
+                loading={loading}
+              />
+            )}
+          </CategorySection>
+
+          {/* Category 3: Markets & Futures */}
+          <CategorySection 
+            icon={<TrendingUp size={16} className="text-emerald-400" />} 
+            title="시장 & 선물"
+          >
+            <IndicatorCard 
+              title="S&P 500" 
+              value={formatWithCommas(data?.sp500?.value)} 
+              change={formatChange(data?.sp500?.change)}
+              changeColor={getChangeColor(data?.sp500?.change, false)}
+              loading={loading}
+            />
+            <IndicatorCard 
+              title="ES Futures" 
+              value={formatWithCommas(data?.esFutures?.value)} 
+              change={formatChange(data?.esFutures?.change)}
+              changeColor={getChangeColor(data?.esFutures?.change, false)}
+              loading={loading}
+            />
+            <IndicatorCard 
+              title="NQ Futures" 
+              value={formatWithCommas(data?.nq?.value)} 
+              change={formatChange(data?.nq?.change)}
+              changeColor={getChangeColor(data?.nq?.change, false)}
+              loading={loading}
+            />
+          </CategorySection>
+
+          {/* Category 4: FX & Commodities */}
+          <CategorySection 
+            icon={<DollarSign size={16} className="text-cyan-400" />} 
+            title="통화 & 원자재"
+          >
+            <IndicatorCard 
+              title="DXY" 
+              value={formatValue(data?.dxy?.value, 1)} 
+              change={formatChange(data?.dxy?.change)}
+              changeColor={getChangeColor(data?.dxy?.change, true)}
+              loading={loading}
+            />
+            <IndicatorCard 
+              title="USD/KRW" 
+              value={formatWithCommas(data?.usdkrw?.value)} 
+              change={formatChange(data?.usdkrw?.change)}
+              changeColor={getChangeColor(data?.usdkrw?.change, true)}
+              loading={loading}
+            />
+            <IndicatorCard 
+              title="Gold" 
+              value={formatWithCommas(data?.gold?.value, 1)} 
+              change={formatChange(data?.gold?.change)}
+              changeColor={getChangeColor(data?.gold?.change, false)}
+              loading={loading}
+            />
+            <IndicatorCard 
+              title="Crude Oil" 
+              value={formatValue(data?.oil?.value, 2)} 
+              change={formatChange(data?.oil?.change)}
+              changeColor={getChangeColor(data?.oil?.change, false)}
+              loading={loading}
+            />
+            <IndicatorCard 
+              title="Bitcoin" 
+              value={formatWithCommas(data?.btc?.value)} 
+              change={formatChange(data?.btc?.change)}
+              changeColor={getChangeColor(data?.btc?.change, false)}
+              loading={loading}
+            />
+          </CategorySection>
         </div>
       ) : (
         <div className="bg-surface rounded-xl border border-border p-12 text-center">
@@ -202,9 +309,17 @@ export default function MacroPage() {
 }
 
 function IndicatorCard({ 
-  title, value, label, change, changeColor, statusColor, valueColor, loading 
+  title, value, label, subtitle, change, changeColor, statusColor, valueColor, loading 
 }: { 
-  title: string, value: string, label?: string, change: string, changeColor?: string, statusColor?: string, valueColor?: string, loading: boolean 
+  title: string; 
+  value: string; 
+  label?: string; 
+  subtitle?: string;
+  change: string; 
+  changeColor?: string; 
+  statusColor?: string; 
+  valueColor?: string; 
+  loading: boolean;
 }) {
   if (loading) {
     return (
@@ -223,7 +338,10 @@ function IndicatorCard({
   return (
     <div className="bg-surface rounded-xl border border-border p-4 transition-all hover:border-neutral-700">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-muted uppercase tracking-tight">{title}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-medium text-muted uppercase tracking-tight">{title}</span>
+          {subtitle && <span className="text-[10px] text-neutral-600">{subtitle}</span>}
+        </div>
         {statusColor && <div className={`w-2 h-2 rounded-full ${statusColor}`} />}
       </div>
       <div className="flex items-baseline gap-2">
@@ -235,6 +353,28 @@ function IndicatorCard({
       <div className={`flex items-center gap-0.5 text-xs font-mono mt-1 ${changeColor}`}>
         <Icon size={12} />
         {change}
+      </div>
+    </div>
+  );
+}
+
+function CategorySection({ 
+  icon, 
+  title, 
+  children 
+}: { 
+  icon: React.ReactNode; 
+  title: string; 
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        {icon}
+        <h2 className="text-sm font-semibold text-fg">{title}</h2>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {children}
       </div>
     </div>
   );

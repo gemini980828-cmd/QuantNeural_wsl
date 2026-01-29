@@ -12,6 +12,15 @@ interface MacroData {
   dxy: { value: number | null; change: number | null };
   nq: { value: number | null; change: number | null };
   usdkrw: { value: number | null; change: number | null };
+  vix3m: { value: number | null; change: number | null };
+  sp500: { value: number | null; change: number | null };
+  esFutures: { value: number | null; change: number | null };
+  gold: { value: number | null; change: number | null };
+  oil: { value: number | null; change: number | null };
+  btc: { value: number | null; change: number | null };
+  yieldCurve?: { value: number | null; color: ColorTone; change: number | null };
+  hySpread?: { value: number | null; color: ColorTone; change: number | null };
+  treasury2y?: { value: number | null; change: number | null };
   updatedAt: string;
 }
 
@@ -26,6 +35,18 @@ function getFngColor(value: number): ColorTone {
   if (value <= 50) return 'action';
   if (value <= 75) return 'ok';
   return 'action';
+}
+
+function getYieldCurveColor(value: number): ColorTone {
+  if (value > 0.5) return 'ok';
+  if (value >= 0) return 'action';
+  return 'danger'; // Inverted
+}
+
+function getHySpreadColor(value: number): ColorTone {
+  if (value < 3) return 'ok';
+  if (value <= 5) return 'action';
+  return 'danger';
 }
 
 interface YahooQuoteResult {
@@ -56,6 +77,29 @@ async function fetchYahooQuote(symbol: string): Promise<YahooQuoteResult> {
     return { value, prevClose, change };
   } catch {
     return { value: null, prevClose: null, change: null };
+  }
+}
+
+async function fetchFredSeries(seriesId: string): Promise<{ value: number | null; change: number | null }> {
+  const apiKey = process.env.FRED_API_KEY;
+  if (!apiKey) return { value: null, change: null };
+  
+  try {
+    const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${apiKey}&file_type=json&limit=2&sort_order=desc`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return { value: null, change: null };
+    
+    const data = await res.json();
+    const observations = data.observations || [];
+    if (observations.length === 0) return { value: null, change: null };
+    
+    const latest = parseFloat(observations[0].value);
+    const previous = observations.length > 1 ? parseFloat(observations[1].value) : null;
+    const change = previous !== null ? latest - previous : null;
+    
+    return { value: isNaN(latest) ? null : latest, change };
+  } catch {
+    return { value: null, change: null };
   }
 }
 
@@ -114,14 +158,65 @@ async function fetchUsdKrw(): Promise<{ value: number | null; change: number | n
   return { value, change };
 }
 
+async function fetchVix3m(): Promise<{ value: number | null; change: number | null }> {
+  const { value, change } = await fetchYahooQuote('^VIX3M');
+  return { value, change };
+}
+
+async function fetchSp500(): Promise<{ value: number | null; change: number | null }> {
+  const { value, change } = await fetchYahooQuote('^GSPC');
+  return { value, change };
+}
+
+async function fetchEsFutures(): Promise<{ value: number | null; change: number | null }> {
+  const { value, change } = await fetchYahooQuote('ES=F');
+  return { value, change };
+}
+
+async function fetchGold(): Promise<{ value: number | null; change: number | null }> {
+  const { value, change } = await fetchYahooQuote('GC=F');
+  return { value, change };
+}
+
+async function fetchOil(): Promise<{ value: number | null; change: number | null }> {
+  const { value, change } = await fetchYahooQuote('CL=F');
+  return { value, change };
+}
+
+async function fetchBtc(): Promise<{ value: number | null; change: number | null }> {
+  const { value, change } = await fetchYahooQuote('BTC-USD');
+  return { value, change };
+}
+
+async function fetchYieldCurve(): Promise<{ value: number | null; change: number | null }> {
+  return await fetchFredSeries('T10Y2Y');
+}
+
+async function fetchHySpread(): Promise<{ value: number | null; change: number | null }> {
+  return await fetchFredSeries('BAMLH0A0HYM2');
+}
+
+async function fetchTreasury2Y(): Promise<{ value: number | null; change: number | null }> {
+  return await fetchFredSeries('DGS2');
+}
+
 export async function GET() {
-  const [vix, fng, treasury, dxy, nq, usdkrw] = await Promise.all([
+  const [vix, fng, treasury, dxy, nq, usdkrw, vix3m, sp500, esFutures, gold, oil, btc, yieldCurveData, hySpreadData, treasury2y] = await Promise.all([
     fetchVix(),
     fetchFearGreed(),
     fetchTreasury10Y(),
     fetchDXY(),
     fetchNasdaqFutures(),
     fetchUsdKrw(),
+    fetchVix3m(),
+    fetchSp500(),
+    fetchEsFutures(),
+    fetchGold(),
+    fetchOil(),
+    fetchBtc(),
+    fetchYieldCurve(),
+    fetchHySpread(),
+    fetchTreasury2Y(),
   ]);
 
   const data: MacroData = {
@@ -131,8 +226,34 @@ export async function GET() {
     dxy,
     nq,
     usdkrw,
+    vix3m,
+    sp500,
+    esFutures,
+    gold,
+    oil,
+    btc,
     updatedAt: new Date().toISOString(),
   };
+
+  if (yieldCurveData.value !== null) {
+    data.yieldCurve = {
+      value: yieldCurveData.value,
+      color: getYieldCurveColor(yieldCurveData.value),
+      change: yieldCurveData.change,
+    };
+  }
+
+  if (hySpreadData.value !== null) {
+    data.hySpread = {
+      value: hySpreadData.value,
+      color: getHySpreadColor(hySpreadData.value),
+      change: hySpreadData.change,
+    };
+  }
+
+  if (treasury2y.value !== null) {
+    data.treasury2y = treasury2y;
+  }
 
   return NextResponse.json(data);
 }
