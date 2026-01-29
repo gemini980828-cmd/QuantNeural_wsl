@@ -51,13 +51,26 @@ export default function SimpleView({ vm, macroData, macroLoading, onSwitchToPro 
   const isHardEmergency = vm.emergencyState === "HARD_CONFIRMED";
   
   const totalValue = vm.portfolio?.derived?.totalEquity ?? vm.inputTotalValueKrw ?? 0;
+  const dailyPnL = vm.portfolio?.derived?.dailyPnL ?? 0;
+  const dailyPnLPct = vm.portfolio?.derived?.dailyPnLPct ?? 0;
+  const isPositive = dailyPnL >= 0;
 
   return (
     <div className="flex flex-col items-center gap-6 py-8">
-      <div className="text-center space-y-2">
+      <div className="text-center space-y-1">
         <p className="text-muted text-sm">총 자산</p>
         <p className="text-4xl sm:text-5xl font-bold text-fg font-mono">
           {formatKRW(totalValue, vm.privacyMode)}
+        </p>
+        <p className={`text-lg font-mono ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+          {vm.privacyMode ? '***' : (
+            <>
+              {isPositive ? '+' : ''}{dailyPnLPct.toFixed(2)}%
+              <span className="text-sm ml-2">
+                ({isPositive ? '+' : ''}₩{dailyPnL.toLocaleString('ko-KR')})
+              </span>
+            </>
+          )}
         </p>
       </div>
 
