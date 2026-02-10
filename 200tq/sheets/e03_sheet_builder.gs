@@ -1,6 +1,7 @@
 // ──────────────────────────────────────────────────────────
-// initE03_Step1 ~ Step4: Google Apps Script 6분 제한 우회
-// 순서대로 실행: Step1 → Step2 → Step3 → Step4
+// initE03_Step1 ~ Step5: Google Apps Script 6분 제한 우회
+// 순서대로 실행: Step1 → Step2 → Step3 → Step4 → Step5
+// Step1은 Browser.msgBox 대기 시간 격리를 위해 별도 분리
 // ──────────────────────────────────────────────────────────
 
 var E03_TABS = [
@@ -24,55 +25,61 @@ function withDeferredRecalc_(fn) {
   }
 }
 
-// Step 1: 기존 탭 삭제 + Settings + PriceData
+// Step 1: 기존 탭 삭제 (Browser.msgBox 대기 시간 격리)
+// ⚠️ withDeferredRecalc_ 없이 실행 — msgBox 대기가 6분에 포함되므로 별도 분리
 function initE03_Step1() {
-  withDeferredRecalc_(function(ss) {
-    var existingTabs = [];
-    var i;
-    for (i = 0; i < E03_TABS.length; i += 1) {
-      if (ss.getSheetByName(E03_TABS[i])) {
-        existingTabs.push(E03_TABS[i]);
-      }
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var existingTabs = [];
+  var i;
+  for (i = 0; i < E03_TABS.length; i += 1) {
+    if (ss.getSheetByName(E03_TABS[i])) {
+      existingTabs.push(E03_TABS[i]);
     }
+  }
 
-    if (existingTabs.length > 0) {
-      var prompt = 'The following E03 tabs already exist:\n\n' +
-        existingTabs.join('\n') +
-        '\n\nDelete and rebuild them?';
-      var response = Browser.msgBox('E03 Sheet Builder', prompt, Browser.Buttons.YES_NO);
-      if (response !== 'yes') {
-        Browser.msgBox('Cancelled. No sheets were modified.');
-        return;
-      }
-      deleteTargetTabs(ss, E03_TABS);
+  if (existingTabs.length > 0) {
+    var prompt = 'The following E03 tabs already exist:\n\n' +
+      existingTabs.join('\n') +
+      '\n\nDelete and rebuild them?';
+    var response = Browser.msgBox('E03 Sheet Builder', prompt, Browser.Buttons.YES_NO);
+    if (response !== 'yes') {
+      Browser.msgBox('Cancelled. No sheets were modified.');
+      return;
     }
+    deleteTargetTabs(ss, E03_TABS);
+  }
 
-    createSettingsTab(ss);
-    createPriceDataTab(ss);
-
-    Browser.msgBox('Step 1/4 완료 (Settings + PriceData).\n\n다음: initE03_Step2 실행');
-  });
+  Browser.msgBox('Step 1/5 완료 (기존 탭 삭제).\n\n다음: initE03_Step2 실행');
 }
 
-// Step 2: Signal (가장 무거움 — 300행 × 14열)
+// Step 2: Settings + PriceData
 function initE03_Step2() {
   withDeferredRecalc_(function(ss) {
-    createSignalTab(ss);
-    Browser.msgBox('Step 2/4 완료 (Signal).\n\n다음: initE03_Step3 실행');
+    createSettingsTab(ss);
+    createPriceDataTab(ss);
+    Browser.msgBox('Step 2/5 완료 (Settings + PriceData).\n\n다음: initE03_Step3 실행');
   });
 }
 
-// Step 3: Emergency + TradeLog
+// Step 3: Signal (가장 무거움 — 300행 × 14열)
 function initE03_Step3() {
+  withDeferredRecalc_(function(ss) {
+    createSignalTab(ss);
+    Browser.msgBox('Step 3/5 완료 (Signal).\n\n다음: initE03_Step4 실행');
+  });
+}
+
+// Step 4: Emergency + TradeLog
+function initE03_Step4() {
   withDeferredRecalc_(function(ss) {
     createEmergencyTab(ss);
     createTradeLogTab(ss);
-    Browser.msgBox('Step 3/4 완료 (Emergency + TradeLog).\n\n다음: initE03_Step4 실행');
+    Browser.msgBox('Step 4/5 완료 (Emergency + TradeLog).\n\n다음: initE03_Step5 실행');
   });
 }
 
-// Step 4: Portfolio + Dashboard + 마무리
-function initE03_Step4() {
+// Step 5: Portfolio + Dashboard + 마무리
+function initE03_Step5() {
   withDeferredRecalc_(function(ss) {
     createPortfolioTab(ss);
     createDashboardTab(ss);
@@ -84,7 +91,7 @@ function initE03_Step4() {
       ss.moveActiveSheet(1);
     }
 
-    Browser.msgBox('Step 4/4 완료!\n\nE03 스프레드시트 초기화 완료.');
+    Browser.msgBox('Step 5/5 완료!\n\nE03 스프레드시트 초기화 완료.');
   });
 }
 
