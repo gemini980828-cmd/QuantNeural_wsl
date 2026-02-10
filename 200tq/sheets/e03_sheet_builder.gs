@@ -204,30 +204,6 @@ function createPriceDataTab(ss) {
   sheet.hideSheet();
 }
 
-function buildSignalFormulas(startRow, endRow) {
-  var formulas = [];
-  var r;
-  for (r = startRow; r <= endRow; r += 1) {
-    formulas.push([
-      '=IFERROR(\'📊 PriceData\'!A' + r + ',"")',
-      '=IFERROR(\'📊 PriceData\'!B' + r + ',"")',
-      '=IFERROR(AVERAGE(OFFSET(B' + r + ',0,0,-3,1)),"")',
-      '=IFERROR(AVERAGE(OFFSET(B' + r + ',0,0,-CFG_SMA_WIN1,1)),"")',
-      '=IFERROR(AVERAGE(OFFSET(B' + r + ',0,0,-CFG_SMA_WIN2,1)),"")',
-      '=IFERROR(AVERAGE(OFFSET(B' + r + ',0,0,-CFG_SMA_WIN3,1)),"")',
-      '=IF(C' + r + '="","",IF(C' + r + '>D' + r + ',"PASS","FAIL"))',
-      '=IF(C' + r + '="","",IF(C' + r + '>E' + r + ',"PASS","FAIL"))',
-      '=IF(C' + r + '="","",IF(C' + r + '>F' + r + ',"PASS","FAIL"))',
-      '=IF(G' + r + '="","",IF(COUNTIF(G' + r + ':I' + r + ',"PASS")>=2,"ON","OFF"))',
-      '=IF(ROW()-1<CFG_F1_WINDOW,"",SUMPRODUCT(--(OFFSET(J' + r + ',-CFG_F1_WINDOW+1,0,CFG_F1_WINDOW-1,1)<>OFFSET(J' + r + ',-CFG_F1_WINDOW+2,0,CFG_F1_WINDOW-1,1))))',
-      '=IF(J' + r + '="","",IF(\'🚨 Emergency\'!I' + r + '="🔴 ACTIVE","EMERGENCY",IF(J' + r + '="OFF","OFF10",IF(AND(J' + r + '="ON",K' + r + '>=CFG_F1_THRESHOLD),"ON-CHOPPY","ON"))))',
-      '=IFS(L' + r + '="ON",1,L' + r + '="ON-CHOPPY",CFG_F1_REDUCED,L' + r + '="OFF10",CFG_OFF_RESIDUAL,L' + r + '="EMERGENCY",CFG_OFF_RESIDUAL,TRUE,"")',
-      '=IF(ROW()-1<CFG_F1_WINDOW,CFG_F1_WINDOW-(ROW()-1)&" days left","VALID")'
-    ]);
-  }
-  return formulas;
-}
-
 function createSignalTab(ss) {
   var sheet = ss.insertSheet('📈 Signal');
   var headers = [
@@ -248,11 +224,25 @@ function createSignalTab(ss) {
   ];
   setHeaderRow(sheet, headers);
 
-  var startRow = 2;
-  var endRow = 300;
-  var rowCount = endRow - startRow + 1;
-  var formulas = buildSignalFormulas(startRow, endRow);
-  sheet.getRange(startRow, 1, rowCount, headers.length).setFormulas(formulas);
+  var row2Formulas = [[
+    '=IFERROR(\'📊 PriceData\'!A2,"")',
+    '=IFERROR(\'📊 PriceData\'!B2,"")',
+    '=IFERROR(AVERAGE(OFFSET(B2,0,0,-3,1)),"")',
+    '=IFERROR(AVERAGE(OFFSET(B2,0,0,-CFG_SMA_WIN1,1)),"")',
+    '=IFERROR(AVERAGE(OFFSET(B2,0,0,-CFG_SMA_WIN2,1)),"")',
+    '=IFERROR(AVERAGE(OFFSET(B2,0,0,-CFG_SMA_WIN3,1)),"")',
+    '=IF(C2="","",IF(C2>D2,"PASS","FAIL"))',
+    '=IF(C2="","",IF(C2>E2,"PASS","FAIL"))',
+    '=IF(C2="","",IF(C2>F2,"PASS","FAIL"))',
+    '=IF(G2="","",IF(COUNTIF(G2:I2,"PASS")>=2,"ON","OFF"))',
+    '=IF(ROW()-1<CFG_F1_WINDOW,"",SUMPRODUCT(--(OFFSET(J2,-CFG_F1_WINDOW+1,0,CFG_F1_WINDOW-1,1)<>OFFSET(J2,-CFG_F1_WINDOW+2,0,CFG_F1_WINDOW-1,1))))',
+    '=IF(J2="","",IF(\'🚨 Emergency\'!I2="🔴 ACTIVE","EMERGENCY",IF(J2="OFF","OFF10",IF(AND(J2="ON",K2>=CFG_F1_THRESHOLD),"ON-CHOPPY","ON"))))',
+    '=IFS(L2="ON",1,L2="ON-CHOPPY",CFG_F1_REDUCED,L2="OFF10",CFG_OFF_RESIDUAL,L2="EMERGENCY",CFG_OFF_RESIDUAL,TRUE,"")',
+    '=IF(ROW()-1<CFG_F1_WINDOW,CFG_F1_WINDOW-(ROW()-1)&" days left","VALID")'
+  ]];
+  var row2Range = sheet.getRange(2, 1, 1, headers.length);
+  row2Range.setFormulas(row2Formulas);
+  row2Range.copyTo(sheet.getRange(3, 1, 298, headers.length));
 
   sheet.getRange('B2:F300').setNumberFormat('$#,##0.00');
   sheet.getRange('M2:M300').setNumberFormat('0.00%');
@@ -317,26 +307,6 @@ function createSignalTab(ss) {
   sheet.setConditionalFormatRules(rules);
 }
 
-function buildEmergencyFormulas(startRow, endRow) {
-  var formulas = [];
-  var r;
-  for (r = startRow; r <= endRow; r += 1) {
-    formulas.push([
-      '=IFERROR(\'📈 Signal\'!A' + r + ',"")',
-      '=IFERROR(\'📈 Signal\'!B' + r + ',"")',
-      '=IF(OR(B' + r + '="",B' + (r - 1) + '=""),"",(B' + r + '-B' + (r - 1) + ')/B' + (r - 1) + ')',
-      '=IF(C' + r + '="","",IF(C' + r + '<=CFG_EMERGENCY_QQQ,"🚨 TRIGGER","✅ SAFE"))',
-      '=LIVE_TQQQ',
-      '=CFG_TQQQ_ENTRY',
-      '=IF(OR(E' + r + '="",F' + r + '="",F' + r + '=0),"",(E' + r + '-F' + r + ')/F' + r + ')',
-      '=IF(G' + r + '="","",IF(G' + r + '<=CFG_EMERGENCY_TQQQ,"🚨 TRIGGER","✅ SAFE"))',
-      '=IF(OR(D' + r + '="🚨 TRIGGER",H' + r + '="🚨 TRIGGER"),"🔴 ACTIVE","🟢 NONE")',
-      '=IF(ROW()<=2,"CLEAR",IF(I' + (r - 1) + '="🔴 ACTIVE","⏳ COOLDOWN","CLEAR"))'
-    ]);
-  }
-  return formulas;
-}
-
 function createEmergencyTab(ss) {
   var sheet = ss.insertSheet('🚨 Emergency');
   var headers = [
@@ -353,11 +323,21 @@ function createEmergencyTab(ss) {
   ];
   setHeaderRow(sheet, headers);
 
-  var startRow = 2;
-  var endRow = 300;
-  var rowCount = endRow - startRow + 1;
-  var formulas = buildEmergencyFormulas(startRow, endRow);
-  sheet.getRange(startRow, 1, rowCount, headers.length).setFormulas(formulas);
+  var row2Formulas = [[
+    '=IFERROR(\'📈 Signal\'!A2,"")',
+    '=IFERROR(\'📈 Signal\'!B2,"")',
+    '=IF(OR(B2="",B1=""),"",(B2-B1)/B1)',
+    '=IF(C2="","",IF(C2<=CFG_EMERGENCY_QQQ,"🚨 TRIGGER","✅ SAFE"))',
+    '=LIVE_TQQQ',
+    '=CFG_TQQQ_ENTRY',
+    '=IF(OR(E2="",F2="",F2=0),"",(E2-F2)/F2)',
+    '=IF(G2="","",IF(G2<=CFG_EMERGENCY_TQQQ,"🚨 TRIGGER","✅ SAFE"))',
+    '=IF(OR(D2="🚨 TRIGGER",H2="🚨 TRIGGER"),"🔴 ACTIVE","🟢 NONE")',
+    '=IF(ROW()<=2,"CLEAR",IF(I1="🔴 ACTIVE","⏳ COOLDOWN","CLEAR"))'
+  ]];
+  var row2Range = sheet.getRange(2, 1, 1, headers.length);
+  row2Range.setFormulas(row2Formulas);
+  row2Range.copyTo(sheet.getRange(3, 1, 298, headers.length));
 
   sheet.getRange('C2:C300').setNumberFormat('0.00%');
   sheet.getRange('G2:G300').setNumberFormat('0.00%');
@@ -388,20 +368,6 @@ function createEmergencyTab(ss) {
   sheet.setConditionalFormatRules(rules);
 }
 
-function buildTradeLogFormulas(startRow, endRow) {
-  var formulas = [];
-  var r;
-  for (r = startRow; r <= endRow; r += 1) {
-    formulas.push([
-      '=IF(D' + r + '="","",D' + r + '*E' + r + ')',
-      '=LIVE_USDKRW',
-      '=IF(F' + r + '="","",F' + r + '*G' + r + ')',
-      '=IF(F' + r + '="","",F' + r + '*CFG_COMMISSION)'
-    ]);
-  }
-  return formulas;
-}
-
 function createTradeLogTab(ss) {
   var sheet = ss.insertSheet('📝 TradeLog');
   var headers = [
@@ -419,11 +385,15 @@ function createTradeLogTab(ss) {
   ];
   setHeaderRow(sheet, headers);
 
-  var startRow = 2;
-  var endRow = 200;
-  var rowCount = endRow - startRow + 1;
-  var formulas = buildTradeLogFormulas(startRow, endRow);
-  sheet.getRange(startRow, 6, rowCount, 4).setFormulas(formulas);
+  var row2Formulas = [[
+    '=IF(D2="","",D2*E2)',
+    '=LIVE_USDKRW',
+    '=IF(F2="","",F2*G2)',
+    '=IF(F2="","",F2*CFG_COMMISSION)'
+  ]];
+  var row2Range = sheet.getRange(2, 6, 1, 4);
+  row2Range.setFormulas(row2Formulas);
+  row2Range.copyTo(sheet.getRange(3, 6, 198, 4));
 
   var tickerValidation = SpreadsheetApp.newDataValidation()
     .requireValueInList(['TQQQ', 'SGOV'], true)
