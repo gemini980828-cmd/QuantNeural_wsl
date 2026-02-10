@@ -1,5 +1,10 @@
 function initializeE03Sheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // Defer recalculation during build to avoid mid-build stalls
+  var origInterval = ss.getRecalculationInterval();
+  ss.setRecalculationInterval(SpreadsheetApp.RecalculationInterval.HOUR);
+
   var targetTabs = [
     '⚙️ Settings',
     '📊 PriceData',
@@ -46,6 +51,9 @@ function initializeE03Sheet() {
     ss.moveActiveSheet(1);
   }
 
+  // Restore recalculation interval
+  ss.setRecalculationInterval(origInterval);
+
   Browser.msgBox('E03 spreadsheet initialized successfully.');
 }
 
@@ -77,10 +85,11 @@ function getSheetOrThrow(ss, sheetName) {
 
 function setHeaderRow(sheet, headers) {
   var headerValues = [headers];
-  sheet.getRange(1, 1, 1, headers.length).setValues(headerValues);
-  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-  sheet.getRange(1, 1, 1, headers.length).setBackground('#E8EAED');
-  sheet.getRange(1, 1, 1, headers.length).setHorizontalAlignment('center');
+  var range = sheet.getRange(1, 1, 1, headers.length);
+  range.setValues(headerValues);
+  range.setFontWeight('bold');
+  range.setBackground('#E8EAED');
+  range.setHorizontalAlignment('center');
 }
 
 function setSectionTitle(sheet, a1, title) {
@@ -101,9 +110,10 @@ function setNamedRangeSafe(ss, name, range) {
 function createSettingsTab(ss) {
   var sheet = ss.insertSheet('⚙️ Settings');
 
-  sheet.getRange(1, 1, 1, 2).setValues([['Label', 'Value']]);
-  sheet.getRange(1, 1, 1, 2).setFontWeight('bold');
-  sheet.getRange(1, 1, 1, 2).setBackground('#DDE3EA');
+  var headerRange = sheet.getRange(1, 1, 1, 2);
+  headerRange.setValues([['Label', 'Value']]);
+  headerRange.setFontWeight('bold');
+  headerRange.setBackground('#DDE3EA');
 
   setSectionTitle(sheet, 'A2', 'Strategy Constants');
 
@@ -239,17 +249,17 @@ function createSignalTab(ss) {
   setHeaderRow(sheet, headers);
 
   var startRow = 2;
-  var endRow = 400;
+  var endRow = 300;
   var rowCount = endRow - startRow + 1;
   var formulas = buildSignalFormulas(startRow, endRow);
   sheet.getRange(startRow, 1, rowCount, headers.length).setFormulas(formulas);
 
-  sheet.getRange('B2:F400').setNumberFormat('$#,##0.00');
-  sheet.getRange('M2:M400').setNumberFormat('0.00%');
+  sheet.getRange('B2:F300').setNumberFormat('$#,##0.00');
+  sheet.getRange('M2:M300').setNumberFormat('0.00%');
 
-  var voteRange = sheet.getRange('G2:I400');
-  var stateRange = sheet.getRange('L2:L400');
-  var flipRange = sheet.getRange('K2:K400');
+  var voteRange = sheet.getRange('G2:I300');
+  var stateRange = sheet.getRange('L2:L300');
+  var flipRange = sheet.getRange('K2:K300');
 
   var rules = sheet.getConditionalFormatRules();
   rules.push(
@@ -344,20 +354,20 @@ function createEmergencyTab(ss) {
   setHeaderRow(sheet, headers);
 
   var startRow = 2;
-  var endRow = 400;
+  var endRow = 300;
   var rowCount = endRow - startRow + 1;
   var formulas = buildEmergencyFormulas(startRow, endRow);
   sheet.getRange(startRow, 1, rowCount, headers.length).setFormulas(formulas);
 
-  sheet.getRange('C2:C400').setNumberFormat('0.00%');
-  sheet.getRange('G2:G400').setNumberFormat('0.00%');
-  sheet.getRange('B2:B400').setNumberFormat('$#,##0.00');
-  sheet.getRange('E2:F400').setNumberFormat('$#,##0.00');
+  sheet.getRange('C2:C300').setNumberFormat('0.00%');
+  sheet.getRange('G2:G300').setNumberFormat('0.00%');
+  sheet.getRange('B2:B300').setNumberFormat('$#,##0.00');
+  sheet.getRange('E2:F300').setNumberFormat('$#,##0.00');
 
   var rules = sheet.getConditionalFormatRules();
-  var crashRange = sheet.getRange('D2:D400');
-  var stopRange = sheet.getRange('H2:H400');
-  var emergencyRange = sheet.getRange('I2:I400');
+  var crashRange = sheet.getRange('D2:D300');
+  var stopRange = sheet.getRange('H2:H300');
+  var emergencyRange = sheet.getRange('I2:I300');
 
   rules.push(
     SpreadsheetApp.newConditionalFormatRule()
@@ -480,7 +490,7 @@ function createPortfolioTab(ss) {
       '=IF(OR(B2="",D2=""),"",B2*D2)',
       '=IF(E2="","",E2*LIVE_USDKRW)',
       '=IF($E$5=0,"",E2/$E$5)',
-      '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$M$2:$M$400<>""),\'📈 Signal\'!$M$2:$M$400),"")',
+      '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$M$2:$M$300<>""),\'📈 Signal\'!$M$2:$M$300),"")',
       '=IF(OR(G2="",H2=""),"",G2-H2)',
       '=IF(OR(B2="",C2="",D2=""),"",(D2-C2)*B2)',
       '=IF(J2="","",J2*LIVE_USDKRW)',
@@ -572,27 +582,27 @@ function createDashboardTab(ss) {
   sheet.getRange('A4').setBackground('#D9E2EC');
 
   sheet.getRange('D4:H5').merge();
-  sheet.getRange('D4').setFormula('=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$L$2:$L$400<>""),\'📈 Signal\'!$L$2:$L$400),"")');
+  sheet.getRange('D4').setFormula('=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$L$2:$L$300<>""),\'📈 Signal\'!$L$2:$L$300),"")');
   sheet.getRange('D4').setFontSize(24).setFontWeight('bold').setHorizontalAlignment('center').setVerticalAlignment('middle');
 
   var evidenceRows = [
-    ['Evidence: Vote160', '', '', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$G$2:$G$400<>""),\'📈 Signal\'!$G$2:$G$400),"")', 'Evidence: Vote165', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$H$2:$H$400<>""),\'📈 Signal\'!$H$2:$H$400),"")', 'Evidence: Vote170', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$I$2:$I$400<>""),\'📈 Signal\'!$I$2:$I$400),"")'],
-    ['SMA3', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$C$2:$C$400<>""),\'📈 Signal\'!$C$2:$C$400),"")', 'SMA160', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$D$2:$D$400<>""),\'📈 Signal\'!$D$2:$D$400),"")', 'SMA165', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$E$2:$E$400<>""),\'📈 Signal\'!$E$2:$E$400),"")', 'SMA170', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$F$2:$F$400<>""),\'📈 Signal\'!$F$2:$F$400),"")'],
+    ['Evidence: Vote160', '', '', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$G$2:$G$300<>""),\'📈 Signal\'!$G$2:$G$300),"")', 'Evidence: Vote165', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$H$2:$H$300<>""),\'📈 Signal\'!$H$2:$H$300),"")', 'Evidence: Vote170', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$I$2:$I$300<>""),\'📈 Signal\'!$I$2:$I$300),"")'],
+    ['SMA3', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$C$2:$C$300<>""),\'📈 Signal\'!$C$2:$C$300),"")', 'SMA160', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$D$2:$D$300<>""),\'📈 Signal\'!$D$2:$D$300),"")', 'SMA165', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$E$2:$E$300<>""),\'📈 Signal\'!$E$2:$E$300),"")', 'SMA170', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$F$2:$F$300<>""),\'📈 Signal\'!$F$2:$F$300),"")'],
     ['', '', '', '', '', '', '', '']
   ];
   sheet.getRange(7, 1, evidenceRows.length, 8).setValues(evidenceRows);
   sheet.getRange('B8:H8').setNumberFormat('$#,##0.00');
 
   var f1Rows = [
-    ['F1 FlipCount', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$K$2:$K$400<>""),\'📈 Signal\'!$K$2:$K$400),"")', 'F1 Validity', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$N$2:$N$400<>""),\'📈 Signal\'!$N$2:$N$400),"")', 'Target TQQQ%', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$M$2:$M$400<>""),\'📈 Signal\'!$M$2:$M$400),"")', '', ''],
+    ['F1 FlipCount', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$K$2:$K$300<>""),\'📈 Signal\'!$K$2:$K$300),"")', 'F1 Validity', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$N$2:$N$300<>""),\'📈 Signal\'!$N$2:$N$300),"")', 'Target TQQQ%', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$M$2:$M$300<>""),\'📈 Signal\'!$M$2:$M$300),"")', '', ''],
     ['Choppy Status', '=IF(D4="ON-CHOPPY","CHOPPY","NORMAL")', '', '', '', '', '', '']
   ];
   sheet.getRange(11, 1, f1Rows.length, 8).setValues(f1Rows);
   sheet.getRange('F11:F11').setNumberFormat('0.00%');
 
   var emergencyRows = [
-    ['Emergency QQQ Return', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$C$2:$C$400<>""),\'🚨 Emergency\'!$C$2:$C$400),"")', 'Emergency Drawdown', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$G$2:$G$400<>""),\'🚨 Emergency\'!$G$2:$G$400),"")', 'Emergency Status', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$I$2:$I$400<>""),\'🚨 Emergency\'!$I$2:$I$400),"")', '', ''],
-    ['Cooldown', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$J$2:$J$400<>""),\'🚨 Emergency\'!$J$2:$J$400),"")', '', '', '', '', '', '']
+    ['Emergency QQQ Return', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$C$2:$C$300<>""),\'🚨 Emergency\'!$C$2:$C$300),"")', 'Emergency Drawdown', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$G$2:$G$300<>""),\'🚨 Emergency\'!$G$2:$G$300),"")', 'Emergency Status', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$I$2:$I$300<>""),\'🚨 Emergency\'!$I$2:$I$300),"")', '', ''],
+    ['Cooldown', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$J$2:$J$300<>""),\'🚨 Emergency\'!$J$2:$J$300),"")', '', '', '', '', '', '']
   ];
   sheet.getRange(14, 1, emergencyRows.length, 8).setValues(emergencyRows);
   sheet.getRange('B14:B14').setNumberFormat('0.00%');
@@ -680,62 +690,15 @@ function applyGlobalFormatting(ss) {
       continue;
     }
     sheet.freezeRows(1);
-    var maxCols = Math.max(sheet.getLastColumn(), 8);
-    sheet.autoResizeColumns(1, maxCols);
   }
 
+  // Protection for strategy constants (one-time setup)
   var settings = ss.getSheetByName('⚙️ Settings');
   if (settings) {
-    settings.getRange('B7:B10').setNumberFormat('0.00%');
-    settings.getRange('B16:B18').setNumberFormat('$#,##0.00');
-    settings.getRange('B19:B19').setNumberFormat('₩#,##0');
-    settings.getRange('B23:B25').setNumberFormat('$#,##0.00');
-    settings.getRange('B26:B26').setNumberFormat('₩#,##0.00');
-
     var protectRange = settings.getRange('A2:B12');
     var protection = protectRange.protect();
     protection.setDescription('E03 strategy constants (protected)');
     protection.setWarningOnly(true);
-  }
-
-  var signal = ss.getSheetByName('📈 Signal');
-  if (signal) {
-    signal.getRange('M2:M400').setNumberFormat('0.00%');
-  }
-
-  var emergency = ss.getSheetByName('🚨 Emergency');
-  if (emergency) {
-    emergency.getRange('C2:C400').setNumberFormat('0.00%');
-    emergency.getRange('G2:G400').setNumberFormat('0.00%');
-    emergency.getRange('B2:B400').setNumberFormat('$#,##0.00');
-    emergency.getRange('E2:F400').setNumberFormat('$#,##0.00');
-  }
-
-  var tradeLog = ss.getSheetByName('📝 TradeLog');
-  if (tradeLog) {
-    tradeLog.getRange('E2:G1000').setNumberFormat('$#,##0.00');
-    tradeLog.getRange('H2:H1000').setNumberFormat('₩#,##0');
-    tradeLog.getRange('I2:I1000').setNumberFormat('$#,##0.00');
-  }
-
-  var portfolio = ss.getSheetByName('💼 Portfolio');
-  if (portfolio) {
-    portfolio.getRange('C2:E5').setNumberFormat('$#,##0.00');
-    portfolio.getRange('F2:F5').setNumberFormat('₩#,##0');
-    portfolio.getRange('G2:I5').setNumberFormat('0.00%');
-    portfolio.getRange('J2:J5').setNumberFormat('$#,##0.00');
-    portfolio.getRange('K2:K5').setNumberFormat('₩#,##0');
-    portfolio.getRange('L2:L5').setNumberFormat('$#,##0.00');
-  }
-
-  var dashboard = ss.getSheetByName('📊 Dashboard');
-  if (dashboard) {
-    dashboard.getRange('B20:B20').setNumberFormat('$#,##0.00');
-    dashboard.getRange('D20:D20').setNumberFormat('₩#,##0');
-    dashboard.getRange('B21:D21').setNumberFormat('0.00%');
-    dashboard.getRange('B14:B14').setNumberFormat('0.00%');
-    dashboard.getRange('D14:D14').setNumberFormat('0.00%');
-    dashboard.getRange('F11:F11').setNumberFormat('0.00%');
   }
 }
 
