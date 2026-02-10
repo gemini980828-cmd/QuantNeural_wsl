@@ -299,7 +299,7 @@ function createSignalTab(ss) {
   );
   rules.push(
     SpreadsheetApp.newConditionalFormatRule()
-      .whenFormulaSatisfied('=AND($K2<>"",$K2>=CFG_F1_THRESHOLD)')
+      .whenFormulaSatisfied('=AND($K2<>"",$K2>=3)')
       .setBackground('#FFAA00')
       .setRanges([flipRange])
       .build()
@@ -316,7 +316,7 @@ function buildEmergencyFormulas(startRow, endRow) {
       '=IFERROR(\'📈 Signal\'!B' + r + ',"")',
       '=IF(OR(B' + r + '="",B' + (r - 1) + '=""),"",(B' + r + '-B' + (r - 1) + ')/B' + (r - 1) + ')',
       '=IF(C' + r + '="","",IF(C' + r + '<=CFG_EMERGENCY_QQQ,"🚨 TRIGGER","✅ SAFE"))',
-      safeGF('TQQQ', 'price'),
+      '=LIVE_TQQQ',
       '=CFG_TQQQ_ENTRY',
       '=IF(OR(E' + r + '="",F' + r + '="",F' + r + '=0),"",(E' + r + '-F' + r + ')/F' + r + ')',
       '=IF(G' + r + '="","",IF(G' + r + '<=CFG_EMERGENCY_TQQQ,"🚨 TRIGGER","✅ SAFE"))',
@@ -384,7 +384,7 @@ function buildTradeLogFormulas(startRow, endRow) {
   for (r = startRow; r <= endRow; r += 1) {
     formulas.push([
       '=IF(D' + r + '="","",D' + r + '*E' + r + ')',
-      '=IFERROR(GOOGLEFINANCE("CURRENCY:USDKRW"),"")',
+      '=LIVE_USDKRW',
       '=IF(F' + r + '="","",F' + r + '*G' + r + ')',
       '=IF(F' + r + '="","",F' + r + '*CFG_COMMISSION)'
     ]);
@@ -410,7 +410,7 @@ function createTradeLogTab(ss) {
   setHeaderRow(sheet, headers);
 
   var startRow = 2;
-  var endRow = 1000;
+  var endRow = 200;
   var rowCount = endRow - startRow + 1;
   var formulas = buildTradeLogFormulas(startRow, endRow);
   sheet.getRange(startRow, 6, rowCount, 4).setFormulas(formulas);
@@ -419,29 +419,29 @@ function createTradeLogTab(ss) {
     .requireValueInList(['TQQQ', 'SGOV'], true)
     .setAllowInvalid(false)
     .build();
-  sheet.getRange('B2:B1000').setDataValidation(tickerValidation);
+  sheet.getRange('B2:B200').setDataValidation(tickerValidation);
 
   var actionValidation = SpreadsheetApp.newDataValidation()
     .requireValueInList(['BUY', 'SELL', 'HOLD'], true)
     .setAllowInvalid(false)
     .build();
-  sheet.getRange('C2:C1000').setDataValidation(actionValidation);
+  sheet.getRange('C2:C200').setDataValidation(actionValidation);
 
   var sharesValidation = SpreadsheetApp.newDataValidation()
     .requireNumberGreaterThan(0)
     .setAllowInvalid(false)
     .build();
-  sheet.getRange('D2:D1000').setDataValidation(sharesValidation);
+  sheet.getRange('D2:D200').setDataValidation(sharesValidation);
 
   var priceValidation = SpreadsheetApp.newDataValidation()
     .requireNumberGreaterThan(0)
     .setAllowInvalid(false)
     .build();
-  sheet.getRange('E2:E1000').setDataValidation(priceValidation);
+  sheet.getRange('E2:E200').setDataValidation(priceValidation);
 
-  sheet.getRange('E2:G1000').setNumberFormat('$#,##0.00');
-  sheet.getRange('H2:H1000').setNumberFormat('₩#,##0');
-  sheet.getRange('I2:I1000').setNumberFormat('$#,##0.00');
+  sheet.getRange('E2:G200').setNumberFormat('$#,##0.00');
+  sheet.getRange('H2:H200').setNumberFormat('₩#,##0');
+  sheet.getRange('I2:I200').setNumberFormat('$#,##0.00');
 }
 
 function createPortfolioTab(ss) {
