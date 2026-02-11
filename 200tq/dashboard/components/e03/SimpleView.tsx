@@ -23,13 +23,29 @@ interface SimpleViewProps {
   onSwitchToPro: () => void;
 }
 
-function getVerdictStyle(strategyState: "ON" | "OFF10"): { bg: string; text: string; icon: React.ReactNode; label: string } {
+function getVerdictStyle(strategyState: E03ViewModel["strategyState"]): { bg: string; text: string; icon: React.ReactNode; label: string } {
   if (strategyState === "ON") {
     return { 
       bg: "bg-emerald-500/20 border-emerald-500/30", 
       text: "text-emerald-400",
       icon: <TrendingUp className="w-6 h-6" />,
       label: "ON (100% TQQQ)"
+    };
+  }
+  if (strategyState === "ON_CHOPPY") {
+    return {
+      bg: "bg-amber-500/20 border-amber-500/30",
+      text: "text-amber-400",
+      icon: <TrendingDown className="w-6 h-6" />,
+      label: "ON-CHOPPY (TQQQ 70%)"
+    };
+  }
+  if (strategyState === "EMERGENCY") {
+    return {
+      bg: "bg-red-500/20 border-red-500/30",
+      text: "text-red-400",
+      icon: <AlertTriangle className="w-6 h-6" />,
+      label: "EMERGENCY (TQQQ 10%)"
     };
   }
   return { 

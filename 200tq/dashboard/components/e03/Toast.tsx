@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * @deprecated Use `useToast()` from `@/lib/stores/toast-store` instead.
+ * This component is no longer imported anywhere.
+ * Retained for reference — safe to delete.
+ */
+
 import { useEffect } from "react";
 
 interface ToastProps {

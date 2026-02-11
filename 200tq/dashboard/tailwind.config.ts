@@ -18,6 +18,7 @@ const config: Config = {
 
         // Semantic colors for data display
         positive: "rgb(var(--positive) / <alpha-value>)",
+        choppy: "rgb(var(--choppy) / <alpha-value>)",
         negative: "rgb(var(--negative) / <alpha-value>)",
 
         status: {
@@ -28,6 +29,10 @@ const config: Config = {
           action: {
             bg: "rgb(var(--status-action-bg) / <alpha-value>)",
             fg: "rgb(var(--status-action-fg) / <alpha-value>)",
+          },
+          choppy: {
+            bg: "rgb(var(--choppy) / <alpha-value>)",
+            fg: "rgb(var(--fg) / <alpha-value>)",
           },
           danger: {
             bg: "rgb(var(--status-danger-bg) / <alpha-value>)",

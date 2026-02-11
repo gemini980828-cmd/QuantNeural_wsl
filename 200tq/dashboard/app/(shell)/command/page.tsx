@@ -270,7 +270,11 @@ export default function CommandPage({
     "fresh_normal", 
     "stale_or_closed", 
     "soft_alert", 
-    "hard_confirmed"
+    "hard_confirmed",
+    "choppy_on",
+    "emergency_qqq",
+    "emergency_tqqq",
+    "cooldown",
   ];
 
   const scenarioLabels: Record<ScenarioId, string> = {
@@ -278,6 +282,10 @@ export default function CommandPage({
     stale_or_closed: "장 마감",
     soft_alert: "긴급 점검",
     hard_confirmed: "비상 확정",
+    choppy_on: "ON-변동성",
+    emergency_qqq: "QQQ 비상",
+    emergency_tqqq: "TQQQ 비상",
+    cooldown: "쿨다운",
   };
 
   // Loading state
@@ -376,7 +384,6 @@ export default function CommandPage({
                 perfSummary={perfSummary}
                 startCapital={startCapital}
                 onCapitalChange={setStartCapital}
-                realPrices={rawInputs?.inputPrices}
                 onDateRangeChange={handleDateRangeChange}
               />
               

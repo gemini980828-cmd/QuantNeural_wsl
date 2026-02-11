@@ -1,7 +1,7 @@
-# E03 Command Center — UI Design SSOT v1.1
+# E03 Command Center — UI Design SSOT v1.1 (v2026.3 aligned)
 
 - Document Status: SSOT_UI_V1.1
-- Target Strategy: E03 (Ensemble Vote + OFF10 + SGOV)
+- Target Strategy: E03 v2026.3 (Ensemble Vote + F1 Flip Filter + 4-State Strategy)
 - Audience: Frontend Engineer / Publisher
 - Authoring Role: Senior UI Engineer
 - Timezone: KST 기본 표기 (옵션: ET 병기)
@@ -54,13 +54,16 @@ UI는 아래 SSOT 정의를 변경할 수 없다.
 
 ### 2.1 상태명 표기(고정)
 - ON
+- ON_CHOPPY
 - OFF10  ← 공백 금지(OFF 10 금지)
+- EMERGENCY
 
 ### 2.2 앙상블 비교식(고정)
 - 비교는 “현재가 vs MA”가 아니라 **SMA(3) vs SMA(window)**.
 - Vote(window) = (SMA(3) > SMA(window))
 - windows = {160, 165, 170}
-- 2/3 이상 true → ON, else → OFF10
+- 2/3 이상 true → ON 계열, else → OFF10
+- F1 Filter: FlipCount >= 3이면 ON_CHOPPY
 
 ### 2.3 시간/날짜 표기(고정)
 - 기본: KST
@@ -106,7 +109,7 @@ UI 규칙
   - “데이터 지연: 전일 신호 유지 중(보수적)”
 
 ### 4.2 Strategy State (전략 판정)
-- ON / OFF10
+- ON / ON_CHOPPY / OFF10 / EMERGENCY
 
 ### 4.3 Execution State (실행 상태)
 - NO_ACTION: 목표 비중 변화 없음(주문 없음)
@@ -162,7 +165,7 @@ UI 규칙(핵심)
 목적: 오늘 Verdict와 내일 Execution을 “한 문장”으로 이해.
 
 B0. Hero Summary (필수)
-- Verdict (가장 큰 타이포): ON 또는 OFF10
+- Verdict (가장 큰 타이포): ON / ON_CHOPPY / OFF10 / EMERGENCY
 - Subline:
   - 판정일(Verdict Date)
   - 실행일(Execution Date, t+1)
@@ -178,6 +181,20 @@ B1. Evidence Grid (필수)
   - Vote: ✅ / ❌  (SMA3 > SMAwindow 여부)
   - Margin(%): SMA3 대비 SMAwindow 괴리(양/음)
   - Gauge: 0% 기준 좌(음수)/우(양수)로 뻗는 막대(직관 인지)
+
+B1-2. FlipCount Gauge + Timeline (v2026.3 필수)
+- FlipCount 게이지(Threshold=3 마커 포함)
+- 40일 시그널 타임라인(ON=green, OFF=gray, 전환 지점 강조)
+- 기본 동작: ON_CHOPPY에서 펼침, 그 외 접힘
+- 표시 문구: "40일 시그널 히스토리 · N회 전환"
+
+B1-3. Risk Monitor 임계값(필수)
+- QQQ Drop Alert: -5%
+- TQQQ Flash Crash: -15%
+- 기존 레거시 임계값 문구 사용 금지
+
+B1-4. Cooldown Indicator (필수)
+- `cooldownActive=true`일 때 "쿨다운 활성 (1일)" 배지 노출
 
 B2. Guardrail Copy (필수)
 - “비상 경보(SOFT_ALERT)는 확정이 아니며, 확정은 종가 이후입니다.”
@@ -197,7 +214,7 @@ C0. Input Panel (Reality, 수동 입력)
 
 선택 입력(정확도/비상 계산)
 - 현재 보유 수량: TQQQ, SGOV
-- TQQQ 평균단가(비상 -20% 트리거 계산용)
+- TQQQ 평균단가(비상 -15% 트리거 계산용)
 - 신규 입금/분배금(선택)
 
 Auto-fill UX
@@ -213,9 +230,16 @@ C1. Order Ticket (Strategy, 자동 산출)
 주문 리스트 표시(실수 방지)
 - 종목명보다 **Qty를 크게** 표시(모노스페이스 권장)
 - OFF10 계산 규칙 각주(작게 고정):
-  - “OFF10 잔류 수량은 10%를 올림(ceiling)”
+- “OFF10 잔류 수량은 10%를 올림(ceiling)”
   - “SGOV 불가 시 SHV로 대체”
-  - “(선택) 0.2% 현금 버퍼 반영”
+- “(선택) 0.2% 현금 버퍼 반영”
+
+C1-2. Weight Context Banner (v2026.3 필수)
+- ON: `ON: TQQQ 100%`
+- ON_CHOPPY: `Choppy 구간: TQQQ 70% / SGOV 30%`
+- OFF10: `OFF: TQQQ 10% / SGOV 90%`
+- EMERGENCY: `Emergency Exit: TQQQ 10% / SGOV 90%`
+- Position Impact After 컬럼에 목표 비중 퍼센트 병기
 
 C2. Copy (Primary Action)
 - 버튼 라벨: “주문 복사”

@@ -1,10 +1,8 @@
 import { E03ViewModel, EvidenceItem } from "../../lib/ops/e03/types";
-import { CheckCircle2, XCircle, AlertTriangle, TrendingUp, Wallet, Settings, ChevronDown } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, TrendingUp, Wallet, Settings, ChevronDown, Clock3 } from "lucide-react";
 import { Period } from "../../lib/ops/e03/mockPrices";
 import { PerfSummary } from "../../lib/ops/e03/performance";
-import { useState, useMemo, useEffect } from "react";
-import { getClosePrices } from "../../lib/ops/e03/mockPrices";
-import { sma } from "../../lib/ops/e03/indicators";
+import { useState, useEffect } from "react";
 import MacroStrip from "./MacroStrip";
 
 type ColorTone = 'ok' | 'action' | 'danger';
@@ -25,7 +23,6 @@ interface ZoneBSignalCoreProps {
   perfSummary: PerfSummary | null;
   startCapital?: number;
   onCapitalChange?: (capital: number) => void;
-  realPrices?: Record<string, number>; // Real API prices (TQQQ, QQQ, etc.)
   onDateRangeChange?: (start: string, end: string) => void;
 }
 
@@ -102,22 +99,50 @@ export default function ZoneBSignalCore({
   perfSummary, 
   startCapital = 10000000,
   onCapitalChange,
-  realPrices,
   onDateRangeChange
 }: ZoneBSignalCoreProps) {
-  const isOff = vm.strategyState === "OFF10";
+  const stateConfig = {
+    ON: {
+      actionLabel: "매수 유지",
+      stateLabel: "ON",
+      headingClass: "text-positive",
+      badgeClass: "bg-positive/10 text-positive",
+    },
+    ON_CHOPPY: {
+      actionLabel: "매수 축소",
+      stateLabel: "CHOPPY",
+      headingClass: "text-choppy",
+      badgeClass: "bg-amber-900/40 text-amber-400",
+    },
+    OFF10: {
+      actionLabel: "매도 대기",
+      stateLabel: "OFF",
+      headingClass: "text-amber-400",
+      badgeClass: "bg-status-inactive-bg text-status-inactive-fg",
+    },
+    EMERGENCY: {
+      actionLabel: "비상 전환",
+      stateLabel: "EMERGENCY",
+      headingClass: "text-negative animate-pulse",
+      badgeClass: "bg-red-900/40 text-red-400",
+    },
+  } as const;
+  const currentState = stateConfig[vm.strategyState];
   const [showSettings, setShowSettings] = useState(false);
   const [includeFees, setIncludeFees] = useState(false);
   const [localCapital, setLocalCapital] = useState(startCapital / 10000); // 만원 단위
+  const [showFlipDetails, setShowFlipDetails] = useState(vm.strategyState === "ON_CHOPPY");
   
   // Custom date range state
   const defaultDateRange = getDateRange(selectedPeriod);
   const [localStartDate, setLocalStartDate] = useState(defaultDateRange.start);
   const [localEndDate, setLocalEndDate] = useState(defaultDateRange.end);
   
-  // Action guidance based on strategy state
-  const actionLabel = isOff ? "매도 대기" : "매수 유지";
-  const stateLabel = isOff ? "OFF" : "ON";
+  useEffect(() => {
+    if (vm.strategyState === "ON_CHOPPY") {
+      setShowFlipDetails(true);
+    }
+  }, [vm.strategyState]);
   
   // Use local dates for display
   const dateRange = { start: localStartDate, end: localEndDate };
@@ -156,167 +181,112 @@ export default function ZoneBSignalCore({
   
 
 
-  // Risk Calculation (SSOT: TQQQ -20% from entry price)
-  // Uses realPrices if available (REAL mode), otherwise falls back to mock prices
-  const riskMetrics = useMemo(() => {
-    // Get prices: prefer realPrices (API) over mock data
-    let currentPrice: number;
-    let qqqCurrent: number;
-    let qqqPrev: number;
-    
-    if (realPrices && realPrices.TQQQ && realPrices.QQQ) {
-      // REAL mode: use API prices
-      currentPrice = realPrices.TQQQ;
-      qqqCurrent = realPrices.QQQ;
-      // For QQQ prev close, we'd need historical data - estimate ~0% change for now
-      // In production, this should come from a separate API call or stored prev close
-      qqqPrev = realPrices.QQQ_PREV || realPrices.QQQ; // Fallback to same (0% change)
-    } else {
-      // MOCK mode: use getClosePrices
-      const tqqqFull = getClosePrices("TQQQ");
-      const qqqFull = getClosePrices("QQQ");
-      currentPrice = tqqqFull[tqqqFull.length - 1];
-      qqqCurrent = qqqFull[qqqFull.length - 1];
-      qqqPrev = qqqFull[qqqFull.length - 2];
-    }
-    
-    // Entry price: In REAL mode, should come from user's actual entry log
-    // For now, use current price as entry (showing 0% from entry for safety)
-    const entryPrice = realPrices?.TQQQ_ENTRY || currentPrice;
-    
-    // Stop loss line per SSOT: -20% from entry
-    const stopLossPrice = entryPrice * 0.80;
-    
-    // Distance to stop loss (positive = safe buffer, negative = breached)
-    const distToStop = currentPrice && entryPrice 
-      ? ((currentPrice - stopLossPrice) / currentPrice) * 100 
-      : 0;
-    
-    // Warning threshold: within 5% of stop loss (i.e., down 15-20% from entry)
-    const isWarning = distToStop > 0 && distToStop < 5;
-    const isTriggered = distToStop <= 0;
-    
-    // QQQ Drop Percentage (Negative value means drop)
-    const qqqDropPct = (qqqCurrent && qqqPrev) 
-      ? ((qqqCurrent - qqqPrev) / qqqPrev) * 100 
-      : 0;
-      
-    // QQQ Trigger: Drop > 7% (i.e., less than -7%)
-    const isQqqTriggered = qqqDropPct <= -7;
-    const isQqqWarning = qqqDropPct <= -5 && qqqDropPct > -7; // Warn at -5%
-    
-    return { 
-      currentPrice, 
-      entryPrice,
-      stopLossPrice, 
-      distToStop,
-      isWarning,
-      isTriggered,
-      qqqDropPct,
-      isQqqTriggered,
-      isQqqWarning,
-      isAnyTriggered: isTriggered || isQqqTriggered
-    };
-  }, [selectedPeriod, realPrices]);
+
+  const hasSignalHistory = Boolean(vm.signalHistory && vm.signalHistory.length > 0);
+  const flipGaugeRatio = Math.min(vm.flipCount / 8, 1);
 
   return (
     <section className="space-y-4">
-      {/* Risk Monitor Banner (High Priority) */}
-      <div className={`rounded-xl border px-4 py-3 transition-all shadow-sm ${
-        riskMetrics.isAnyTriggered 
-          ? "bg-red-950 border-red-500 animate-pulse text-white shadow-lg shadow-red-900/40" // Emergency/Exit Now
-          : riskMetrics.isWarning || riskMetrics.isQqqWarning
-            ? "bg-amber-950/40 border-amber-500/50" // Caution (subtle)
-            : "bg-surface border-border"
-      }`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <div className={`p-2 rounded-full ${
-               riskMetrics.isAnyTriggered ? "bg-red-500/30 text-red-100" : 
-               riskMetrics.isWarning || riskMetrics.isQqqWarning ? "bg-amber-500/20 text-amber-400" : "bg-inset text-neutral-400"
-             }`}>
-               <AlertTriangle size={18} className={riskMetrics.isAnyTriggered ? "animate-pulse" : ""} />
-             </div>
-             
-             <div className="flex flex-col gap-1">
-               {/* TQQQ Status */}
-               <div className="flex items-center gap-3">
-                 <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                   riskMetrics.isTriggered ? "text-red-200" : "text-muted"
-                 }`}>
-                   TQQQ Flash Crash (-20%)
-                 </span>
-                 <div className="flex items-baseline gap-2">
-                    <span className={`text-sm font-bold font-mono tracking-tight ${
-                      riskMetrics.isTriggered ? "text-white" : 
-                      riskMetrics.isWarning ? "text-amber-400" : "text-fg"
-                    }`}>
-                      {riskMetrics.isTriggered ? "🚨 TRIGGERED" : `${riskMetrics.distToStop.toFixed(1)}%`}
-                    </span>
-                    <span className={`text-[10px] font-sans tabular-nums ${
-                      riskMetrics.isTriggered ? "text-red-300" : "text-muted"
-                    }`}>
-                      (${riskMetrics.currentPrice?.toFixed(2)} → SL ${riskMetrics.stopLossPrice?.toFixed(2)})
-                    </span>
-                 </div>
-               </div>
+      {hasSignalHistory && (
+        <div className="rounded-xl border border-border bg-surface p-3 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setShowFlipDetails((prev) => !prev)}
+            className="flex w-full items-center justify-between text-left"
+          >
+            <div>
+              <div className="text-xs text-muted font-medium font-sans mb-1">시그널 안정성 필터</div>
+              <div className="text-xs font-medium text-fg font-sans"><span className="font-mono">{vm.flipCount}</span>회 전환 <span className="text-muted font-normal">/ 최근 40일</span></div>
+            </div>
+            <ChevronDown size={16} className={`text-muted transition-transform ${showFlipDetails ? "rotate-180" : ""}`} />
+          </button>
 
-               {/* QQQ Status */}
-               <div className="flex items-center gap-3">
-                 <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                   riskMetrics.isQqqTriggered ? "text-red-200" : "text-muted"
-                 }`}>
-                   QQQ Drop Alert (-7%)
-                 </span>
-                 <div className="flex items-baseline gap-2">
-                    <span className={`text-sm font-bold font-mono tracking-tight ${
-                      riskMetrics.isQqqTriggered ? "text-white" : 
-                      riskMetrics.isQqqWarning ? "text-amber-400" : "text-fg"
-                    }`}>
-                      {riskMetrics.isQqqTriggered ? "🚨 TRIGGERED" : `${riskMetrics.qqqDropPct.toFixed(2)}%`}
-                    </span>
-                    <span className={`text-[10px] font-sans tabular-nums bg-inset px-1 rounded ${
-                      riskMetrics.isQqqTriggered ? "text-red-300" : "text-muted"
-                    }`}>
-                      vs Prev Close
-                    </span>
-                 </div>
-               </div>
-             </div>
-          </div>
-          
-          {riskMetrics.isAnyTriggered && (
-            <div className="px-3 py-1.5 bg-red-600 text-white text-sm font-bold rounded-lg animate-bounce shadow-lg">
-              EXIT NOW
+          {showFlipDetails && (
+            <div className="mt-3 space-y-3">
+              {/* Gauge */}
+              <div className="space-y-1">
+                <div className="relative h-3 w-full overflow-hidden rounded-full bg-inset">
+                  <div className="absolute inset-y-0 left-0 w-[37.5%] bg-positive/50" />
+                  <div className="absolute inset-y-0 right-0 w-[62.5%] bg-choppy/45" />
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full bg-positive"
+                    style={{ width: `${flipGaugeRatio * 100}%` }}
+                  />
+                  <div className="absolute left-[37.5%] top-[-2px] h-4 w-px bg-fg/70" />
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-muted font-sans">
+                  <span>0 (안정)</span>
+                  <span className="font-semibold">기준 3회</span>
+                  <span>8+ (불안정)</span>
+                </div>
+              </div>
+
+              {/* Interpretation */}
+              <div className={`text-xs font-medium font-sans ${vm.flipCount < 3 ? "text-positive" : "text-choppy"}`}>
+                {vm.flipCount < 3
+                  ? `안정 구간 — 전환 ${vm.flipCount}회로 기준(3회) 미만. TQQQ 100% 유지.`
+                  : `불안정 구간 — 전환 ${vm.flipCount}회로 기준 초과. TQQQ 70%로 축소 적용.`}
+              </div>
+
+              {/* Signal History Grid */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[10px] text-muted font-sans">
+                  <span>40일 시그널 히스토리</span>
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-positive/70" /> ON</span>
+                    <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-status-inactive-bg" /> OFF</span>
+                    <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm border border-choppy bg-transparent" /> 전환</span>
+                  </div>
+                </div>
+                <div className="grid gap-[3px]" style={{ gridTemplateColumns: 'repeat(20, minmax(0, 1fr))' }}>
+                  {vm.signalHistory?.slice(-40).map((value, idx, arr) => {
+                    const isFlipPoint = idx > 0 && value !== arr[idx - 1];
+                    return (
+                      <div
+                        key={`${idx}-${value ? "1" : "0"}`}
+                        className={`h-2.5 rounded-sm border ${
+                          value ? "bg-positive/70" : "bg-status-inactive-bg"
+                        } ${isFlipPoint ? "border-choppy" : "border-transparent"}`}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-muted/50 font-sans">
+                  <span>40일 전</span>
+                  <span>오늘</span>
+                </div>
+              </div>
             </div>
           )}
         </div>
-      </div>
+      )}
 
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-4">
              {/* Primary: Action Label (what to do) */}
-             <h2 className={`text-4xl font-bold tracking-tight font-sans ${
-               isOff ? "text-amber-400" : "text-positive"
-             }`}>
-               {actionLabel}
-             </h2>
-             {/* Secondary: System State (technical status) */}
-             <span className={`text-lg px-2 py-0.5 rounded font-medium font-sans ${
-               isOff 
-                 ? "bg-status-inactive-bg text-status-inactive-fg" 
-                 : "bg-positive/10 text-positive"
-             }`}>
-               {stateLabel}
-             </span>
-        </div>
-        
-        {vm.emergencyState === "SOFT_ALERT" && (
-           <div className="flex items-center gap-2 text-status-action-fg text-sm font-medium bg-status-action-bg/10 px-3 py-1 rounded-lg border border-status-action-bg/20">
-             <AlertTriangle size={16} />
-             {vm.softAlertNote || "Soft Alert Active"}
-           </div>
-        )}
+             <h2 className={`text-4xl font-bold tracking-tight font-sans ${currentState.headingClass}`}>
+               {currentState.actionLabel}
+              </h2>
+              {/* Secondary: System State (technical status) */}
+              <span className={`text-lg px-2 py-0.5 rounded font-medium font-sans ${currentState.badgeClass}`}>
+                {currentState.stateLabel}
+              </span>
+         </div>
+         
+         <div className="flex items-center gap-2">
+           {vm.cooldownActive && (
+              <div className="flex items-center gap-1.5 text-amber-400 text-xs font-medium bg-amber-900/40 px-2 py-1 rounded border border-amber-800">
+               <Clock3 size={14} />
+               쿨다운 활성 (1일)
+             </div>
+           )}
+           {vm.emergencyState === "SOFT_ALERT" && (
+             <div className="flex items-center gap-2 text-status-action-fg text-sm font-medium bg-status-action-bg/10 px-3 py-1 rounded-lg border border-status-action-bg/20">
+               <AlertTriangle size={16} />
+               {vm.softAlertNote || "Soft Alert Active"}
+             </div>
+           )}
+         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">

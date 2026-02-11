@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { E03ViewModel } from "../../lib/ops/e03/types";
-import { AlertCircle, Shield, MonitorPlay, Clock, Database, AlertTriangle, Bell, LayoutDashboard, Minimize2 } from "lucide-react";
+import { AlertCircle, Shield, MonitorPlay, Clock, Database, AlertTriangle, Bell, LayoutDashboard, Minimize2, Activity, Clock3 } from "lucide-react";
 import { ThemeToggle } from "../ThemeToggle";
 import { useViewMode, useSettingsStore } from "@/lib/stores/settings-store";
 
@@ -17,10 +17,13 @@ export default function ZoneAHeader({ vm, onToggleSimulation, onTogglePrivacy, u
   const viewMode = useViewMode();
   const store = useSettingsStore();
   const needsRecord = vm.executionState === "DUE_TODAY" || vm.executionState === "UNKNOWN";
+  const isChoppy = vm.strategyState === "ON_CHOPPY";
+  const isEmergencyState = vm.strategyState === "EMERGENCY";
   
   // Determine emergency state
-  const hasEmergency = vm.emergencyState !== "NONE";
   const isHardEmergency = vm.emergencyState === "HARD_CONFIRMED";
+  const showHardEmergency = isHardEmergency || isEmergencyState;
+  const hasEmergency = vm.emergencyState !== "NONE" || isEmergencyState;
   
   // Determine execution context
   const isExecScheduled = vm.executionBadge.detail?.includes("SCHEDULED") || vm.executionBadge.detail?.includes("DUE");
@@ -95,17 +98,40 @@ export default function ZoneAHeader({ vm, onToggleSimulation, onTogglePrivacy, u
             {/* 1. EMERGENCY - Priority 1 (Prominent when active, minimal when NONE) */}
             {hasEmergency ? (
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-bold text-xs ${
-                isHardEmergency 
+                showHardEmergency 
                   ? "bg-red-500 text-white animate-pulse shadow-lg shadow-red-900/40" 
                   : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
               }`}>
-                <AlertTriangle size={14} className={isHardEmergency ? "animate-bounce" : ""} />
-                <span>{isHardEmergency ? "🚨 비상 확정" : "⚠️ 긴급 점검"}</span>
+                <AlertTriangle size={14} className={showHardEmergency ? "animate-bounce" : ""} />
+                <span>{showHardEmergency ? "🚨 비상 확정" : "⚠️ 긴급 점검"}</span>
               </div>
             ) : (
               <div className="flex items-center gap-1.5 text-neutral-600 text-xs" title="비상 상황 없음">
                 <div className="w-2 h-2 rounded-full bg-neutral-700" />
+                <span className="hidden sm:inline">비상 없음</span>
+              </div>
+            )}
+
+            {isChoppy ? (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-medium bg-amber-900/40 text-amber-500 border-amber-800">
+                <Activity size={14} />
+                <span>시그널 불안정</span>
+              </div>
+            ) : vm.strategyState === "ON" ? (
+              <div className="flex items-center gap-1.5 text-positive text-xs" title="ON-Normal">
+                <div className="w-2 h-2 rounded-full bg-positive" />
                 <span className="hidden sm:inline">정상</span>
+              </div>
+            ) : vm.strategyState === "OFF10" ? (
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs bg-status-inactive-bg text-status-inactive-fg">
+                <span>OFF10</span>
+              </div>
+            ) : null}
+
+            {vm.cooldownActive && (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded border text-xs bg-amber-900/40 text-amber-400 border-amber-800">
+                <Clock3 size={12} />
+                <span>쿨다운</span>
               </div>
             )}
             

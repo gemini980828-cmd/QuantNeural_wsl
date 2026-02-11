@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SettingsEffects } from "@/components/settings-effects";
+import { ToastProvider } from "@/components/ToastProvider";
 
 export const metadata: Metadata = {
   title: "200TQ α Dashboard",
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-bg text-fg font-sans antialiased">
         <SettingsEffects />
+        <ToastProvider />
         {children}
       </body>
     </html>

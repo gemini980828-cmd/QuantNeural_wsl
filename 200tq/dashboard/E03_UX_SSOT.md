@@ -1,4 +1,4 @@
-# E03 Command Center — UX SSOT v3.0 (Functional-First)
+# E03 Command Center — UX SSOT v3.0 (Functional-First, v2026.3 aligned)
 
 - **Document Status**: `SSOT_V3.0_DRAFT`
 - **Product**: E03 Command Center (Personal Ops Dashboard)
@@ -75,8 +75,9 @@
   - 주문 생성/복사는 원칙적으로 **잠금(LOCK)** 또는 **보수적 모드(전일 유지 + 강한 경고)** 로 처리한다.
 
 ### 3.2 Strategy State (전략 판정)
-- `ON` / `OFF10`
+- `ON` / `ON_CHOPPY` / `OFF10` / `EMERGENCY`
 - 판정 근거는 항상: `SMA(3) vs SMA(160/165/170)` + “2/3 투표 결과”
+- ON 계열은 F1 Filter(FlipWindow=40, FlipThreshold=3)로 `ON`과 `ON_CHOPPY`를 분기
 
 ### 3.3 Execution State (실행 상태)
 - `NO_ACTION`: 목표 비중 변화 없음 → 실행할 주문 없음
@@ -97,6 +98,7 @@
 **UX 규칙**
 - `SOFT_ALERT`에서는 **“준비”만** 허용(계산/체크리스트), **강제 복사 버튼 금지**
 - `HARD_CONFIRMED`에서만 “내일 OFF10 주문 초안 생성/복사” 허용
+- Hard 해제 직후 1일은 `cooldownActive=true`로 OFF10 유지(쿨다운 배지 표기)
 
 ---
 
@@ -106,7 +108,7 @@
 목표: “오늘 판정/내일 실행” 확인 + 필요 시 준비.
 
 1) Zone A에서 `Data State` 확인(FRESH/STALE/휴장)
-2) Zone B에서 `오늘 Verdict` 확인(ON/OFF10) + 근거
+2) Zone B에서 `오늘 Verdict` 확인(ON/ON_CHOPPY/OFF10/EMERGENCY) + 근거
 3) `Execution State = SCHEDULED`면 Zone C에서 **내일 주문 초안** 확인/복사(준비)
 4) 실행일이 아니라면 종료(정보 소비는 선택)
 
@@ -130,6 +132,11 @@
   1) “내일 OFF10 실행 준비”가 명확히 표시
   2) Zone C에서 OFF10 주문 초안 생성/복사 허용
   3) 실행일에 기록까지 완료하도록 리마인드 큐 등록
+
+- **ON_CHOPPY(필터 발동)**
+  1) Zone B에서 FlipCount 게이지와 40일 타임라인으로 불안정 상태를 설명
+  2) Zone C에서 70/30 배분 배지와 주문 컨텍스트를 동시에 노출
+  3) 사용자는 규칙 변경 없이 비중 축소 상태임을 즉시 인지
 
 ### 4.4 신규 자금/분배금(선택)
 - 입력 시, 목표 비중 대비 **부족 자산 우선**으로 배분 초안을 생성
@@ -165,10 +172,15 @@
 
 **B0. Signal Summary (필수)**
 - 출력:
-  - `State`: ON / OFF10
+  - `State`: ON / ON_CHOPPY / OFF10 / EMERGENCY
   - `Verdict Date`: (QQQ Close 기반)
   - `Execution Date`: (t+1 기준)
   - `Basis`: SMA3 vs SMA160/165/170 + 2/3 투표 결과
+
+**B0-2. FlipCount Interaction (필수)**
+- 접힘/펼침 토글 제공
+- ON_CHOPPY일 때 기본 펼침
+- 텍스트 기준: "40일 시그널 히스토리 · N회 전환"
 
 **B1. Ensemble Details (필수)**
 - 각 window별:
@@ -197,7 +209,7 @@
   - `총 평가액(원)` 또는 `투입 금액(원)` (프로덕트 정책에 따라 1개로 통일 권장)
 - 선택 입력(정확도 개선):
   - `현재 보유 수량`(TQQQ/SGOV)
-  - `TQQQ 평균단가`(비상 트리거 -20% 계산에 필요)
+  - `TQQQ 평균단가`(비상 트리거 -15% 계산에 필요)
   - `신규 입금/분배금`
 
 **입력 UX 최적화(기능 요구)**
@@ -255,6 +267,7 @@
 
 ### 7.1 트리거(필수)
 - Verdict 변경(ON↔OFF10)
+- Verdict 변경(ON↔ON_CHOPPY↔OFF10↔EMERGENCY)
 - Execution 스케줄 생성(SCHEDULED)
 - Execution Day(DUE_TODAY)
 - 기록 누락(UNKNOWN 지속)

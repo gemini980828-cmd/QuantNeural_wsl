@@ -12,6 +12,13 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import yahooFinance from 'yahoo-finance2';
+import {
+  checkDataStale,
+  checkHardTrigger,
+  checkVerdictChanged,
+  logIngestFail,
+} from '@/lib/ops/notifications';
 
 // Ticker configuration
 const TICKERS = ['TQQQ', 'QQQ', 'SPLG', 'SGOV'] as const;
@@ -19,6 +26,25 @@ const SMA_BUFFER_DAYS = 220; // Extra buffer for SMA170
 
 // Polygon API config
 const POLYGON_BASE_URL = 'https://api.polygon.io';
+const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
+
+type DataSource = 'finnhub' | 'polygon' | 'yahoo';
+
+interface FinnhubQuoteResponse {
+  c: number;   // Current price
+  d: number;   // Change
+  dp: number;  // Percent change
+  h: number;   // High price of the day
+  l: number;   // Low price of the day
+  o: number;   // Open price of the day
+  pc: number;  // Previous close price
+  t: number;   // Unix timestamp (seconds)
+}
+
+interface FetchResult {
+  bar: PolygonDailyBar;
+  source: DataSource;
+}
 
 interface PolygonDailyBar {
   t: number;    // Unix timestamp ms
@@ -37,7 +63,7 @@ interface PriceRow {
   low: number;
   close: number;
   volume: number;
-  source: string;
+  source: DataSource;
   fetched_at: string;
 }
 
@@ -66,10 +92,90 @@ async function fetchLatestBar(ticker: string, apiKey: string): Promise<PolygonDa
   return data.results[0];
 }
 
+async function fetchFinnhubQuote(ticker: string, apiKey: string): Promise<PolygonDailyBar | null> {
+  try {
+    const url = `${FINNHUB_BASE_URL}/quote?symbol=${ticker}&token=${apiKey}`;
+    
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.error(`Finnhub API error for ${ticker}:`, res.status);
+      return null;
+    }
+    
+    const data: FinnhubQuoteResponse = await res.json();
+    if (!data.c || data.c === 0) {
+      console.error(`Finnhub no data for ${ticker}`);
+      return null;
+    }
+    
+    return {
+      t: data.t * 1000,
+      o: data.o,
+      h: data.h,
+      l: data.l,
+      c: data.c,
+      v: 0,
+    };
+  } catch (error) {
+    console.error(`Finnhub fetch error for ${ticker}:`, error);
+    return null;
+  }
+}
+
+async function fetchYahooBar(ticker: string): Promise<PolygonDailyBar | null> {
+  try {
+    const period1 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const history = await yahooFinance.historical(ticker, {
+      period1,
+      interval: '1d',
+    }) as Array<{ date: Date; open: number; high: number; low: number; close: number; volume: number }>;
+    
+    if (!history || history.length === 0) {
+      console.error(`Yahoo no data for ${ticker}`);
+      return null;
+    }
+    
+    const last = history[history.length - 1];
+    return {
+      t: last.date.getTime(),
+      o: last.open,
+      h: last.high,
+      l: last.low,
+      c: last.close,
+      v: last.volume,
+    };
+  } catch (error) {
+    console.error(`Yahoo fetch error for ${ticker}:`, error);
+    return null;
+  }
+}
+
+async function fetchWithFallback(
+  ticker: string,
+  finnhubKey: string | undefined,
+  polygonKey: string
+): Promise<FetchResult | null> {
+  if (finnhubKey) {
+    const bar = await fetchFinnhubQuote(ticker, finnhubKey);
+    if (bar) return { bar, source: 'finnhub' };
+    console.log(`Finnhub failed for ${ticker}, trying Polygon...`);
+  }
+  
+  const polygonBar = await fetchLatestBar(ticker, polygonKey);
+  if (polygonBar) return { bar: polygonBar, source: 'polygon' };
+  console.log(`Polygon failed for ${ticker}, trying Yahoo...`);
+  
+  const yahooBar = await fetchYahooBar(ticker);
+  if (yahooBar) return { bar: yahooBar, source: 'yahoo' };
+  
+  console.error(`All providers failed for ${ticker}`);
+  return null;
+}
+
 /**
  * Convert Polygon bar to price row
  */
-function barToPriceRow(ticker: string, bar: PolygonDailyBar): PriceRow {
+function barToPriceRow(ticker: string, bar: PolygonDailyBar, source: DataSource): PriceRow {
   const date = new Date(bar.t).toISOString().split('T')[0];
   return {
     date,
@@ -79,7 +185,7 @@ function barToPriceRow(ticker: string, bar: PolygonDailyBar): PriceRow {
     low: bar.l,
     close: bar.c,
     volume: Math.floor(bar.v),
-    source: 'polygon',
+    source,
     fetched_at: new Date().toISOString(),
   };
 }
@@ -147,6 +253,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'POLYGON_API_KEY not configured' }, { status: 500 });
   }
   
+  const finnhubKey = process.env.FINNHUB_API_KEY;
+  
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
@@ -157,17 +265,17 @@ export async function GET(request: Request) {
   const supabase = createClient(supabaseUrl, supabaseKey);
   
   try {
-    // 1. Fetch latest bars from Polygon
     const priceRows: PriceRow[] = [];
+    const sourcesUsed: Record<string, DataSource> = {};
     let verdictDate: string | null = null;
     
     for (const ticker of TICKERS) {
-      const bar = await fetchLatestBar(ticker, polygonKey);
-      if (bar) {
-        const row = barToPriceRow(ticker, bar);
+      const result = await fetchWithFallback(ticker, finnhubKey, polygonKey);
+      if (result) {
+        const row = barToPriceRow(ticker, result.bar, result.source);
         priceRows.push(row);
+        sourcesUsed[ticker] = result.source;
         
-        // Use QQQ's date as verdict date
         if (ticker === 'QQQ') {
           verdictDate = row.date;
         }
@@ -196,6 +304,8 @@ export async function GET(request: Request) {
             },
             computed_at: new Date().toISOString(),
           });
+        
+        await checkDataStale(lastSnapshot[0].verdict_date, 'All providers failed to return data');
       }
       
       return NextResponse.json({ 
@@ -205,17 +315,19 @@ export async function GET(request: Request) {
       });
     }
     
-    // 2. Check idempotency - if FRESH snapshot already exists for this date, skip
-    const { data: existingSnapshot } = await supabase
+    // 2. Check idempotency - skip only if we already have this or newer data
+    const { data: latestSnapshot } = await supabase
       .from('ops_snapshots_daily')
-      .select('health')
-      .eq('verdict_date', verdictDate)
+      .select('verdict_date, health, payload_json')
+      .order('verdict_date', { ascending: false })
+      .limit(1)
       .single();
     
-    if (existingSnapshot?.health === 'FRESH') {
+    // Skip if Polygon's date is not newer than our latest data
+    if (latestSnapshot && latestSnapshot.verdict_date >= verdictDate) {
       return NextResponse.json({ 
         status: 'SKIPPED', 
-        reason: `FRESH snapshot already exists for ${verdictDate}`,
+        reason: `Latest snapshot (${latestSnapshot.verdict_date}) is already up-to-date. Polygon returned: ${verdictDate}`,
       });
     }
     
@@ -260,8 +372,9 @@ export async function GET(request: Request) {
       sma: { sma3, sma160, sma165, sma170 },
       verdict,
       sourceMeta: {
-        source: 'polygon',
+        sources: sourcesUsed,
         lastTradingDate: verdictDate,
+        fetchedAt: new Date().toISOString(),
       },
     };
     
@@ -275,6 +388,21 @@ export async function GET(request: Request) {
         payload_json: payload,
         computed_at: new Date().toISOString(),
       });
+    
+    // 9. Check for verdict change and send notification
+    const previousVerdict = latestSnapshot?.payload_json?.verdict as 'ON' | 'OFF10' | undefined;
+    if (previousVerdict && previousVerdict !== verdict) {
+      await checkVerdictChanged(previousVerdict, verdict, executionDate!);
+    }
+    
+    // 10. Check Hard Trigger (QQQ daily -7%)
+    const qqqTodayClose = priceRows.find(r => r.symbol === 'QQQ')?.close;
+    const qqqYesterdayClose = qqqPrices.length > 1 ? Number(qqqPrices[1].close) : null;
+    
+    if (qqqTodayClose && qqqYesterdayClose && qqqYesterdayClose > 0) {
+      const qqqDailyChange = (qqqTodayClose - qqqYesterdayClose) / qqqYesterdayClose;
+      await checkHardTrigger(qqqDailyChange);
+    }
     
     return NextResponse.json({
       status: 'SUCCESS',
@@ -307,6 +435,8 @@ export async function GET(request: Request) {
         })
         .eq('verdict_date', lastSnapshot[0].verdict_date);
     }
+    
+    await logIngestFail('ingest-close', String(error));
     
     return NextResponse.json({ 
       status: 'ERROR', 

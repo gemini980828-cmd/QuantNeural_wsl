@@ -21,10 +21,12 @@
 
   /* semantic colors */
   --positive: 16 185 129;  /* #10B981 - Fintech Green (emerald-500) */
+  --choppy: 245 158 11;    /* amber-500 */
   --negative: 248 113 113; /* red-400 (brighter for accessibility) */
 
   /* Strategy strips (Story Mode chart) */
   --strip-e03-on: #10b981;     /* emerald-500 */
+  --strip-e03-choppy: #f59e0b; /* amber-500 */
   --strip-e03-off: #6b7280;    /* gray-500 */
   --strip-200tq-bear: #ef4444;  /* red-500 */
   --strip-200tq-focus: #3b82f6; /* blue-500 */
@@ -53,10 +55,12 @@
 
   /* Brighter colors for dark mode accessibility */
   --positive: 52 211 153;  /* #34D399 - Fintech Green (emerald-400) */
+  --choppy: 251 191 36;    /* amber-400 */
   --negative: 252 165 165; /* red-300 (salmon/coral for dark bg) */
 
   /* Strategy strips (Story Mode chart) - brighter for dark bg */
   --strip-e03-on: #34d399;     /* emerald-400 */
+  --strip-e03-choppy: #fbbf24; /* amber-400 */
   --strip-e03-off: #9ca3af;    /* gray-400 */
   --strip-200tq-bear: #f87171;  /* red-400 */
   --strip-200tq-focus: #60a5fa; /* blue-400 */
@@ -130,4 +134,18 @@ body {
 .compact .text-lg {
   font-size: 1rem;
   line-height: 1.5rem;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.25s ease-out;
 }

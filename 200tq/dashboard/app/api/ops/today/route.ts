@@ -27,6 +27,10 @@ interface OpsSnapshot {
     lastTradingDate: string;
   };
   staleReason?: string;
+  signalHistory?: boolean[];
+  qqqDailyReturn?: number;
+  tqqqEntryPrice?: number;
+  cooldownActive?: boolean;
 }
 
 export async function GET() {
@@ -85,6 +89,47 @@ export async function GET() {
     } catch (e) {
       console.warn('Failed to fetch QQQ prev close:', e);
     }
+
+    let signalHistory: boolean[] | undefined;
+    try {
+      const { data: historyData } = await supabase
+        .from('ops_snapshots_daily')
+        .select('payload_json')
+        .order('verdict_date', { ascending: false })
+        .limit(40);
+
+      if (historyData && historyData.length > 0) {
+        signalHistory = historyData
+          .reverse()
+          .map((row: any) => row.payload_json?.verdict === 'ON');
+      }
+    } catch (e) {
+      console.warn('Failed to fetch signal history:', e);
+    }
+
+    let qqqDailyReturn: number | undefined;
+    if (qqqPrevClose && payload.prices?.QQQ) {
+      qqqDailyReturn = ((payload.prices.QQQ - qqqPrevClose) / qqqPrevClose) * 100;
+    }
+
+    let tqqqEntryPrice: number | undefined;
+    try {
+      const { data: entryData } = await supabase
+        .from('trade_executions')
+        .select('price')
+        .eq('ticker', 'TQQQ')
+        .eq('action', 'BUY')
+        .order('executed_at', { ascending: false })
+        .limit(1);
+
+      if (entryData && entryData.length > 0) {
+        tqqqEntryPrice = entryData[0].price;
+      }
+    } catch (e) {
+      console.warn('Failed to fetch TQQQ entry price:', e);
+    }
+
+    const cooldownActive = false; // TODO: Implement cooldown tracking in ingest pipeline
     
     // Convert to KST timezone display
     const toKstString = (dateStr: string) => {
@@ -146,6 +191,10 @@ export async function GET() {
       updatedAtKst: snapshot.computed_at,
       sourceMeta: payload.sourceMeta,
       staleReason: payload.staleReason,
+      signalHistory,
+      qqqDailyReturn,
+      tqqqEntryPrice,
+      cooldownActive,
       meta: {
         lastIngestSuccess,
         lastIngestFail,
@@ -163,4 +212,3 @@ export async function GET() {
     }, { status: 500 });
   }
 }
-

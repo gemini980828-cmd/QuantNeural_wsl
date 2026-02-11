@@ -4,7 +4,7 @@ import { useState } from "react";
 import { E03ViewModel, TradeLine } from "../../lib/ops/e03/types";
 import { Copy, Lock, Info, ExternalLink, Check, Download } from "lucide-react";
 import { formatTradeForClipboard, getHumanReadableReason } from "../../lib/ops/e03/formatters";
-import Toast from "./Toast";
+import { useToast } from "@/lib/stores/toast-store";
 import RecordModal from "./RecordModal";
 import { saveRecord, saveRecordToSupabase, ManualRecord } from "../../lib/ops/e03/storage";
 
@@ -48,8 +48,9 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
      (vm.expectedTrades.length === 1 && vm.expectedTrades[0].action === "HOLD");
 
   const highlightRecord = vm.primaryCtaLabel === "기록 필요";
+  const stopLossLabel = vm.emergencyTqqqThreshold ?? -15;
   
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const toast = useToast();
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
 
   // Copy Handler
@@ -63,7 +64,7 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
        const content = vm.privacyMode 
          ? "클립보드에 복사됨" 
          : (mode === "NUMBERS" ? "숫자만 복사됨" : `${vm.expectedTrades.length}개 주문 복사됨`);
-       setToastMsg(`복사 완료: ${content}`);
+       toast.success(`복사 완료: ${content}`);
     } catch (err) {
        // Fallback for old browsers or non-secure contexts
        const ta = document.createElement('textarea');
@@ -72,7 +73,7 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
        ta.select();
        document.execCommand('copy');
        document.body.removeChild(ta);
-       setToastMsg("복사 완료");
+       toast.success("복사 완료");
     }
   };
 
@@ -90,9 +91,9 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
     // Save to Supabase
     const result = await saveRecordToSupabase(vm.executionDateLabel, record, vm.expectedTrades, vm.inputPrices);
     if (result.success) {
-      setToastMsg("기록 완료 (localStorage + Supabase)");
+      toast.success("기록 완료 (localStorage + Supabase)");
     } else {
-      setToastMsg("기록 완료 (Supabase 저장 실패)");
+      toast.error("기록 완료 (Supabase 저장 실패)");
     }
     
     onRecordSuccess?.();
@@ -100,7 +101,6 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
 
   return (
     <section className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
-      {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg(null)} />}
       
       <RecordModal 
          isOpen={isRecordModalOpen} 
@@ -167,12 +167,12 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
                                     (vm.expectedTrades.find(t => t.ticker === "TQQQ" && t.action === "SELL")?.shares || 0);
 
                   if (afterTqqq > 0 && port.derived.stopLossLevel) {
-                     const dist = port.derived.stopLossDist || -0.2;
+                     const dist = port.derived.stopLossDist || -0.15;
                      const stopPrice = port.derived.stopLossLevel;
                      
                      return (
                         <div className="text-[10px] font-mono text-red-400 bg-red-950/20 px-2 py-0.5 rounded border border-red-900/30 flex items-center gap-2 w-fit">
-                           <span>STOP(-20%): ${stopPrice.toFixed(2)}</span>
+                           <span>STOP({stopLossLabel}%): ${stopPrice.toFixed(2)}</span>
                            <span className="opacity-50">|</span>
                            <span>Dist: {(dist * 100).toFixed(1)}%</span>
                         </div>
@@ -218,17 +218,19 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
 
                         const tqqqAfter = getQty("TQQQ");
                         const sgovAfter = getQty("SGOV");
+                        const tqqqWeightPct = Math.round(vm.targetTqqqWeight * 100);
+                        const sgovWeightPct = 100 - tqqqWeightPct;
 
                         return (
                            <>
                               <div className="flex justify-between">
                                  <span className="text-neutral-500">TQQQ</span>
-                                 <span className="text-blue-100 font-bold">{tqqqAfter.toLocaleString()}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                 <span className="text-neutral-500">SGOV</span>
-                                 <span className="text-blue-100 font-bold">{sgovAfter.toLocaleString()}</span>
-                              </div>
+                                 <span className="text-blue-100 font-bold">{tqqqAfter.toLocaleString()} ({tqqqWeightPct}%)</span>
+                               </div>
+                               <div className="flex justify-between">
+                                  <span className="text-neutral-500">SGOV</span>
+                                  <span className="text-blue-100 font-bold">{sgovAfter.toLocaleString()} ({sgovWeightPct}%)</span>
+                               </div>
                            </>
                         );
                      })()}
@@ -238,8 +240,20 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
          </div>
 
          <div className="rounded-xl bg-surface p-4 shadow-sm">
-            {isNoAction ? (
-               <div className="flex flex-col items-center justify-center py-8 text-muted gap-2">
+            {vm.strategyState === "ON_CHOPPY" && (
+              <div className="mb-3 text-xs text-choppy font-medium">Choppy 구간: TQQQ 70% / SGOV 30%</div>
+            )}
+            {vm.strategyState === "EMERGENCY" && (
+              <div className="mb-3 text-xs text-negative font-medium animate-pulse">Emergency Exit: TQQQ 10% / SGOV 90%</div>
+            )}
+            {vm.strategyState === "ON" && (
+              <div className="mb-3 text-xs text-positive font-medium">ON: TQQQ 100%</div>
+            )}
+            {vm.strategyState === "OFF10" && (
+              <div className="mb-3 text-xs text-muted font-medium">OFF: TQQQ 10% / SGOV 90%</div>
+            )}
+             {isNoAction ? (
+                <div className="flex flex-col items-center justify-center py-8 text-muted gap-2">
                   <Info size={24} />
                   <span>오늘 주문 없음 (NO_ACTION)</span>
                </div>

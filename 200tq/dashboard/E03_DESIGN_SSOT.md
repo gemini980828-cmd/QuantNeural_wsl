@@ -1,4 +1,4 @@
-E03 Command Center — Design SSOT v1.0 (Web + Mobile, Light/Dark)
+E03 Command Center — Design SSOT v1.0 (Web + Mobile, Light/Dark, v2026.3 aligned)
 
 Status: DESIGN_SSOT_V1.0
 
@@ -116,7 +116,7 @@ Number 규칙
 
 Type Scale (Mobile / Web 공통)
 
-Display: 32/40 (Zone B Verdict “ON/OFF10”)
+Display: 32/40 (Zone B Verdict “ON/ON_CHOPPY/OFF10/EMERGENCY”)
 
 H1: 24/32
 
@@ -210,6 +210,8 @@ Semantic
 
 positive: #16A34A
 
+choppy: #F59E0B
+
 negative: #DC2626
 
 warning: #F59E0B
@@ -225,6 +227,8 @@ info: #2563EB
 --primary, --primary-hover, --primary-pressed
 
 --success, --danger, --warn, --info
+
+--choppy, --strip-e03-choppy
 
 --focus-ring (primary 기반)
 
@@ -269,6 +273,42 @@ SOFT_ALERT: Warning, 보조 문구 “확정은 종가 이후입니다.”
 E03_UI_SSOT
 
 HARD_CONFIRMED: Danger, 보조 문구 “내일 OFF10 실행 준비”
+
+Strategy State 추가 매핑(v2026.3)
+
+ON: Positive (Green)
+
+ON_CHOPPY: Choppy (Amber)
+
+OFF10: Inactive (Gray)
+
+EMERGENCY: Negative (Red, Pulse)
+
+쿨다운 배지: Amber + Clock icon
+
+5) New Components (v2026.3)
+
+5.1 FlipCount Gauge (Zone B)
+
+- 너비: 부모 100%
+- 높이: 12px 트랙 + threshold marker
+- Stable Zone(0-2): Green
+- Choppy Zone(3+): Amber
+- Threshold marker: 값 3, 라벨 "Threshold"
+
+5.2 Signal Timeline (Zone B)
+
+- 기간: 최근 40일
+- 셀: 8x8~10x10, gap 2~4
+- ON 셀: Green, OFF 셀: Gray
+- 전환 지점: Amber border 강조
+
+5.3 Weight Context Banner (Zone C)
+
+- ON: Green text only
+- ON_CHOPPY: Amber left border card
+- OFF10: Gray text
+- EMERGENCY: Red left border card + subtle pulse
 
 Execution State
 
@@ -734,4 +774,3 @@ Zone D 확장, 단 문맥은 '검증/리서치'로 고정 (오늘 판단 아님)
 - 주문 복사 전 확인 체크 (고정)
 - 시뮬 모드에서만 주문 복사 허용 (옵션)
 - 고위험 상태 (Down 등)에서 경고 강제 표시
-
