@@ -1,0 +1,15 @@
+{
+  "FinalPostTax": 105.98836154657354,
+  "FinalPreTax": 128.3661132615786,
+  "CAGR_PostTax": 0.3392504773504781,
+  "CAGR_PreTax": 0.3554170836531261,
+  "MDD": -0.5026501893981281,
+  "Sharpe": 0.8926223324319735,
+  "Sortino": 0.9118226191315886,
+  "Calmar": 0.6749236039415316,
+  "Trades": 283,
+  "TurnoverPerYear": 222.61162812142805,
+  "TotalTaxPaid": 1.1528501394939534,
+  "NumDays": 4023,
+  "experiment": "E07c_Overheat_2.70"
+}

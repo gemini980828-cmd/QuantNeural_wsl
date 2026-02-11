@@ -1,0 +1,58 @@
+{
+  "IS_best_windows": [
+    150,
+    155,
+    175
+  ],
+  "E03_default_windows": [
+    160,
+    165,
+    170
+  ],
+  "IS_E03_default": {
+    "Final": 6.358155384329454,
+    "CAGR": 0.26454199324611705,
+    "MDD": -0.4939989056688743,
+    "Sharpe": 0.8133132605129787,
+    "Sortino": 0.8510045705735,
+    "Calmar": 0.5355112940744824,
+    "NumTrades": 0,
+    "TotalTaxPaid": 0.0,
+    "NumDays": 1986
+  },
+  "OOS_E03_default": {
+    "Final": 13.88917069506722,
+    "CAGR": 0.390787924197014,
+    "MDD": -0.5441710666757109,
+    "Sharpe": 0.8990485689938638,
+    "Sortino": 0.9081093617682563,
+    "Calmar": 0.7181343296774305,
+    "NumTrades": 0,
+    "TotalTaxPaid": 0.0,
+    "NumDays": 2010
+  },
+  "IS_best_combo": {
+    "Final": 6.533617425461752,
+    "CAGR": 0.2689175385903573,
+    "MDD": -0.4892331496581479,
+    "Sharpe": 0.8195867291061778,
+    "Sortino": 0.8648984185832772,
+    "Calmar": 0.5496715395885656,
+    "NumTrades": 0,
+    "TotalTaxPaid": 0.0,
+    "NumDays": 1986
+  },
+  "OOS_best_combo": {
+    "Final": 15.656418770955174,
+    "CAGR": 0.41182976726685605,
+    "MDD": -0.49804600324770765,
+    "Sharpe": 0.9321575543214409,
+    "Sortino": 0.9694887744157116,
+    "Calmar": 0.8268910192660031,
+    "NumTrades": 0,
+    "TotalTaxPaid": 0.0,
+    "NumDays": 2010
+  },
+  "degradation_ratio_default": 1.4772245396723986,
+  "degradation_ratio_best": 1.5314351359365865
+}

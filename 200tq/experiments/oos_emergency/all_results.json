@@ -1,0 +1,224 @@
+{
+  "A_E03_Baseline": {
+    "full_period": {
+      "Final": 114.2243,
+      "CAGR": 0.348244,
+      "MDD": -0.515303,
+      "Sharpe": 0.8898,
+      "Sortino": 0.9284,
+      "Calmar": 0.6758,
+      "Trades": 52,
+      "TotalTax": 6.3106
+    },
+    "emergency_count": 0,
+    "oos": {
+      "IS": {
+        "Final": 6.7283,
+        "CAGR": 0.273653,
+        "MDD": -0.490579,
+        "Sharpe": 0.833,
+        "Sortino": 0.8821,
+        "Calmar": 0.5578,
+        "Trades": 0,
+        "TotalTax": 0.0
+      },
+      "OOS": {
+        "Final": 16.1496,
+        "CAGR": 0.41733,
+        "MDD": -0.515303,
+        "Sharpe": 0.9377,
+        "Sortino": 0.9843,
+        "Calmar": 0.8099,
+        "Trades": 0,
+        "TotalTax": 0.0
+      },
+      "DegradationRatio_CAGR": 1.525,
+      "DegradationRatio_Calmar": 1.452
+    }
+  },
+  "B_E03_Emergency": {
+    "full_period": {
+      "Final": 283.7114,
+      "CAGR": 0.427861,
+      "MDD": -0.490579,
+      "Sharpe": 1.0315,
+      "Sortino": 1.2078,
+      "Calmar": 0.8722,
+      "Trades": 56,
+      "TotalTax": 0.3045
+    },
+    "emergency_count": 13,
+    "oos": {
+      "IS": {
+        "Final": 7.8293,
+        "CAGR": 0.298384,
+        "MDD": -0.490579,
+        "Sharpe": 0.8889,
+        "Sortino": 0.9876,
+        "Calmar": 0.6082,
+        "Trades": 0,
+        "TotalTax": 0.0
+      },
+      "OOS": {
+        "Final": 34.4714,
+        "CAGR": 0.558677,
+        "MDD": -0.410308,
+        "Sharpe": 1.1435,
+        "Sortino": 1.4169,
+        "Calmar": 1.3616,
+        "Trades": 0,
+        "TotalTax": 0.0
+      },
+      "DegradationRatio_CAGR": 1.8723,
+      "DegradationRatio_Calmar": 2.2387
+    }
+  },
+  "C_E03_F1": {
+    "full_period": {
+      "Final": 101.0343,
+      "CAGR": 0.337852,
+      "MDD": -0.515008,
+      "Sharpe": 0.8758,
+      "Sortino": 0.9044,
+      "Calmar": 0.656,
+      "Trades": 59,
+      "TotalTax": 7.093
+    },
+    "emergency_count": 0,
+    "oos": {
+      "IS": {
+        "Final": 6.1383,
+        "CAGR": 0.258907,
+        "MDD": -0.470769,
+        "Sharpe": 0.8129,
+        "Sortino": 0.8569,
+        "Calmar": 0.55,
+        "Trades": 0,
+        "TotalTax": 0.0
+      },
+      "OOS": {
+        "Final": 15.6577,
+        "CAGR": 0.411845,
+        "MDD": -0.515008,
+        "Sharpe": 0.9295,
+        "Sortino": 0.9662,
+        "Calmar": 0.7997,
+        "Trades": 0,
+        "TotalTax": 0.0
+      },
+      "DegradationRatio_CAGR": 1.5907,
+      "DegradationRatio_Calmar": 1.454
+    }
+  },
+  "D_E03_F1_Emergency": {
+    "full_period": {
+      "Final": 272.0418,
+      "CAGR": 0.424084,
+      "MDD": -0.467637,
+      "Sharpe": 1.0313,
+      "Sortino": 1.2105,
+      "Calmar": 0.9069,
+      "Trades": 63,
+      "TotalTax": 0.3058
+    },
+    "emergency_count": 13,
+    "oos": {
+      "IS": {
+        "Final": 7.1767,
+        "CAGR": 0.284123,
+        "MDD": -0.467637,
+        "Sharpe": 0.8721,
+        "Sortino": 0.9674,
+        "Calmar": 0.6076,
+        "Trades": 0,
+        "TotalTax": 0.0
+      },
+      "OOS": {
+        "Final": 36.0594,
+        "CAGR": 0.567502,
+        "MDD": -0.410308,
+        "Sharpe": 1.1557,
+        "Sortino": 1.4439,
+        "Calmar": 1.3831,
+        "Trades": 0,
+        "TotalTax": 0.0
+      },
+      "DegradationRatio_CAGR": 1.9974,
+      "DegradationRatio_Calmar": 2.2763
+    }
+  },
+  "E_E03_F3_Graduated": {
+    "full_period": {
+      "Final": 49.2887,
+      "CAGR": 0.278645,
+      "MDD": -0.429179,
+      "Sharpe": 0.8663,
+      "Sortino": 0.9283,
+      "Calmar": 0.6493,
+      "Trades": 399,
+      "TotalTax": 11.8347
+    },
+    "emergency_count": 0,
+    "oos": {
+      "IS": {
+        "Final": 4.5128,
+        "CAGR": 0.210715,
+        "MDD": -0.376935,
+        "Sharpe": 0.7895,
+        "Sortino": 0.8458,
+        "Calmar": 0.559,
+        "Trades": 0,
+        "TotalTax": 0.0
+      },
+      "OOS": {
+        "Final": 10.3937,
+        "CAGR": 0.341144,
+        "MDD": -0.429179,
+        "Sharpe": 0.925,
+        "Sortino": 1.0074,
+        "Calmar": 0.7949,
+        "Trades": 0,
+        "TotalTax": 0.0
+      },
+      "DegradationRatio_CAGR": 1.619,
+      "DegradationRatio_Calmar": 1.422
+    }
+  },
+  "F_E03_F3_Graduated_Emergency": {
+    "full_period": {
+      "Final": 115.3047,
+      "CAGR": 0.349045,
+      "MDD": -0.392002,
+      "Sharpe": 1.0351,
+      "Sortino": 1.2444,
+      "Calmar": 0.8904,
+      "Trades": 403,
+      "TotalTax": 4.1311
+    },
+    "emergency_count": 12,
+    "oos": {
+      "IS": {
+        "Final": 5.1188,
+        "CAGR": 0.230225,
+        "MDD": -0.36669,
+        "Sharpe": 0.8486,
+        "Sortino": 0.9505,
+        "Calmar": 0.6278,
+        "Trades": 0,
+        "TotalTax": 0.0
+      },
+      "OOS": {
+        "Final": 21.4365,
+        "CAGR": 0.468557,
+        "MDD": -0.392002,
+        "Sharpe": 1.1769,
+        "Sortino": 1.5115,
+        "Calmar": 1.1953,
+        "Trades": 0,
+        "TotalTax": 0.0
+      },
+      "DegradationRatio_CAGR": 2.0352,
+      "DegradationRatio_Calmar": 1.904
+    }
+  }
+}

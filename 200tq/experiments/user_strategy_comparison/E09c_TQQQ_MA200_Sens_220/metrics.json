@@ -1,0 +1,15 @@
+{
+  "FinalPostTax": 108.96011631558235,
+  "FinalPreTax": 129.23480065640243,
+  "CAGR_PostTax": 0.3415722771426275,
+  "CAGR_PreTax": 0.3559898308435234,
+  "MDD": -0.5094598115364055,
+  "Sharpe": 0.895607698177039,
+  "Sortino": 0.9177371795017601,
+  "Calmar": 0.6704597092997964,
+  "Trades": 275,
+  "TurnoverPerYear": 208.01725808028522,
+  "TotalTaxPaid": 3.1030183669090188,
+  "NumDays": 4023,
+  "experiment": "E09c_TQQQ_MA200_Sens_220"
+}

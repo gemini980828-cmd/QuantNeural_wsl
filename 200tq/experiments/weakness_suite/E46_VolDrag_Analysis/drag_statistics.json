@@ -1,0 +1,31 @@
+{
+  "full_period": {
+    "qqq_total_return": 15.321538821535203,
+    "tqqq_total_return": 261.1175340578347,
+    "theo_3x_daily": 553.4793674431015,
+    "total_drag": -292.36183338526683,
+    "drag_annualized": -18.437232736007818
+  },
+  "on_periods": {
+    "count": 25,
+    "avg_days": 128.0,
+    "avg_drag": -0.04410534134738297,
+    "median_drag": -0.0020227161877027777,
+    "total_drag": -1.1026335336845743,
+    "avg_qqq_vol": 0.1756655158974556
+  },
+  "off_periods": {
+    "count": 24,
+    "avg_days": 33.041666666666664,
+    "avg_drag": -0.00728954972001319,
+    "median_drag": -0.0021069153374815297,
+    "total_drag": -0.17494919328031655,
+    "avg_qqq_vol": 0.26692419989849187
+  },
+  "sideways": {
+    "days": 1647,
+    "pct_of_total": 0.41216216216216217,
+    "drag_per_day": -0.0001738660045781449,
+    "drag_annualized": -0.04381423315369251
+  }
+}

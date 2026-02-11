@@ -1,0 +1,15 @@
+{
+  "FinalPostTax": 22.97096125810007,
+  "FinalPreTax": 50.472184009376214,
+  "CAGR_PostTax": 0.21692557833767645,
+  "CAGR_PreTax": 0.27843566732553837,
+  "MDD": -0.5083097267956183,
+  "Sharpe": 0.680232481667148,
+  "Sortino": 0.5726683516984082,
+  "Calmar": 0.4267586609156077,
+  "Trades": 289,
+  "TurnoverPerYear": 87.91310736207014,
+  "TotalTaxPaid": 6.588061700687556,
+  "NumDays": 4023,
+  "experiment": "E06a_Vol_Sensitivity_5.0"
+}

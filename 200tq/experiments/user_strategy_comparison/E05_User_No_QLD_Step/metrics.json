@@ -1,0 +1,15 @@
+{
+  "FinalPostTax": 142.87345108816976,
+  "FinalPreTax": 160.3093979053056,
+  "CAGR_PostTax": 0.3645384523577886,
+  "CAGR_PreTax": 0.3744161069611309,
+  "MDD": -0.5167905919980446,
+  "Sharpe": 0.9237782003907102,
+  "Sortino": 0.9614597231501928,
+  "Calmar": 0.7053891034439883,
+  "Trades": 129,
+  "TurnoverPerYear": 97.81834583425056,
+  "TotalTaxPaid": 2.9061773589984576,
+  "NumDays": 4023,
+  "experiment": "E05_User_No_QLD_Step"
+}
