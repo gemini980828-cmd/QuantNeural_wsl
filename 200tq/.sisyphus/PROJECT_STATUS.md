@@ -2,7 +2,7 @@
 
 > **Last Updated**: 2026-01-28
 > **Version**: Alpha (Development)
-> **Deploy URL**: https://200tq.vercel.app
+> **Deploy URL**: https://dashboard-five-tau-66.vercel.app
 
 ---
 
@@ -24,8 +24,8 @@
 ### Tech Stack
 - **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS
 - **Backend**: Supabase (PostgreSQL), Vercel Serverless Functions
-- **Data**: Yahoo Finance API, Custom Backtest Engine (Python)
-- **Notifications**: Telegram Bot API
+- **Data**: Finnhub (Primary), Polygon (Fallback), yahoo-finance2 (Tertiary)
+- **Notifications**: Telegram Bot API + In-App Notification Center
 
 ---
 
@@ -88,16 +88,19 @@
 - [x] `/api/record` - 체결 기록 저장/조회
 - [x] `/api/portfolio/state` - 포트폴리오 상태 저장/조회
 - [x] `/api/portfolio/ocr` - 스크린샷 OCR 분석
-- [x] `/api/cron/ingest-close` - 일별 종가 수집 (Cron)
-- [x] `/api/cron/check-alerts` - 알림 체크 (Cron)
+- [x] `/api/cron/ingest-close` - 일별 종가 수집 (Finnhub → Polygon → Yahoo 폴백)
+- [x] `/api/cron/daily` - 일일 알림 체크 (Cron)
+- [x] `/api/ops/check-alerts` - 수동 알림 체크
 - [x] `/api/telegram/send` - 텔레그램 메시지 발송
+- [x] `/api/notifications/list` - 알림 목록 조회
+- [x] `/api/notifications/ack` - 알림 확인 처리
 
 #### Database (Supabase)
-- [x] `prices_daily` - 일별 가격 데이터
+- [x] `prices_daily` - 일별 가격 데이터 (source 필드로 provider 추적)
 - [x] `trade_executions` - 체결 기록 (expected_lines 포함)
 - [x] `portfolio_states` - 포트폴리오 스냅샷
-- [x] `ops_snapshots_daily` - 운영 스냅샷
-- [x] `notifications` - 알림 기록
+- [x] `ops_snapshots_daily` - 운영 스냅샷 (verdict, SMA, health)
+- [x] `ops_notifications` - 알림 기록 (dedupe_key로 중복 방지)
 
 #### Backtest Engine (Python)
 - [x] `scripts/run_suite.py` - 11개 전략 백테스트
@@ -120,13 +123,26 @@
 | # | Feature | Priority | Notes |
 |---|---------|----------|-------|
 | 1 | Portfolio Equity Curve 차트 | Medium | 시간별 자산 가치 시각화 |
-| 2 | LLM 통합 (AI 분석) | Low | 시장 분석, 전략 제안 |
+| 2 | Hard Trigger 모니터링 | Medium | QQQ -7% / TQQQ -20% 실시간 체크 |
+| 3 | 체결 기록 자동 입력 | Low | 증권사 API 연동 |
+| 4 | LLM 통합 (AI 분석) | Low | 시장 분석, 전략 제안 |
 
 ---
 
 ## Recent Changes (최근 변경)
 
 ### 2026-01-28
+- **Multi-Provider 데이터 통합 완료**
+  - Finnhub `/quote` API를 Primary로 전환 (실시간 데이터)
+  - Polygon을 Fallback으로 강등
+  - yahoo-finance2 npm 패키지를 Tertiary fallback으로 추가
+  - `source` 필드로 각 ticker별 데이터 출처 추적
+- **알림센터 연동 완료**
+  - `ingest-close` 크론에서 직접 알림 트리거
+  - VERDICT_CHANGED: 시그널 변경시 앱+Telegram 알림
+  - DATA_STALE: 데이터 수집 실패시 알림
+  - INGEST_FAIL: 크론 에러시 Emergency 알림
+  - dedupe_key로 중복 알림 방지
 - 3-mode 테마 시스템 구현 (System/Dark/Light)
   - System 모드: OS 다크/라이트 설정 자동 감지 및 실시간 반영
   - 설정 페이지에 System | Dark | Light 토글 추가
@@ -182,6 +198,17 @@
 
 ## Quick Reference
 
+### 환경변수 (Vercel)
+| 변수 | 용도 |
+|------|------|
+| `FINNHUB_API_KEY` | Finnhub 실시간 데이터 (Primary) |
+| `POLYGON_API_KEY` | Polygon 데이터 (Fallback) |
+| `TELEGRAM_BOT_TOKEN` | 텔레그램 알림 |
+| `TELEGRAM_CHAT_ID` | 텔레그램 채팅 ID |
+| `CRON_SECRET` | Cron job 인증 |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase 서비스 키 |
+
 ### 로컬 개발
 ```bash
 cd dashboard && bun run dev
@@ -204,4 +231,4 @@ npx vercel --prod --yes
 ## Contact
 
 - **Repository**: github.com/gemini980828-cmd/QuantNeural_wsl
-- **Deploy**: https://200tq.vercel.app
+- **Deploy**: https://dashboard-five-tau-66.vercel.app
