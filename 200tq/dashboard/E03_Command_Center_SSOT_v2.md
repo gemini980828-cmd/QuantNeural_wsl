@@ -1,7 +1,7 @@
-# E03 Command Center — 기능 SSOT v2.0 (Single Source of Truth)
+# E03 Command Center — 기능 SSOT v2.0 (Single Source of Truth, v2026.3 aligned)
 
 - **Document Status**: `SSOT_V2.0_FINAL_DRAFT`
-- **Target Strategy**: **E03 (Ensemble Vote + OFF10 + SGOV)**
+- **Target Strategy**: **E03 v2026.3 (Ensemble Vote + F1 Flip Filter + OFF10/ON-CHOPPY + SGOV)**
 - **Authoring Role**: Senior Web Designer & System Architect (PO)
 - **Last Updated**: 2026-01-19 (KST)
 
@@ -92,7 +92,9 @@ E03 Command Center는 **E03 전략을 ‘무결점 실행’**하기 위한 개�
 - **Verdict Date(판정일)**: 미국 정규장 마감 후(한국시간 아침) 확정된 ‘오늘의 신호’
 - **Execution Date(실행일)**: **t일 신호를 t+1일에 적용**하는 실제 주문 대상일
 - **ON**: 목표 비중 TQQQ 100% / SGOV 0%
-- **OFF10**: 목표 비중 TQQQ 10% / SGOV 90% (비상 전환도 목표 상태는 OFF10)
+- **ON-CHOPPY**: 목표 비중 TQQQ 70% / SGOV 30% (FlipCount >= 3)
+- **OFF10**: 목표 비중 TQQQ 10% / SGOV 90%
+- **EMERGENCY**: 전략 상태는 Emergency로 표기, 목표 비중은 OFF10(10%/90%)
 - **Vote**: MA160/165/170 각각에 대해 `SMA3 > SMAwindow` 여부(✅/❌)
 - **Hard Trigger(확정 트리거)**: 종가 기준으로 규칙이 ‘발동 확정’되는 트리거
 - **Soft Alert(조기 경보)**: 장중 관측치로 ‘경보’만 울리는 트리거(자동 전환 아님)
@@ -102,7 +104,7 @@ E03 Command Center는 **E03 전략을 ‘무결점 실행’**하기 위한 개�
 ## 4) 사용자 핵심 플로우(User Journeys)
 
 ### 4.1 Daily (매일 아침, 1분)
-1) 오늘 **Verdict** 확인(ON/OFF10)
+1) 오늘 **Verdict** 확인(ON/ON-CHOPPY/OFF10/EMERGENCY)
 2) **내일 Execution** 존재 여부 확인
 3) (있다면) Zone C에서 주문 초안 복사 → 삼성증권에서 내일 실행 준비
 
@@ -166,6 +168,15 @@ E03 Command Center는 **E03 전략을 ‘무결점 실행’**하기 위한 개�
   - ON: Vote가 **2개 이상 true**
   - OFF10: 그 외(≤1)
 
+### 7.1.1 F1 Signal Stability Filter (v2026.3)
+- FlipWindow: 최근 40거래일
+- FlipCount: 신호가 ON/OFF로 바뀐 횟수(전환 수)
+- FlipThreshold: 3
+- 규칙:
+  - Vote 결과가 ON이고 FlipCount < 3이면 ON 유지
+  - Vote 결과가 ON이고 FlipCount >= 3이면 ON-CHOPPY
+  - Vote 결과가 OFF면 F1 필터 적용하지 않음(OFF10 유지)
+
 > **중요**: ‘현재가 vs MA’ 비교가 아니라 **MA3 vs MAwindow** 비교가 정식 정의다.
 
 ### 7.2 실행 지연(Execution Lag)
@@ -176,7 +187,9 @@ E03 Command Center는 **E03 전략을 ‘무결점 실행’**하기 위한 개�
 
 ### 7.3 목표 비중(Target Allocation)
 - ON: TQQQ 100% / SGOV 0%
+- ON-CHOPPY: TQQQ 70% / SGOV 30%
 - OFF10: TQQQ 10% / SGOV 90%
+- EMERGENCY: TQQQ 10% / SGOV 90%
 
 ### 7.4 리밸런싱 방식
 - **Delta Rebalance**: 목표 비중이 바뀔 때만 주문 생성
@@ -198,8 +211,8 @@ E03 Command Center는 **E03 전략을 ‘무결점 실행’**하기 위한 개�
 ### 8.1 Soft Alert (장중 조기 경보)
 - 목적: 사용자의 심리/준비를 돕는 **경보**
 - 조건(장중 관측):
-  - QQQ 당일 등락률이 -7% 이하에 근접/도달(데이터 제공 시)
-  - 사용자가 입력한 ‘TQQQ 평균단가’ 기준 손실이 -20% 근접/도달
+  - QQQ 당일 등락률이 -5% 이하에 근접/도달(데이터 제공 시)
+  - 사용자가 입력한 ‘TQQQ 평균단가’ 기준 손실이 -15% 근접/도달
 - 동작:
   - Zone A 경고(색상/애니메이션) + “경보” 배지
   - **자동 전환 금지** (Hard Trigger가 확정 규칙)
@@ -207,11 +220,16 @@ E03 Command Center는 **E03 전략을 ‘무결점 실행’**하기 위한 개�
 ### 8.2 Hard Trigger (종가 확정)
 - 목적: 전략 규칙의 ‘확정 발동’
 - 조건(종가 기준):
-  - QQQ 당일 종가 기준 -7% 이상 하락
-  - TQQQ 진입가 대비 -20% 이상 하락(사용자 기록 기반)
+  - QQQ 당일 종가 기준 -5% 이상 하락
+  - TQQQ 진입가 대비 -15% 이상 하락(사용자 기록 기반)
 - 동작:
-  - **다음 Execution일에 OFF10 강제 전환**을 “확정”으로 표시
+  - **전략 상태를 EMERGENCY로 표기**하고 다음 Execution일 목표 비중은 OFF10(10%/90%)
   - 주문 초안을 Zone C에 자동 생성
+
+### 8.3 Emergency Cooldown (v2026.3)
+- Hard Trigger 해제 직후 1거래일은 `cooldownActive=true`로 관리
+- 쿨다운 중에는 Vote가 ON이어도 OFF10 실행을 1일 추가 유지
+- UI에는 "쿨다운 활성 (1일)" 배지를 표시
 
 ---
 
@@ -239,7 +257,7 @@ E03 Command Center는 **E03 전략을 ‘무결점 실행’**하기 위한 개�
   - MA160: ✅/❌ + (SMA3 - SMA160) 여유(%)
   - MA165: ✅/❌ + 여유(%)
   - MA170: ✅/❌ + 여유(%)
-- Verdict 배지: `STRONG ON` / `OFF10` (문구는 단정적으로, 감정 없이)
+- Verdict 배지: `ON` / `ON-CHOPPY` / `OFF10` / `EMERGENCY`
 
 #### MOD-B2. Verdict vs Execution Card (필수)
 - “오늘 판정(Verdict)”과 “내일 실행(Execution)”을 동시에 표시
@@ -277,11 +295,24 @@ E03 Command Center는 **E03 전략을 ‘무결점 실행’**하기 위한 개�
   - DELAY: 실행이 늦어짐(사용자 체크)
   - UNKNOWN: 보유 입력 없음
 
-#### MOD-C3. Tax Jar (선택/고급)
+#### MOD-C3. Tax Jar (확정 — Excel 미사용)
 - FIFO 기반 tax lots 관리(수동 체결 입력 기반)
-- UI: “세금 잠금 구간(회색 해치)” + 툴팁
+- UI: "세금 잠금 구간(회색 해치)" + 툴팁
 - 주의 문구:
-  - “세금 계산은 가정/추정이며 법적/세무 자문이 아닙니다. 공제/세율은 설정에서 조정 가능합니다.”
+  - "세금 계산은 가정/추정이며 법적/세무 자문이 아닙니다. 공제/세율은 설정에서 조정 가능합니다."
+
+#### 구현 결정 (2026-02)
+- **결정**: Tax Jar 모듈 구현 확정. 사용자가 Excel을 사용하지 않으므로 대시보드가 유일한 세금 데이터 관리 도구.
+- **삭제된 스텁**: `/reports` 스텁 삭제됨. Tax 기능은 /reports와 무관한 별도 모듈.
+- **구현 형태**: 별도 `/tax` 페이지 (MOD-C3 모듈)
+- **필수 기능**:
+  - FIFO tax lots 관리 (수동 체결 입력 기반)
+  - 거래일 기준 USD/KRW 환율 자동 조회 (한국은행 매매기준율)
+  - 연간 순양도차익 계산 (250만원 기본공제 적용)
+  - SGOV 배당 소득 추적 (종합소득세용)
+  - 세금/정산용 CSV 내보내기
+- **우선순위**: P2 (현재 연 3~7회 거래로 급하지 않으나, 거래 데이터 축적 시점에 구현)
+- **참고**: 기존 tax_lots 테이블 스키마 및 daily_audit.tax_liability_est 필드 활용
 
 ---
 
@@ -335,7 +366,7 @@ CREATE TABLE prices_daily (
 -- 2) 일별 신호/투표 결과
 CREATE TABLE signals_daily (
   date DATE PRIMARY KEY,
-  verdict TEXT NOT NULL, -- 'ON' | 'OFF10'
+verdict TEXT NOT NULL, -- 'ON' | 'ON_CHOPPY' | 'OFF10' | 'EMERGENCY'
   vote_160 BOOLEAN,
   vote_165 BOOLEAN,
   vote_170 BOOLEAN,
@@ -428,4 +459,3 @@ CREATE TABLE ai_briefings (
 - **Phase 1 (Survival Core)**: Zone A1/A2 + Zone B1/B2 + Zone C1/C2
 - **Phase 2 (Ops & Audit)**: trades/holdings/audit 저장 + Compliance 잔디 + Export
 - **Phase 3 (Intel & Simulator)**: AI Briefing + Underwater Plot + Simulator/Replay
-
