@@ -1,7 +1,14 @@
 // ──────────────────────────────────────────────────────────
-// initE03_Step1 ~ Step5: Google Apps Script 6분 제한 우회
-// 순서대로 실행: Step1 → Step2 → Step3 → Step4 → Step5
-// Step1은 Browser.msgBox 대기 시간 격리를 위해 별도 분리
+// E03 시트 빌더 — 자동 연속 실행 아키텍처
+// ──────────────────────────────────────────────────────────
+//
+// 사용법: initE03() 한 번 실행 → 모든 단계 자동 완료
+//
+// 단계 1–8:  탭 생성 + 포맷 (GOOGLEFINANCE 제외)
+// 단계 9–11: GOOGLEFINANCE 수식 삽입 (지연 실행)
+//
+// PropertiesService + ScriptApp.newTrigger()를 사용하여
+// 4.5분 GAS 제한에 근접하면 자동으로 이어서 실행합니다.
 // ──────────────────────────────────────────────────────────
 
 var E03_TABS = [
@@ -14,96 +21,132 @@ var E03_TABS = [
   '📊 Dashboard'
 ];
 
-function withDeferredRecalc_(fn) {
+var E03_MAX_MS = 4.5 * 60 * 1000; // 270,000ms (4.5분)
+
+// ── 오케스트레이션 ──────────────────────────────────────
+
+/**
+ * 단일 진입점. 기존 E03 탭을 삭제하고 모든 빌드 단계를 실행.
+ * 4.5분 제한에 근접하면 시간 기반 트리거로 자동 이어서 실행.
+ */
+function initE03() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var orig = ss.getRecalculationInterval();
-  ss.setRecalculationInterval(SpreadsheetApp.RecalculationInterval.HOUR);
-  try {
-    fn(ss);
-  } finally {
-    ss.setRecalculationInterval(orig);
-  }
+
+  // 이전 실행에서 남은 트리거/상태 정리
+  _clearE03Triggers();
+
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty('E03_STEP', '1');
+  props.setProperty('E03_SS_ID', ss.getId());
+
+  _processE03(ss, 1);
 }
 
-// Step 1: 기존 탭 삭제 (Browser.msgBox 대기 시간 격리)
-// ⚠️ withDeferredRecalc_ 없이 실행 — msgBox 대기가 6분에 포함되므로 별도 분리
-function initE03_Step1() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var existingTabs = [];
-  var i;
-  for (i = 0; i < E03_TABS.length; i += 1) {
-    if (ss.getSheetByName(E03_TABS[i])) {
-      existingTabs.push(E03_TABS[i]);
-    }
+/**
+ * 트리거 핸들러 — 시간 기반 트리거에 의해 호출되어
+ * 저장된 단계부터 처리를 재개합니다.
+ */
+function continueE03() {
+  var props = PropertiesService.getScriptProperties();
+  var step = parseInt(props.getProperty('E03_STEP'), 10);
+  var ssId = props.getProperty('E03_SS_ID');
+
+  if (!ssId || isNaN(step)) {
+    console.log('continueE03: 저장된 상태 없음 — 중단합니다.');
+    _clearE03Triggers();
+    return;
   }
 
-  if (existingTabs.length > 0) {
-    var prompt = 'The following E03 tabs already exist:\n\n' +
-      existingTabs.join('\n') +
-      '\n\nDelete and rebuild them?';
-    var response = Browser.msgBox('E03 Sheet Builder', prompt, Browser.Buttons.YES_NO);
-    if (response !== 'yes') {
-      Browser.msgBox('Cancelled. No sheets were modified.');
+  var ss = SpreadsheetApp.openById(ssId);
+  _processE03(ss, step);
+}
+
+/**
+ * 메인 처리 루프. 단계를 순차적으로 실행하며,
+ * 각 단계 후 경과 시간을 확인합니다. 4.5분 예산을
+ * 초과하면 진행 상황을 저장하고 1분 후 트리거를 예약합니다.
+ *
+ * 단계:
+ *   1  deleteTargetTabs           (기존 탭 삭제)
+ *   2  createSettingsTab          (GF 없음)
+ *   3  createPriceDataTab         (GF 없음)
+ *   4  createSignalTab            (신호 탭)
+ *   5  createEmergencyTab         (비상 탭)
+ *   6  createTradeLogTab          (거래 기록 탭)
+ *   7  createPortfolioTab         (GF 없음)
+ *   8  createDashboardTab + 글로벌 포맷
+ *   9  _insertGF_Settings         (GF 4개)
+ *  10  _insertGF_PriceData        (GF 1개 — 가장 무거움)
+ *  11  _insertGF_Portfolio        (GF 2개)
+ */
+function _processE03(ss, startStep) {
+  var t0 = Date.now();
+  var props = PropertiesService.getScriptProperties();
+
+  // 이 함수를 호출한 트리거 정리
+  _clearE03Triggers();
+
+  var step = startStep;
+  var totalSteps = 11;
+
+  while (step <= totalSteps) {
+    console.log('E03 단계 ' + step + '/' + totalSteps + ' 시작…');
+
+    switch (step) {
+      case 1:
+        deleteTargetTabs(ss, E03_TABS);
+        // 삭제 후 ss 참조가 오래되므로 다시 가져옴
+        ss = SpreadsheetApp.openById(ss.getId());
+        break;
+      case 2:  createSettingsTab(ss); break;
+      case 3:  createPriceDataTab(ss); break;
+      case 4:  createSignalTab(ss); break;
+      case 5:  createEmergencyTab(ss); break;
+      case 6:  createTradeLogTab(ss); break;
+      case 7:  createPortfolioTab(ss); break;
+      case 8:
+        createDashboardTab(ss);
+        applyGlobalFormatting(ss);
+        break;
+      case 9:  _insertGF_Settings(ss); break;
+      case 10: _insertGF_PriceData(ss); break;
+      case 11: _insertGF_Portfolio(ss); break;
+    }
+
+    console.log('E03 단계 ' + step + '/' + totalSteps + ' 완료.');
+    step += 1;
+
+    // 경과 시간 확인 — 초과 시 연속 실행 예약
+    if (step <= totalSteps && (Date.now() - t0) >= E03_MAX_MS) {
+      props.setProperty('E03_STEP', String(step));
+      ScriptApp.newTrigger('continueE03')
+        .timeBased()
+        .after(60 * 1000)
+        .create();
+      console.log('E03 시간 제한 도달. 단계 ' + step + '에서 연속 실행을 예약했습니다.');
       return;
     }
-    deleteTargetTabs(ss, E03_TABS);
   }
 
-  Browser.msgBox('Step 1/5 완료 (기존 탭 삭제).\n\n다음: initE03_Step2 실행');
+  // 모든 단계 완료 — 정리
+  props.deleteProperty('E03_STEP');
+  props.deleteProperty('E03_SS_ID');
+  _clearE03Triggers();
+
+  console.log('E03 시트 빌드 완료 — 총 ' + totalSteps + '단계 모두 완료.');
 }
 
-// Step 2: Settings + PriceData
-function initE03_Step2() {
-  withDeferredRecalc_(function(ss) {
-    createSettingsTab(ss);
-    createPriceDataTab(ss);
-    Browser.msgBox('Step 2/5 완료 (Settings + PriceData).\n\n다음: initE03_Step3 실행');
-  });
-}
-
-// Step 3: Signal (가장 무거움 — 300행 × 14열)
-function initE03_Step3() {
-  withDeferredRecalc_(function(ss) {
-    createSignalTab(ss);
-    Browser.msgBox('Step 3/5 완료 (Signal).\n\n다음: initE03_Step4 실행');
-  });
-}
-
-// Step 4: Emergency + TradeLog
-function initE03_Step4() {
-  withDeferredRecalc_(function(ss) {
-    createEmergencyTab(ss);
-    createTradeLogTab(ss);
-    Browser.msgBox('Step 4/5 완료 (Emergency + TradeLog).\n\n다음: initE03_Step5 실행');
-  });
-}
-
-// Step 5: Portfolio + Dashboard + 마무리
-function initE03_Step5() {
-  withDeferredRecalc_(function(ss) {
-    createPortfolioTab(ss);
-    createDashboardTab(ss);
-    applyGlobalFormatting(ss);
-
-    var dashboard = ss.getSheetByName('📊 Dashboard');
-    if (dashboard) {
-      dashboard.activate();
-      ss.moveActiveSheet(1);
-    }
-
-    Browser.msgBox('Step 5/5 완료!\n\nE03 스프레드시트 초기화 완료.');
-  });
-}
-
-function deleteTargetTabs(ss, tabNames) {
+function _clearE03Triggers() {
+  var triggers = ScriptApp.getProjectTriggers();
   var i;
-  for (i = 0; i < tabNames.length; i += 1) {
-    var sheet = ss.getSheetByName(tabNames[i]);
-    if (sheet) {
-      ss.deleteSheet(sheet);
+  for (i = 0; i < triggers.length; i += 1) {
+    if (triggers[i].getHandlerFunction() === 'continueE03') {
+      ScriptApp.deleteTrigger(triggers[i]);
     }
   }
 }
+
+// ── 헬퍼 함수 ──────────────────────────────────────────
 
 function safeGF(ticker, attr) {
   return '=IFERROR(GOOGLEFINANCE("' + ticker + '","' + attr + '"),"")';
@@ -116,7 +159,7 @@ function safeGFHistory(ticker, attr, startDate) {
 function getSheetOrThrow(ss, sheetName) {
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
-    throw new Error('Missing sheet: ' + sheetName);
+    throw new Error('시트를 찾을 수 없음: ' + sheetName);
   }
   return sheet;
 }
@@ -145,6 +188,27 @@ function setNamedRangeSafe(ss, name, range) {
   ss.setNamedRange(name, range);
 }
 
+function deleteTargetTabs(ss, tabNames) {
+  // 스프레드시트를 다시 가져와 최신 시트 참조 확보
+  ss = SpreadsheetApp.openById(ss.getId());
+  var i;
+  for (i = 0; i < tabNames.length; i += 1) {
+    var sheet = ss.getSheetByName(tabNames[i]);
+    if (sheet) {
+      try {
+        console.log('기존 탭 삭제 중: ' + tabNames[i]);
+        ss.deleteSheet(sheet);
+      } catch (e) {
+        console.log('삭제 건너뜀 (이미 없음): ' + tabNames[i] + ' — ' + e.message);
+      }
+    }
+  }
+  // 삭제를 확정한 후 insertSheet 호출 가능하도록 flush
+  SpreadsheetApp.flush();
+}
+
+// ── 탭 생성 (GOOGLEFINANCE 없음) ────────────────────────
+
 function createSettingsTab(ss) {
   var sheet = ss.insertSheet('⚙️ Settings');
 
@@ -153,7 +217,7 @@ function createSettingsTab(ss) {
   headerRange.setFontWeight('bold');
   headerRange.setBackground('#DDE3EA');
 
-  setSectionTitle(sheet, 'A2', 'Strategy Constants');
+  setSectionTitle(sheet, 'A2', '전략 상수');
 
   var constantRows = [
     ['SMA Window 1', 160],
@@ -170,33 +234,27 @@ function createSettingsTab(ss) {
   ];
   sheet.getRange(2, 1, constantRows.length, 2).setValues(constantRows);
 
-  setSectionTitle(sheet, 'A14', 'Portfolio Initial');
+  setSectionTitle(sheet, 'A14', '포트폴리오 초기값');
   var portfolioRows = [
-    ['TQQQ Qty', ''],
-    ['TQQQ Avg Entry', ''],
-    ['SGOV Qty', ''],
-    ['SGOV Avg Entry', ''],
-    ['Cash Balance KRW', ''],
+    ['TQQQ 수량', ''],
+    ['TQQQ 평균 매수가', ''],
+    ['SGOV 수량', ''],
+    ['SGOV 평균 매수가', ''],
+    ['현금 잔고 (KRW)', ''],
     ['', ''],
-    ['Live Data', '']
+    ['실시간 데이터', '']
   ];
-  sheet.getRange(14, 1, portfolioRows.length, 2).setValues(portfolioRows);
+  sheet.getRange(15, 1, portfolioRows.length, 2).setValues(portfolioRows);
 
-  var liveRows = [
-    ['QQQ Price', ''],
-    ['TQQQ Price', ''],
-    ['SGOV Price', ''],
-    ['USD/KRW', '']
+  var liveLabels = [
+    ['QQQ 현재가', ''],
+    ['TQQQ 현재가', ''],
+    ['SGOV 현재가', ''],
+    ['USD/KRW 환율', '']
   ];
-  sheet.getRange(23, 1, liveRows.length, 2).setValues(liveRows);
+  sheet.getRange(23, 1, liveLabels.length, 2).setValues(liveLabels);
 
-  var liveFormulas = [
-    [safeGF('QQQ', 'price')],
-    [safeGF('TQQQ', 'price')],
-    [safeGF('SGOV', 'price')],
-    ['=IFERROR(GOOGLEFINANCE("CURRENCY:USDKRW"),"")']
-  ];
-  sheet.getRange(23, 2, liveFormulas.length, 1).setFormulas(liveFormulas);
+  // 참고: GOOGLEFINANCE 수식은 단계 9 (_insertGF_Settings)에서 삽입
 
   sheet.getRange('A:A').setHorizontalAlignment('left');
   sheet.getRange('B:B').setHorizontalAlignment('right');
@@ -237,8 +295,7 @@ function createSettingsTab(ss) {
 
 function createPriceDataTab(ss) {
   var sheet = ss.insertSheet('📊 PriceData');
-  var formula = [[safeGFHistory('QQQ', 'close', 'DATE(2025,1,1)')]];
-  sheet.getRange(1, 1, 1, 1).setFormulas(formula);
+  // 참고: GOOGLEFINANCE 수식은 단계 10 (_insertGF_PriceData)에서 삽입
   sheet.hideSheet();
 }
 
@@ -265,10 +322,10 @@ function createSignalTab(ss) {
   var row2Formulas = [[
     '=IFERROR(\'📊 PriceData\'!A2,"")',
     '=IFERROR(\'📊 PriceData\'!B2,"")',
-    '=IFERROR(AVERAGE(OFFSET(B2,0,0,-3,1)),"")',
-    '=IFERROR(AVERAGE(OFFSET(B2,0,0,-CFG_SMA_WIN1,1)),"")',
-    '=IFERROR(AVERAGE(OFFSET(B2,0,0,-CFG_SMA_WIN2,1)),"")',
-    '=IFERROR(AVERAGE(OFFSET(B2,0,0,-CFG_SMA_WIN3,1)),"")',
+    '=IFERROR(AVERAGE(OFFSET(B2,-2,0,3,1)),\"\")',
+    '=IFERROR(AVERAGE(OFFSET(B2,-(CFG_SMA_WIN1-1),0,CFG_SMA_WIN1,1)),\"\")',
+    '=IFERROR(AVERAGE(OFFSET(B2,-(CFG_SMA_WIN2-1),0,CFG_SMA_WIN2,1)),\"\")',
+    '=IFERROR(AVERAGE(OFFSET(B2,-(CFG_SMA_WIN3-1),0,CFG_SMA_WIN3,1)),\"\")',
     '=IF(C2="","",IF(C2>D2,"PASS","FAIL"))',
     '=IF(C2="","",IF(C2>E2,"PASS","FAIL"))',
     '=IF(C2="","",IF(C2>F2,"PASS","FAIL"))',
@@ -350,14 +407,14 @@ function createEmergencyTab(ss) {
   var headers = [
     'Date',
     'QQQ Close',
-    'QQQ Daily Return',
-    'Crash Trigger',
-    'TQQQ Current',
-    'TQQQ Entry',
-    'TQQQ Drawdown%',
-    'Stop Trigger',
-    'Emergency Status',
-    'Cooldown'
+    'QQQ 일간수익률',
+    '폭락 트리거',
+    'TQQQ 현재가',
+    'TQQQ 매수가',
+    'TQQQ 하락률',
+    '스탑 트리거',
+    '비상 상태',
+    '쿨다운'
   ];
   setHeaderRow(sheet, headers);
 
@@ -409,17 +466,17 @@ function createEmergencyTab(ss) {
 function createTradeLogTab(ss) {
   var sheet = ss.insertSheet('📝 TradeLog');
   var headers = [
-    'Date',
-    'Ticker',
-    'Action',
-    'Shares',
-    'Price(USD)',
-    'Total(USD)',
+    '날짜',
+    '종목',
+    '매매구분',
+    '수량',
+    '단가(USD)',
+    '금액(USD)',
     'USD/KRW',
-    'Total(KRW)',
-    'Commission',
-    'Signal State',
-    'Note'
+    '금액(KRW)',
+    '수수료',
+    '신호 상태',
+    '메모'
   ];
   setHeaderRow(sheet, headers);
 
@@ -465,19 +522,19 @@ function createTradeLogTab(ss) {
 function createPortfolioTab(ss) {
   var sheet = ss.insertSheet('💼 Portfolio');
   var headers = [
-    'Ticker',
-    'Qty',
-    'Avg Entry(USD)',
-    'Current Price(USD)',
-    'Value(USD)',
-    'Value(KRW)',
-    'Weight%',
-    'Target%',
-    'Deviation%',
-    'Unrealized PnL(USD)',
-    'Unrealized PnL(KRW)',
-    'Daily PnL(USD)',
-    'Recommended Trade'
+    '종목',
+    '수량',
+    '평균매수가(USD)',
+    '현재가(USD)',
+    '평가금액(USD)',
+    '평가금액(KRW)',
+    '비중%',
+    '목표비중%',
+    '편차%',
+    '미실현손익(USD)',
+    '미실현손익(KRW)',
+    '일간손익(USD)',
+    '추천 거래'
   ];
   setHeaderRow(sheet, headers);
 
@@ -485,7 +542,7 @@ function createPortfolioTab(ss) {
     ['TQQQ'],
     ['SGOV'],
     ['CASH'],
-    ['TOTAL']
+    ['합계']
   ];
   sheet.getRange(2, 1, labels.length, 1).setValues(labels);
   sheet.getRange('A2:A5').setFontWeight('bold');
@@ -502,8 +559,8 @@ function createPortfolioTab(ss) {
       '=IF(OR(G2="",H2=""),"",G2-H2)',
       '=IF(OR(B2="",C2="",D2=""),"",(D2-C2)*B2)',
       '=IF(J2="","",J2*LIVE_USDKRW)',
-      '=IF(B2="","",B2*(LIVE_TQQQ-IFERROR(INDEX(GOOGLEFINANCE("TQQQ","close",TODAY()-7,TODAY(),"DAILY"),2,2),LIVE_TQQQ)))',
-      '=IF(H2="","",IF(ABS(I2)<0.01,"HOLD",IF(I2>0,"SELL "&MAX(0,B2-CEILING(B2*H2,1))&" TQQQ","BUY "&MAX(0,CEILING((($E$5*H2)-E2)/D2,1))&" TQQQ")))'
+      '=""',
+      '=IF(H2="","",IF(ABS(I2)<0.01,"HOLD",IF(I2>0,"SELL "&MAX(0,B2-CEILING(B2*H2,1))&" TQQQ","BUY "&MAX(0,CEILING(($E$5*H2-E2)/D2,1))&" TQQQ")))'
     ],
     [
       '=CFG_SGOV_QTY',
@@ -516,8 +573,8 @@ function createPortfolioTab(ss) {
       '=IF(OR(G3="",H3=""),"",G3-H3)',
       '=IF(OR(B3="",C3="",D3=""),"",(D3-C3)*B3)',
       '=IF(J3="","",J3*LIVE_USDKRW)',
-      '=IF(B3="","",B3*(LIVE_SGOV-IFERROR(INDEX(GOOGLEFINANCE("SGOV","close",TODAY()-7,TODAY(),"DAILY"),2,2),LIVE_SGOV)))',
-      '=IF(H3="","",IF(ABS(I3)<0.01,"HOLD",IF(I3>0,"SELL "&MAX(0,B3-CEILING(B3*H3,1))&" SGOV","BUY "&MAX(0,CEILING((($E$5*H3)-E3)/D3,1))&" SGOV")))'
+      '=""',
+      '=IF(H3="","",IF(ABS(I3)<0.01,"HOLD",IF(I3>0,"SELL "&MAX(0,B3-CEILING(B3*H3,1))&" SGOV","BUY "&MAX(0,CEILING(($E$5*H3-E3)/D3,1))&" SGOV")))'
     ],
     [
       '=CFG_CASH_KRW',
@@ -551,6 +608,9 @@ function createPortfolioTab(ss) {
 
   sheet.getRange(2, 2, formulas.length, 12).setFormulas(formulas);
 
+  // 참고: L2, L3은 플레이스홀더(""). 실제 GOOGLEFINANCE 일간손익
+  // 수식은 단계 11 (_insertGF_Portfolio)에서 삽입됩니다.
+
   sheet.getRange('C2:E5').setNumberFormat('$#,##0.00');
   sheet.getRange('F2:F5').setNumberFormat('₩#,##0');
   sheet.getRange('G2:I5').setNumberFormat('0.00%');
@@ -572,12 +632,12 @@ function createDashboardTab(ss) {
   sheet.setColumnWidths(8, 1, 180);
 
   sheet.getRange('A1:H1').merge();
-  sheet.getRange('A1').setValue('E03 v2026.3 Trading Strategy Dashboard');
+  sheet.getRange('A1').setValue('E03 v2026.3 트레이딩 전략 대시보드');
   sheet.getRange('A1').setFontSize(18).setFontWeight('bold').setHorizontalAlignment('center');
   sheet.getRange('A1').setBackground('#102A43').setFontColor('#FFFFFF');
 
   var headerRows = [
-    ['Today', '=TODAY()', 'Data Status', '=IF(LIVE_QQQ="","⚠️ STALE","✅ FRESH")', 'Last Update', '=NOW()', '', ''],
+    ['오늘', '=TODAY()', '데이터 상태', '=IF(LIVE_QQQ="","⚠️ 오래됨","✅ 최신")', '마지막 업데이트', '=NOW()', '', ''],
     ['', '', '', '', '', '', '', '']
   ];
   sheet.getRange(2, 1, headerRows.length, 8).setValues(headerRows);
@@ -585,7 +645,7 @@ function createDashboardTab(ss) {
   sheet.getRange('F2:F2').setNumberFormat('yyyy-mm-dd hh:mm:ss');
 
   sheet.getRange('A4:C5').merge();
-  sheet.getRange('A4').setValue('Verdict');
+  sheet.getRange('A4').setValue('판정');
   sheet.getRange('A4').setFontWeight('bold').setFontSize(16).setHorizontalAlignment('center');
   sheet.getRange('A4').setBackground('#D9E2EC');
 
@@ -594,7 +654,7 @@ function createDashboardTab(ss) {
   sheet.getRange('D4').setFontSize(24).setFontWeight('bold').setHorizontalAlignment('center').setVerticalAlignment('middle');
 
   var evidenceRows = [
-    ['Evidence: Vote160', '', '', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$G$2:$G$300<>""),\'📈 Signal\'!$G$2:$G$300),"")', 'Evidence: Vote165', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$H$2:$H$300<>""),\'📈 Signal\'!$H$2:$H$300),"")', 'Evidence: Vote170', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$I$2:$I$300<>""),\'📈 Signal\'!$I$2:$I$300),"")'],
+    ['근거: Vote160', '', '', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$G$2:$G$300<>""),\'📈 Signal\'!$G$2:$G$300),"")', '근거: Vote165', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$H$2:$H$300<>""),\'📈 Signal\'!$H$2:$H$300),"")', '근거: Vote170', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$I$2:$I$300<>""),\'📈 Signal\'!$I$2:$I$300),"")'],
     ['SMA3', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$C$2:$C$300<>""),\'📈 Signal\'!$C$2:$C$300),"")', 'SMA160', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$D$2:$D$300<>""),\'📈 Signal\'!$D$2:$D$300),"")', 'SMA165', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$E$2:$E$300<>""),\'📈 Signal\'!$E$2:$E$300),"")', 'SMA170', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$F$2:$F$300<>""),\'📈 Signal\'!$F$2:$F$300),"")'],
     ['', '', '', '', '', '', '', '']
   ];
@@ -602,22 +662,22 @@ function createDashboardTab(ss) {
   sheet.getRange('B8:H8').setNumberFormat('$#,##0.00');
 
   var f1Rows = [
-    ['F1 FlipCount', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$K$2:$K$300<>""),\'📈 Signal\'!$K$2:$K$300),"")', 'F1 Validity', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$N$2:$N$300<>""),\'📈 Signal\'!$N$2:$N$300),"")', 'Target TQQQ%', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$M$2:$M$300<>""),\'📈 Signal\'!$M$2:$M$300),"")', '', ''],
-    ['Choppy Status', '=IF(D4="ON-CHOPPY","CHOPPY","NORMAL")', '', '', '', '', '', '']
+    ['F1 플립 횟수', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$K$2:$K$300<>""),\'📈 Signal\'!$K$2:$K$300),"")', 'F1 유효성', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$N$2:$N$300<>""),\'📈 Signal\'!$N$2:$N$300),"")', '목표 TQQQ%', '=IFERROR(LOOKUP(2,1/(\'📈 Signal\'!$M$2:$M$300<>""),\'📈 Signal\'!$M$2:$M$300),"")', '', ''],
+    ['횡보 상태', '=IF(D4="ON-CHOPPY","횡보중","정상")', '', '', '', '', '', '']
   ];
   sheet.getRange(11, 1, f1Rows.length, 8).setValues(f1Rows);
   sheet.getRange('F11:F11').setNumberFormat('0.00%');
 
   var emergencyRows = [
-    ['Emergency QQQ Return', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$C$2:$C$300<>""),\'🚨 Emergency\'!$C$2:$C$300),"")', 'Emergency Drawdown', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$G$2:$G$300<>""),\'🚨 Emergency\'!$G$2:$G$300),"")', 'Emergency Status', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$I$2:$I$300<>""),\'🚨 Emergency\'!$I$2:$I$300),"")', '', ''],
-    ['Cooldown', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$J$2:$J$300<>""),\'🚨 Emergency\'!$J$2:$J$300),"")', '', '', '', '', '', '']
+    ['비상 QQQ 수익률', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$C$2:$C$300<>""),\'🚨 Emergency\'!$C$2:$C$300),"")', '비상 하락률', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$G$2:$G$300<>""),\'🚨 Emergency\'!$G$2:$G$300),"")', '비상 상태', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$I$2:$I$300<>""),\'🚨 Emergency\'!$I$2:$I$300),"")', '', ''],
+    ['쿨다운', '=IFERROR(LOOKUP(2,1/(\'🚨 Emergency\'!$J$2:$J$300<>""),\'🚨 Emergency\'!$J$2:$J$300),"")', '', '', '', '', '', '']
   ];
   sheet.getRange(14, 1, emergencyRows.length, 8).setValues(emergencyRows);
   sheet.getRange('B14:B14').setNumberFormat('0.00%');
   sheet.getRange('D14:D14').setNumberFormat('0.00%');
 
   sheet.getRange('A17:C18').merge();
-  sheet.getRange('A17').setValue('Action');
+  sheet.getRange('A17').setValue('실행 액션');
   sheet.getRange('A17').setFontWeight('bold').setFontSize(16).setHorizontalAlignment('center').setVerticalAlignment('middle');
   sheet.getRange('A17').setBackground('#D9E2EC');
   sheet.getRange('D17:H18').merge();
@@ -625,9 +685,9 @@ function createDashboardTab(ss) {
   sheet.getRange('D17').setFontWeight('bold').setWrap(true);
 
   var summaryRows = [
-    ['Portfolio Value USD', '=IFERROR(\'💼 Portfolio\'!E5,"")', 'Portfolio Value KRW', '=IFERROR(\'💼 Portfolio\'!F5,"")', '', '', '', ''],
-    ['TQQQ Weight', '=IFERROR(\'💼 Portfolio\'!G2,"")', 'SGOV Weight', '=IFERROR(\'💼 Portfolio\'!G3,"")', '', '', '', ''],
-    ['Daily PnL USD', '=IFERROR(\'💼 Portfolio\'!L5,"")', 'Target State', '=IFERROR(D4,"")', '', '', '', ''],
+    ['포트폴리오 가치 USD', '=IFERROR(\'💼 Portfolio\'!E5,"")', '포트폴리오 가치 KRW', '=IFERROR(\'💼 Portfolio\'!F5,"")', '', '', '', ''],
+    ['TQQQ 비중', '=IFERROR(\'💼 Portfolio\'!G2,"")', 'SGOV 비중', '=IFERROR(\'💼 Portfolio\'!G3,"")', '', '', '', ''],
+    ['일간 손익 USD', '=IFERROR(\'💼 Portfolio\'!L5,"")', '목표 상태', '=IFERROR(D4,"")', '', '', '', ''],
     ['', '', '', '', '', '', '', '']
   ];
   sheet.getRange(20, 1, summaryRows.length, 8).setValues(summaryRows);
@@ -676,9 +736,44 @@ function createDashboardTab(ss) {
   );
   sheet.setConditionalFormatRules(rules);
 
-  sheet.activate();
-  ss.moveActiveSheet(1);
+  try {
+    sheet.activate();
+    ss.moveActiveSheet(1);
+  } catch (e) {
+    console.log('Dashboard를 첫 번째 위치로 이동 실패: ' + e.message);
+  }
 }
+
+// ── GOOGLEFINANCE 수식 지연 삽입 ────────────────────────
+
+function _insertGF_Settings(ss) {
+  var sheet = getSheetOrThrow(ss, '⚙️ Settings');
+  var liveFormulas = [
+    [safeGF('QQQ', 'price')],
+    [safeGF('TQQQ', 'price')],
+    [safeGF('SGOV', 'price')],
+    ['=IFERROR(GOOGLEFINANCE("CURRENCY:USDKRW"),"")']
+  ];
+  sheet.getRange(23, 2, liveFormulas.length, 1).setFormulas(liveFormulas);
+}
+
+function _insertGF_PriceData(ss) {
+  var sheet = getSheetOrThrow(ss, '📊 PriceData');
+  var formula = [[safeGFHistory('QQQ', 'close', 'DATE(2025,1,1)')]];
+  sheet.getRange(1, 1, 1, 1).setFormulas(formula);
+}
+
+function _insertGF_Portfolio(ss) {
+  var sheet = getSheetOrThrow(ss, '💼 Portfolio');
+  sheet.getRange('L2').setFormula(
+    '=IF(B2="","",B2*(LIVE_TQQQ-IFERROR(INDEX(GOOGLEFINANCE("TQQQ","close",TODAY()-7,TODAY(),"DAILY"),2,2),LIVE_TQQQ)))'
+  );
+  sheet.getRange('L3').setFormula(
+    '=IF(B3="","",B3*(LIVE_SGOV-IFERROR(INDEX(GOOGLEFINANCE("SGOV","close",TODAY()-7,TODAY(),"DAILY"),2,2),LIVE_SGOV)))'
+  );
+}
+
+// ── 글로벌 포맷팅 ──────────────────────────────────────
 
 function applyGlobalFormatting(ss) {
   var tabNames = [
@@ -697,18 +792,20 @@ function applyGlobalFormatting(ss) {
     if (!sheet) {
       continue;
     }
-    sheet.freezeRows(1);
+    sheet.setFrozenRows(1);
   }
 
-  // Protection for strategy constants (one-time setup)
+  // 전략 상수 보호 (경고만 표시)
   var settings = ss.getSheetByName('⚙️ Settings');
   if (settings) {
     var protectRange = settings.getRange('A2:B12');
     var protection = protectRange.protect();
-    protection.setDescription('E03 strategy constants (protected)');
+    protection.setDescription('E03 전략 상수 (보호됨)');
     protection.setWarningOnly(true);
   }
 }
+
+// ── 유틸리티 함수 ──────────────────────────────────────
 
 function clearExistingDailyTrigger() {
   var triggers = ScriptApp.getProjectTriggers();
@@ -874,10 +971,10 @@ function validateSetupQuick() {
   }
 
   if (missing.length > 0) {
-    Browser.msgBox('Missing tabs:\n' + missing.join('\n'));
+    console.log('누락된 탭: ' + missing.join(', '));
     return;
   }
-  Browser.msgBox('E03 tab structure is complete.');
+  console.log('E03 탭 구조가 완전합니다.');
 }
 
 function forceRecalcNow() {
@@ -895,7 +992,7 @@ function freezeAllHeaders() {
   var sheets = ss.getSheets();
   var i;
   for (i = 0; i < sheets.length; i += 1) {
-    sheets[i].freezeRows(1);
+    sheets[i].setFrozenRows(1);
   }
 }
 
