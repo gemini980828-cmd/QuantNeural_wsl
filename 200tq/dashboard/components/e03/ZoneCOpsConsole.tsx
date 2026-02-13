@@ -19,10 +19,10 @@ function TradeRow({ item, privacyMode }: { item: TradeLine, privacyMode: boolean
   const displayShares = privacyMode ? "***" : (item.shares > 0 ? `${item.shares.toLocaleString()} 주` : "-");
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 border-b border-neutral-800 last:border-0 text-sm gap-2">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 border-b border-border last:border-0 text-sm gap-2">
       <div className="flex items-center gap-3">
         <span className={`font-bold w-12 font-sans ${
-          isBuy ? "text-positive" : isSell ? "text-negative" : "text-neutral-400"
+          isBuy ? "text-positive" : isSell ? "text-negative" : "text-muted"
         }`}>
           {item.action}
         </span>
@@ -63,7 +63,7 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
        // Privacy mode: do not reveal numbers in toast
        const content = vm.privacyMode 
          ? "클립보드에 복사됨" 
-         : (mode === "NUMBERS" ? "숫자만 복사됨" : `${vm.expectedTrades.length}개 주문 복사됨`);
+         : (mode === "NUMBERS" ? "숫자만 복사됨" : vm.expectedTrades.map(t => `${t.ticker} ${t.action === 'SELL' ? '-' : '+'}${Math.round(t.shares)}`).join(', '));
        toast.success(`복사 완료: ${content}`);
     } catch (err) {
        // Fallback for old browsers or non-secure contexts
@@ -100,7 +100,7 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
   };
 
   return (
-    <section className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+    <section className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start relative">
       
       <RecordModal 
          isOpen={isRecordModalOpen} 
@@ -113,19 +113,19 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
       {/* LEFT: Reality */}
       <div className="space-y-3">
           <h3 className="text-lg font-bold font-sans text-muted flex items-center gap-2">
-          현실 (기록)
-          <span className="text-[10px] bg-inset px-1.5 py-0.5 rounded text-muted">READ-ONLY</span>
+          실제 체결(수동)
+          <span className="text-[11px] bg-inset px-1.5 py-0.5 rounded text-muted">READ-ONLY</span>
           <a 
             href="/api/record" 
             download="execution_records.csv"
-            className="text-[10px] bg-inset hover:bg-positive/20 px-1.5 py-0.5 rounded text-muted hover:text-positive transition-colors flex items-center gap-1"
+            className="text-[11px] bg-inset hover:bg-positive/20 px-1.5 py-0.5 rounded text-muted hover:text-positive transition-colors flex items-center gap-1"
             title="CSV 다운로드"
           >
             <Download size={10} />
             CSV
           </a>
         </h3>
-        <div className="p-4 rounded-xl bg-surface h-full min-h-[200px] flex items-center justify-center text-sm shadow-sm">
+        <div className="p-4 rounded-xl bg-surface border border-border min-h-[200px] flex items-center justify-center text-sm shadow-sm">
            {vm.executionState === "RECORDED" ? (
              <div className="flex flex-col items-center gap-2 text-positive">
                <Check size={32} />
@@ -137,7 +137,7 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
                <div className="text-muted text-sm font-sans">아직 기록되지 않음</div>
                <button
                  onClick={() => setIsRecordModalOpen(true)}
-                 className="px-4 py-2 bg-positive/10 hover:bg-positive/20 text-positive rounded-lg font-medium font-sans text-sm transition-colors flex items-center gap-2"
+                 className="px-4 py-2 bg-positive-tint hover:bg-positive/20 text-positive rounded-lg font-medium font-sans text-sm transition-colors flex items-center gap-2"
                >
                  <Check size={16} />
                  첫 실행 기록하기
@@ -150,10 +150,10 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
       {/* RIGHT: Strategy */}
       <div className="space-y-3">
          <div className="flex flex-col gap-2">
-            <h3 className="text-lg font-bold font-sans text-blue-400 flex flex-col lg:flex-row lg:items-center justify-between gap-2">
+            <h3 className="text-lg font-bold font-sans text-info flex flex-col lg:flex-row lg:items-center justify-between gap-2">
                <div className="flex items-center gap-2">
-                  전략 (예상)
-                  <span className="text-[10px] bg-blue-500/10 px-1.5 py-0.5 rounded text-blue-400">Execution Checklist</span>
+                   예상 주문(자동)
+                  <span className="text-[11px] bg-info-tint px-1.5 py-0.5 rounded text-info">Execution Checklist</span>
                </div>
                
                {/* Risk Line (Compact) - Only show if TQQQ expected > 0 */}
@@ -171,7 +171,7 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
                      const stopPrice = port.derived.stopLossLevel;
                      
                      return (
-                        <div className="text-[10px] font-mono text-red-400 bg-red-950/20 px-2 py-0.5 rounded border border-red-900/30 flex items-center gap-2 w-fit">
+                        <div className="text-[11px] font-mono text-negative bg-negative-tint px-2 py-0.5 rounded border border-negative/20 flex items-center gap-2 w-fit">
                            <span>STOP({stopLossLabel}%): ${stopPrice.toFixed(2)}</span>
                            <span className="opacity-50">|</span>
                            <span>Dist: {(dist * 100).toFixed(1)}%</span>
@@ -184,18 +184,18 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
 
             {/* Position Impact Analysis (Before -> After) */}
             {vm.portfolio && (
-               <div className="bg-surface border border-neutral-800 rounded-lg p-2.5 text-xs font-mono grid grid-cols-2 gap-4">
+               <div className="bg-surface border border-border rounded-lg p-2.5 text-xs font-mono grid grid-cols-2 gap-4">
                   {/* Before */}
                   <div className="space-y-1">
-                     <div className="text-muted text-[10px] uppercase tracking-wider">Current</div>
+                     <div className="text-muted text-[11px] uppercase tracking-wider">Current</div>
                      <div className="flex justify-between">
-                        <span className="text-neutral-400">TQQQ</span>
-                        <span className="text-fg font-bold">
-                           {vm.portfolio.positions.find(p => p.ticker === "TQQQ")?.qty.toLocaleString() || 0}
-                        </span>
-                     </div>
-                     <div className="flex justify-between">
-                        <span className="text-neutral-400">SGOV</span>
+                         <span className="text-muted">TQQQ</span>
+                         <span className="text-fg font-bold">
+                            {vm.portfolio.positions.find(p => p.ticker === "TQQQ")?.qty.toLocaleString() || 0}
+                         </span>
+                      </div>
+                      <div className="flex justify-between">
+                         <span className="text-muted">SGOV</span>
                         <span className="text-fg font-bold">
                            {vm.portfolio.positions.find(p => p.ticker === "SGOV")?.qty.toLocaleString() || 0}
                         </span>
@@ -203,8 +203,8 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
                   </div>
 
                   {/* After (Projected) */}
-                  <div className="space-y-1 border-l border-neutral-800 pl-4 relative">
-                     <div className="text-blue-400 text-[10px] uppercase tracking-wider">After (Est)</div>
+                   <div className="space-y-1 border-l border-border pl-4 relative">
+                     <div className="text-info text-[11px] uppercase tracking-wider">After (Est)</div>
                      {(() => {
                         const p = vm.portfolio!.positions;
                         const trades = vm.expectedTrades;
@@ -224,12 +224,12 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
                         return (
                            <>
                               <div className="flex justify-between">
-                                 <span className="text-neutral-500">TQQQ</span>
-                                 <span className="text-blue-100 font-bold">{tqqqAfter.toLocaleString()} ({tqqqWeightPct}%)</span>
-                               </div>
-                               <div className="flex justify-between">
-                                  <span className="text-neutral-500">SGOV</span>
-                                  <span className="text-blue-100 font-bold">{sgovAfter.toLocaleString()} ({sgovWeightPct}%)</span>
+                                  <span className="text-muted">TQQQ</span>
+                                  <span className="text-info font-bold">{tqqqAfter.toLocaleString()} ({tqqqWeightPct}%)</span>
+                                </div>
+                                <div className="flex justify-between">
+                                   <span className="text-muted">SGOV</span>
+                                  <span className="text-info font-bold">{sgovAfter.toLocaleString()} ({sgovWeightPct}%)</span>
                                </div>
                            </>
                         );
@@ -239,7 +239,7 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
             )}
          </div>
 
-         <div className="rounded-xl bg-surface p-4 shadow-sm">
+         <div className="rounded-xl bg-surface border border-border p-4 shadow-sm">
             {vm.strategyState === "ON_CHOPPY" && (
               <div className="mb-3 text-xs text-choppy font-medium">Choppy 구간: TQQQ 70% / SGOV 30%</div>
             )}
@@ -286,11 +286,11 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
                    <button
                      disabled={vm.copyLock.locked}
                      onClick={() => handleCopy("FULL")}
-                     className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
-                       vm.copyLock.locked 
-                         ? "bg-e03-surface text-neutral-600 cursor-not-allowed border border-e03-border" 
-                         : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20"
-                     }`}
+                      className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
+                        vm.copyLock.locked 
+                           ? "bg-e03-surface text-muted cursor-not-allowed border border-e03-border"
+                          : "bg-info hover:bg-info/80 text-white shadow-lg shadow-info/20 border border-info/30"
+                      }`}
                    >
                      {vm.copyLock.locked ? <Lock size={16} /> : <Copy size={16} />}
                      주문 복사
@@ -299,11 +299,11 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
                    <button
                      disabled={vm.copyLock.locked}
                      onClick={() => handleCopy("NUMBERS")}
-                     className={`px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                        vm.copyLock.locked
-                         ? "bg-surface text-muted cursor-not-allowed w-full md:w-auto" 
-                         : "bg-surface hover:bg-inset text-muted ring-1 ring-inset w-full md:w-auto"
-                     }`}
+                      className={`px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                         vm.copyLock.locked
+                          ? "bg-surface text-muted cursor-not-allowed border border-border w-full md:w-auto" 
+                          : "bg-surface hover:bg-inset text-muted border border-border w-full md:w-auto"
+                      }`}
                    >
                      숫자만
                    </button>
@@ -314,7 +314,7 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
             {vm.copyLock.locked && !isNoAction && (
               <div className="flex flex-col gap-1 px-1 mt-1">
                  {vm.copyLock.reasons.map(r => (
-                    <span key={r} className="text-xs text-red-400 flex items-center gap-1.5">
+                    <span key={r} className="text-xs text-negative flex items-center gap-1.5">
                       <Lock size={10} className="shrink-0" /> 
                       {getHumanReadableReason(r)}
                     </span>
@@ -326,11 +326,11 @@ export default function ZoneCOpsConsole({ vm, onRecordSuccess }: ZoneCOpsConsole
             <div className={`mt-4 pt-4 border-t border-e03-border/50 ${highlightRecord ? 'opacity-100' : 'opacity-70'}`}>
                 <button 
                   onClick={() => setIsRecordModalOpen(true)}
-                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold transition-all shadow-md ${
-                     highlightRecord 
-                        ? "bg-red-600 hover:bg-red-500 text-white animate-pulse-slow shadow-red-900/20" 
-                        : "bg-surface text-muted hover:bg-inset"
-                  }`}
+                   className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold transition-all shadow-md ${
+                      highlightRecord 
+                         ? "bg-negative hover:bg-negative/80 text-white animate-pulse-slow shadow-red-900/20" 
+                         : "bg-surface text-muted hover:bg-inset border border-border"
+                   }`}
                 >
                    <ExternalLink size={14} />
                    {vm.primaryCtaLabel === "기록 필요" ? "실행 결과 기록하기 (필수)" : "실행 결과 기록 (Manual)"}

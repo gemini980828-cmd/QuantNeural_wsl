@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { 
   Bell, RefreshCw, CheckCircle2, AlertTriangle, Info, 
-  Database, Server, ClipboardList, ExternalLink, Clock, Check
+  Database, Server, ClipboardList, ExternalLink, Clock, Check,
+  ArrowRightLeft, Calendar, CalendarClock, HelpCircle, Zap
 } from "lucide-react";
 
 // Types
@@ -50,9 +51,9 @@ function formatRelativeTime(dateStr: string): string {
 
 function getLevelColor(level: string): string {
   switch (level) {
-    case "emergency": return "bg-red-900/50 text-red-400 border-red-700";
-    case "action": return "bg-amber-900/50 text-amber-400 border-amber-700";
-    default: return "bg-blue-900/50 text-blue-400 border-blue-700";
+    case "emergency": return "bg-negative-tint text-negative border-negative/30";
+    case "action": return "bg-choppy-tint text-choppy border-choppy/30";
+    default: return "bg-info-tint text-info border-info/30";
   }
 }
 
@@ -62,6 +63,19 @@ function getLevelIcon(level: string) {
     case "action": return <Bell size={14} />;
     default: return <Info size={14} />;
   }
+}
+
+const EVENT_TYPE_META: Record<string, { label: string; icon: React.ReactNode; badgeClass: string }> = {
+  VERDICT_CHANGE:   { label: "Verdict 변경",  icon: <ArrowRightLeft size={13} />, badgeClass: "bg-info-tint text-info border-info/30" },
+  EXEC_SCHEDULED:   { label: "스케줄 생성",   icon: <CalendarClock size={13} />,  badgeClass: "bg-choppy-tint text-choppy border-choppy/30" },
+  DUE_TODAY:        { label: "오늘 실행일",    icon: <Calendar size={13} />,       badgeClass: "bg-positive-tint text-positive border-positive/30" },
+  UNKNOWN_PERSIST:  { label: "기록 누락",      icon: <HelpCircle size={13} />,     badgeClass: "bg-choppy-tint text-choppy border-choppy/30" },
+  SOFT_ALERT:       { label: "장중 경보",      icon: <Zap size={13} />,            badgeClass: "bg-negative-tint text-negative border-negative/30" },
+  HARD_CONFIRMED:   { label: "비상 확정",      icon: <AlertTriangle size={13} />,  badgeClass: "bg-negative-tint text-negative border-negative/30" },
+};
+
+function getEventTypeMeta(eventType: string) {
+  return EVENT_TYPE_META[eventType] || { label: eventType, icon: <Info size={13} />, badgeClass: "bg-inset text-muted border-border" };
 }
 
 export default function NotificationsPage() {
@@ -107,7 +121,6 @@ export default function NotificationsPage() {
       });
       
       // Fetch job runs (would need a new API, using placeholder for now)
-      // TODO: Add /api/ops/runs endpoint
       setJobRuns([]);
       
     } catch (e) {
@@ -158,7 +171,7 @@ export default function NotificationsPage() {
             Notifications
           </span>
           {unresolvedCounts.total > 0 && (
-            <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-negative text-white px-2 py-0.5 rounded-full">
               {unresolvedCounts.total}
             </span>
           )}
@@ -182,7 +195,7 @@ export default function NotificationsPage() {
               <Database size={16} className="text-muted" />
               <span className="text-sm font-medium text-muted">DATA</span>
             </div>
-            <div className={`text-lg font-bold ${meta?.health === "FRESH" ? "text-positive" : "text-amber-400"}`}>
+            <div className={`text-lg font-bold ${meta?.health === "FRESH" ? "text-positive" : "text-choppy"}`}>
               {meta?.health || "—"}
             </div>
             {meta?.staleReason && (
@@ -238,7 +251,7 @@ export default function NotificationsPage() {
             </div>
             <Link 
               href="/records" 
-              className="text-xs text-blue-400 hover:underline mt-2 inline-flex items-center gap-1"
+              className="text-xs text-info hover:underline mt-2 inline-flex items-center gap-1"
             >
               기록 확인 <ExternalLink size={10} />
             </Link>
@@ -258,7 +271,7 @@ export default function NotificationsPage() {
               onClick={() => setTab(t)}
               className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                 tab === t 
-                  ? "bg-neutral-700 text-white" 
+                  ? "bg-inset text-white" 
                   : "text-muted hover:bg-surface"
               }`}
             >
@@ -287,13 +300,20 @@ export default function NotificationsPage() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${getLevelColor(notif.level)}`}>
                         {getLevelIcon(notif.level)}
                         {notif.level.toUpperCase()}
                       </span>
-                      <span className="text-xs text-muted">{notif.event_type}</span>
-                      <span className="text-xs text-muted">•</span>
+                      {(() => {
+                        const meta = getEventTypeMeta(notif.event_type);
+                        return (
+                          <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${meta.badgeClass}`}>
+                            {meta.icon}
+                            {meta.label}
+                          </span>
+                        );
+                      })()}
                       <span className="text-xs text-muted">{formatRelativeTime(notif.created_at)}</span>
                     </div>
                     <div className="font-medium text-fg">{notif.title}</div>
@@ -354,15 +374,15 @@ export default function NotificationsPage() {
                     <td className="px-4 py-2">
                       <span className={`text-xs px-2 py-0.5 rounded ${
                         run.status === "success" ? "bg-green-900/50 text-green-400" :
-                        run.status === "failed" ? "bg-red-900/50 text-red-400" :
-                        "bg-blue-900/50 text-blue-400"
+                        run.status === "failed" ? "bg-negative-tint text-negative" :
+                        "bg-info-tint text-info"
                       }`}>
                         {run.status}
                       </span>
                     </td>
                     <td className="px-4 py-2 text-muted">
                       {run.rows_upserted > 0 && `${run.rows_upserted} rows`}
-                      {run.error && <span className="text-red-400">{run.error}</span>}
+                      {run.error && <span className="text-negative">{run.error}</span>}
                     </td>
                   </tr>
                 ))}

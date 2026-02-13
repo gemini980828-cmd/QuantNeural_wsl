@@ -50,7 +50,7 @@ function MetricCard({
   description?: string;
 }) {
   return (
-    <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-4">
+    <div className="bg-inset/50 border border-border rounded-lg p-4">
       <div className="flex items-center gap-2 text-xs text-muted mb-2">
         <Icon size={12} />
         {label}
@@ -59,7 +59,7 @@ function MetricCard({
         {value}
         {subValue && <span className="text-xs text-muted ml-1">{subValue}</span>}
       </div>
-      {description && <div className="text-[10px] text-neutral-600 mt-1">{description}</div>}
+      {description && <div className="text-[11px] text-muted mt-1">{description}</div>}
     </div>
   );
 }
@@ -106,7 +106,7 @@ export function SingleStrategyPanel({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-neutral-800 bg-surface p-6">
+      <div className="rounded-xl border border-border bg-surface p-6">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: strategyColor }} />
           <span className="text-sm font-bold text-fg">{strategyName}</span>
@@ -118,18 +118,18 @@ export function SingleStrategyPanel({
         />
       </div>
 
-      <div className="rounded-xl border border-neutral-800 bg-surface p-6">
+      <div className="rounded-xl border border-border bg-surface p-6">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingDown size={16} className="text-red-400" />
+          <TrendingDown size={16} className="text-negative" />
           <span className="text-sm font-bold text-fg">Drawdown (Underwater)</span>
           <span className="text-xs text-muted ml-2">MDD: {(mdd.mdd * 100).toFixed(1)}%</span>
         </div>
         <DrawdownChart equity={equity} height={180} showMDD={true} />
       </div>
 
-      <div className="rounded-xl border border-neutral-800 bg-surface p-6">
+      <div className="rounded-xl border border-border bg-surface p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Activity size={16} className="text-blue-400" />
+          <Activity size={16} className="text-info" />
           <span className="text-sm font-bold text-fg">Rolling 12M Metrics</span>
         </div>
         <RollingMetricsChart equity={equity} height={200} metric="both" />
@@ -140,7 +140,7 @@ export function SingleStrategyPanel({
           icon={TrendingDown}
           label="Max Drawdown"
           value={`${(metrics.MDD).toFixed(1)}%`}
-          valueColor="text-red-400"
+          valueColor="text-negative"
           description="Peak-to-trough decline"
         />
         <MetricCard
@@ -180,20 +180,20 @@ export function SingleStrategyPanel({
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-        <div className="bg-neutral-900/30 rounded-lg p-3 border border-neutral-800">
-          <span className="text-neutral-500">Volatility:</span>{" "}
+        <div className="bg-inset/30 rounded-lg p-3 border border-border">
+          <span className="text-muted">Volatility:</span>{" "}
           <span className="font-mono">{(riskMetrics.volatility * 100).toFixed(1)}%</span>
         </div>
-        <div className="bg-neutral-900/30 rounded-lg p-3 border border-neutral-800">
-          <span className="text-neutral-500">Downside Dev:</span>{" "}
+        <div className="bg-inset/30 rounded-lg p-3 border border-border">
+          <span className="text-muted">Downside Dev:</span>{" "}
           <span className="font-mono">{(riskMetrics.downsideDeviation * 100).toFixed(1)}%</span>
         </div>
-        <div className="bg-neutral-900/30 rounded-lg p-3 border border-neutral-800">
-          <span className="text-neutral-500">Trades:</span>{" "}
+        <div className="bg-inset/30 rounded-lg p-3 border border-border">
+          <span className="text-muted">Trades:</span>{" "}
           <span className="font-mono">{metrics.TradesCount}</span>
         </div>
-        <div className="bg-neutral-900/30 rounded-lg p-3 border border-neutral-800">
-          <span className="text-neutral-500">Tax (22%):</span>{" "}
+        <div className="bg-inset/30 rounded-lg p-3 border border-border">
+          <span className="text-muted">Tax (22%):</span>{" "}
           <span className="font-mono">{(metrics.TotalTax / 10000).toLocaleString()}만원</span>
         </div>
       </div>

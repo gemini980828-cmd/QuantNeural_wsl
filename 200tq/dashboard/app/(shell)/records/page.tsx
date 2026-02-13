@@ -174,16 +174,16 @@ const MOCK_RECORDS: RecordEntry[] = [
 // Status badge component
 function StatusBadge({ status }: { status: RecordEntry["status"] }) {
   const config = {
-    DONE: { icon: CheckCircle, color: "text-emerald-400 bg-emerald-950/30 border border-emerald-900/50", label: "완료" },
+    DONE: { icon: CheckCircle, color: "text-positive bg-positive-tint border border-positive/30", label: "완료" },
     SKIPPED: { icon: XCircle, color: "text-muted bg-surface border border-border", label: "스킵" },
-    DELAY: { icon: Clock, color: "text-amber-400 bg-amber-950/30 border border-amber-900/50", label: "지연" },
+    DELAY: { icon: Clock, color: "text-choppy bg-choppy-tint border border-choppy/30", label: "지연" },
     UNKNOWN: { icon: HelpCircle, color: "text-muted bg-inset border border-border", label: "미확인" },
   };
   
   const { icon: Icon, color, label } = config[status];
   
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider ${color}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wider ${color}`}>
       <Icon size={10} />
       {label}
     </span>
@@ -211,7 +211,7 @@ function RecordsSummaryStrip({ records }: { records: RecordEntry[] }) {
       </div>
       <div>
         <div className="text-xs text-muted mb-1">스킵</div>
-        <div className="text-2xl font-bold font-mono text-amber-400">{stats.skipped}</div>
+        <div className="text-2xl font-bold font-mono text-choppy">{stats.skipped}</div>
       </div>
       <div>
         <div className="text-xs text-muted mb-1">미확인</div>
@@ -272,10 +272,10 @@ function QualityAnalytics({ records }: { records: RecordEntry[] }) {
       <div className="bg-surface border border-border rounded-xl p-5">
         <div className="text-xs text-muted mb-1">체결 정확도</div>
         <div className="flex items-baseline gap-2">
-           <span className="text-2xl font-bold font-mono text-blue-400">{stats.accuracy}%</span>
+           <span className="text-2xl font-bold font-mono text-info">{stats.accuracy}%</span>
         </div>
         <div className="w-full bg-surface h-1 rounded-full overflow-hidden mt-2">
-           <div className="bg-blue-500 h-full rounded-full" style={{ width: `${stats.accuracy}%` }}></div>
+           <div className="bg-info h-full rounded-full" style={{ width: `${stats.accuracy}%` }}></div>
         </div>
       </div>
 
@@ -287,7 +287,7 @@ function QualityAnalytics({ records }: { records: RecordEntry[] }) {
            <span className="text-xs text-muted">오차</span>
         </div>
         <div className="w-full bg-surface h-1 rounded-full overflow-hidden mt-2">
-           <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${Math.min(stats.slippage * 200, 100)}%` }}></div>
+           <div className="bg-positive h-full rounded-full" style={{ width: `${Math.min(stats.slippage * 200, 100)}%` }}></div>
         </div>
       </div>
 
@@ -298,7 +298,7 @@ function QualityAnalytics({ records }: { records: RecordEntry[] }) {
            <span className="text-2xl font-bold font-mono text-fg">{stats.delayed}</span>
            <span className="text-xs text-muted">건</span>
         </div>
-        <div className={`text-xs mt-2 ${stats.delayed === 0 ? "text-positive" : "text-amber-400"}`}>
+        <div className={`text-xs mt-2 ${stats.delayed === 0 ? "text-positive" : "text-choppy"}`}>
            {stats.delayed === 0 ? "지연 없음 ✓" : "정시 기록 권장"}
         </div>
       </div>
@@ -440,13 +440,13 @@ export default function RecordsPage() {
               </div>
               <div>
                 <div className="text-xs text-muted mb-1">판정</div>
-                <div className={`font-mono font-bold ${selectedRecord.record.snapshot_verdict === 'ON' ? 'text-positive' : 'text-amber-400'}`}>
+                <div className={`font-mono font-bold ${selectedRecord.record.snapshot_verdict === 'ON' ? 'text-positive' : 'text-choppy'}`}>
                   {selectedRecord.record.snapshot_verdict}
                 </div>
               </div>
               <div>
                 <div className="text-xs text-muted mb-1">데이터 상태</div>
-                <div className={`font-mono ${selectedRecord.record.snapshot_health === 'FRESH' ? 'text-positive' : 'text-amber-400'}`}>
+                <div className={`font-mono ${selectedRecord.record.snapshot_health === 'FRESH' ? 'text-positive' : 'text-choppy'}`}>
                   {selectedRecord.record.snapshot_health}
                 </div>
               </div>
@@ -476,11 +476,11 @@ export default function RecordsPage() {
           기록
           <span className="text-sm font-normal text-muted bg-surface px-2.5 py-0.5 rounded-full border border-border">Records</span>
           {dataSource === "MOCK" ? (
-            <span className="text-[10px] font-bold text-amber-400 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-900/50">
+            <span className="text-[11px] font-bold text-choppy bg-choppy-tint px-2 py-0.5 rounded border border-choppy/30">
               MOCK
             </span>
           ) : (
-            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-900/50">
+            <span className="text-[11px] font-bold text-positive bg-positive-tint px-2 py-0.5 rounded border border-positive/30">
               REAL
             </span>
           )}
@@ -502,7 +502,7 @@ export default function RecordsPage() {
               <Download size={14} />
               CSV Export
             </button>
-            <div className="absolute right-0 top-full mt-1 px-2 py-1 bg-surface text-muted text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+            <div className="absolute right-0 top-full mt-1 px-2 py-1 bg-surface text-muted text-[11px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
               기록이 없어 내보내기 불가
             </div>
           </div>
@@ -547,7 +547,7 @@ export default function RecordsPage() {
             <div className="flex flex-col sm:flex-row gap-2 mt-2">
               <a 
                 href="/command"
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-info hover:bg-info/80 text-white rounded-lg text-sm font-medium transition-colors"
               >
                 <ArrowRight size={16} />
                 오늘 기록하러 가기
@@ -575,7 +575,7 @@ export default function RecordsPage() {
                     onClick={() => setPeriodFilter(p)}
                     className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                       periodFilter === p
-                        ? "bg-neutral-700 text-white"
+                        ? "bg-inset text-white"
                         : "text-muted hover:text-fg"
                     }`}
                   >
@@ -584,7 +584,7 @@ export default function RecordsPage() {
                 ))}
               </div>
               
-              <div className="w-px h-4 bg-neutral-700" />
+              <div className="w-px h-4 bg-inset" />
               
               {/* Status Filter */}
               <div className="flex gap-1 bg-inset p-0.5 rounded-md">
@@ -594,7 +594,7 @@ export default function RecordsPage() {
                     onClick={() => setStatusFilter(s)}
                     className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                       statusFilter === s
-                        ? "bg-neutral-700 text-white"
+                        ? "bg-inset text-white"
                         : "text-muted hover:text-fg"
                     }`}
                   >

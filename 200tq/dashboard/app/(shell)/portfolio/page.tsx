@@ -226,7 +226,7 @@ export default function PortfolioPage() {
         최근 체결
         <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Execution Logs</span>
         {dataSource === "REAL" && recentTrades.length > 0 && (
-          <span className="text-[10px] text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-900/50">
+          <span className="text-[11px] text-positive bg-positive-tint px-2 py-0.5 rounded border border-positive/30">
             {recentTrades.length}건
           </span>
         )}
@@ -268,8 +268,8 @@ export default function PortfolioPage() {
                   <td className="py-3 px-4">
                     <span className={`text-xs px-2 py-0.5 rounded ${
                       trade.action === "BUY" 
-                        ? "bg-positive/10 text-positive" 
-                        : "bg-negative/10 text-negative"
+                        ? "bg-positive-tint text-positive" 
+                        : "bg-negative-tint text-negative"
                     }`}>
                       {trade.action}
                     </span>
@@ -293,10 +293,10 @@ export default function PortfolioPage() {
         성과 분석
         <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Performance</span>
         {equityHistory.length > 0 && (
-          <span className={`text-[10px] px-2 py-0.5 rounded border ${
+          <span className={`text-[11px] px-2 py-0.5 rounded border ${
             dataSource === "REAL" 
-              ? "text-emerald-400 bg-emerald-950/30 border-emerald-900/50"
-              : "text-amber-400 bg-amber-950/30 border-amber-900/50"
+              ? "text-positive bg-positive-tint border-positive/30"
+              : "text-choppy bg-choppy-tint border-choppy/30"
           }`}>
             {dataSource}
           </span>
@@ -316,7 +316,7 @@ export default function PortfolioPage() {
       ) : (
         <div className="rounded-xl border border-border bg-surface p-6">
           {dataSource === "MOCK" && (
-            <div className="mb-4 text-xs text-amber-400 bg-amber-900/20 border border-amber-800/30 rounded-lg px-3 py-2">
+            <div className="mb-4 text-xs text-choppy bg-choppy-tint border border-choppy/30 rounded-lg px-3 py-2">
               MOCK 데이터 - 시뮬레이션 성과입니다
             </div>
           )}
@@ -326,14 +326,14 @@ export default function PortfolioPage() {
               <div className="font-mono font-bold text-fg">
                 ${equityHistory[0]?.value.toLocaleString(undefined, { minimumFractionDigits: 0 })}
               </div>
-              <div className="text-[10px] text-muted mt-1">{equityHistory[0]?.date}</div>
+              <div className="text-[11px] text-muted mt-1">{equityHistory[0]?.date}</div>
             </div>
             <div className="bg-inset/50 rounded-lg p-4">
               <div className="text-xs text-muted mb-1">현재 자산</div>
               <div className="font-mono font-bold text-fg">
                 ${equityHistory[equityHistory.length - 1]?.value.toLocaleString(undefined, { minimumFractionDigits: 0 })}
               </div>
-              <div className="text-[10px] text-muted mt-1">{equityHistory[equityHistory.length - 1]?.date}</div>
+              <div className="text-[11px] text-muted mt-1">{equityHistory[equityHistory.length - 1]?.date}</div>
             </div>
             <div className="bg-inset/50 rounded-lg p-4">
               <div className="text-xs text-muted mb-1">수익률</div>
@@ -347,7 +347,7 @@ export default function PortfolioPage() {
                   </div>
                 );
               })()}
-              <div className="text-[10px] text-muted mt-1">{equityHistory.length}개 데이터포인트</div>
+              <div className="text-[11px] text-muted mt-1">{equityHistory.length}개 데이터포인트</div>
             </div>
           </div>
           
@@ -393,7 +393,7 @@ export default function PortfolioPage() {
               value={tqqqShares}
               onChange={(e) => setTqqqShares(Math.max(0, parseInt(e.target.value) || 0))}
               disabled={portfolioStateLoading}
-              className="w-24 bg-inset border border-border rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="w-24 bg-inset border border-border rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-info/50"
             />
             <span className="text-xs text-muted">주</span>
           </div>
@@ -410,7 +410,7 @@ export default function PortfolioPage() {
               value={sgovShares}
               onChange={(e) => setSgovShares(Math.max(0, parseInt(e.target.value) || 0))}
               disabled={portfolioStateLoading}
-              className="w-24 bg-inset border border-border rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="w-24 bg-inset border border-border rounded-lg px-3 py-1.5 text-sm text-fg text-right focus:outline-none focus:ring-2 focus:ring-info/50"
             />
             <span className="text-xs text-muted">주</span>
           </div>
@@ -423,7 +423,7 @@ export default function PortfolioPage() {
           <div className="flex items-center gap-2">
             {ocrResult && (
               <span className={`text-xs flex items-center gap-1 ${
-                ocrResult.success ? "text-green-400" : "text-red-400"
+                ocrResult.success ? "text-green-400" : "text-negative"
               }`}>
                 {ocrResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                 {ocrResult.message}
@@ -439,7 +439,7 @@ export default function PortfolioPage() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={ocrLoading || portfolioStateLoading}
-              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-purple-600 hover:bg-purple-500 text-white disabled:bg-neutral-700 disabled:text-muted"
+              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-purple-600 hover:bg-purple-500 text-white disabled:bg-inset disabled:text-muted"
             >
               {ocrLoading ? (
                 <RefreshCw size={12} className="animate-spin" />
@@ -462,7 +462,7 @@ export default function PortfolioPage() {
           <div className="flex items-center gap-2">
             {portfolioSaveResult && (
               <span className={`text-xs flex items-center gap-1 ${
-                portfolioSaveResult.success ? "text-green-400" : "text-red-400"
+                portfolioSaveResult.success ? "text-green-400" : "text-negative"
               }`}>
                 {portfolioSaveResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                 {portfolioSaveResult.message}
@@ -471,7 +471,7 @@ export default function PortfolioPage() {
             <button
               onClick={savePortfolioState}
               disabled={portfolioSaving || portfolioStateLoading}
-              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-blue-600 hover:bg-blue-500 text-white disabled:bg-neutral-700 disabled:text-muted"
+              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-info hover:bg-info/80 text-white disabled:bg-inset disabled:text-muted"
             >
               {portfolioSaving ? (
                 <RefreshCw size={12} className="animate-spin" />
@@ -482,10 +482,10 @@ export default function PortfolioPage() {
             </button>
           </div>
         </div>
-        <div className="p-4 bg-blue-900/10">
-          <div className="text-xs text-blue-400">
+        <div className="p-4 bg-info-tint">
+          <div className="text-xs text-info">
             <strong className="block mb-1">알림 조건:</strong>
-            <ul className="list-disc list-inside space-y-0.5 text-blue-400/80">
+            <ul className="list-disc list-inside space-y-0.5 text-info/80">
               <li>BUY 신호 + SGOV 보유 → 알림 발송</li>
               <li>SELL 신호 + TQQQ 보유 → 알림 발송</li>
               <li>해당 자산이 없으면 알림 없음</li>
@@ -511,8 +511,8 @@ export default function PortfolioPage() {
           <div className="flex items-center gap-2">
             <span className={`text-xs px-2 py-1 rounded-full ${
               dataSource === "REAL" 
-                ? "bg-positive/20 text-positive border border-positive/30" 
-                : "bg-amber-900/30 text-amber-400 border border-amber-700/30"
+                ? "bg-positive-tint text-positive border border-positive/30" 
+                : "bg-choppy-tint text-choppy border border-choppy/30"
             }`}>
               {dataSource}
             </span>
@@ -561,8 +561,8 @@ export default function PortfolioPage() {
         <div className="flex items-center gap-2">
           <span className={`text-xs px-2 py-1 rounded-full ${
             dataSource === "REAL" 
-              ? "bg-positive/20 text-positive border border-positive/30" 
-              : "bg-amber-900/30 text-amber-400 border border-amber-700/30"
+              ? "bg-positive-tint text-positive border border-positive/30" 
+              : "bg-choppy-tint text-choppy border border-choppy/30"
           }`}>
             {dataSource}
           </span>
@@ -599,9 +599,27 @@ export default function PortfolioPage() {
             보유 종목
             <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Holdings</span>
           </h2>
+          {vm && (
+            <div className="mb-4 flex items-center gap-3 rounded-lg border border-border bg-inset/50 px-4 py-2.5 text-sm">
+              <span className="text-muted">전략 상태</span>
+              <span className={`font-bold ${
+                vm.strategyState === "ON" ? "text-positive" :
+                vm.strategyState === "ON_CHOPPY" ? "text-choppy" :
+                vm.strategyState === "EMERGENCY" ? "text-negative" :
+                "text-info"
+              }`}>
+                {vm.strategyState}
+              </span>
+              <span className="text-border">|</span>
+              <span className="text-muted">TQQQ 목표</span>
+              <span className="font-bold font-mono text-fg">{(vm.targetTqqqWeight * 100).toFixed(0)}%</span>
+            </div>
+          )}
           <PortfolioPositionsTable 
              positions={portfolio.positions} 
-             totalEquity={portfolio.derived.totalEquity} 
+             totalEquity={portfolio.derived.totalEquity}
+             strategyState={vm?.strategyState}
+             targetTqqqWeight={vm?.targetTqqqWeight}
           />
         </div>
 

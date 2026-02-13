@@ -12,6 +12,7 @@ export interface AppSettings {
   currency: "KRW" | "USD";
   compactMode: boolean;
   viewMode: ViewMode;
+  defaultChartTab: "equity" | "heatmap" | "decomposition";
   
   // B. Mode
   simulationMode: boolean;
@@ -50,6 +51,7 @@ const defaultSettings: AppSettings = {
   currency: "KRW",
   compactMode: false,
   viewMode: "simple",
+  defaultChartTab: "equity",
   
   simulationMode: true,
   privacyMode: false,

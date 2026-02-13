@@ -1,27 +1,28 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useSettingsStore } from "@/lib/stores/settings-store";
+import { applyThemeToDOM } from "@/lib/theme";
 
 export function ThemeToggle() {
-  const [isDark, setIsDark] = useState(false);
+  const theme = useSettingsStore((s) => s.theme);
+  const setSetting = useSettingsStore((s) => s.setSetting);
 
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains("dark"));
-  }, []);
-
-  const toggle = () => {
-    const next = !isDark;
-    setIsDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    try { localStorage.setItem("theme", next ? "dark" : "light"); } catch {}
+  const cycle = () => {
+    const order = ["dark", "light", "system"] as const;
+    const idx = order.indexOf(theme);
+    const next = order[(idx + 1) % order.length];
+    applyThemeToDOM(next);
+    setSetting("theme", next);
   };
+
+  const label = theme === "dark" ? "Dark" : theme === "light" ? "Light" : "System";
 
   return (
     <button
-      onClick={toggle}
+      onClick={cycle}
       className="rounded-lg bg-inset px-3 py-2 text-sm text-fg hover:opacity-90"
       aria-label="Toggle theme"
     >
-      {isDark ? "Dark" : "Light"}
+      {label}
     </button>
   );
 }

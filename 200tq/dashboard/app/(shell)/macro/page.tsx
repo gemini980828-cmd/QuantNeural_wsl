@@ -60,19 +60,19 @@ export default function MacroPage() {
 
   const getCircleColor = (color: ColorTone): string => {
     switch (color) {
-      case 'ok': return 'bg-emerald-500';
-      case 'action': return 'bg-amber-500';
-      case 'danger': return 'bg-red-500';
-      default: return 'bg-neutral-500';
+      case 'ok': return 'bg-positive';
+      case 'action': return 'bg-choppy';
+      case 'danger': return 'bg-negative';
+      default: return 'bg-muted';
     }
   };
 
   const getTextColor = (color: ColorTone): string => {
     switch (color) {
-      case 'ok': return 'text-emerald-400';
-      case 'action': return 'text-amber-400';
-      case 'danger': return 'text-red-400';
-      default: return 'text-neutral-400';
+      case 'ok': return 'text-positive';
+      case 'action': return 'text-choppy';
+      case 'danger': return 'text-negative';
+      default: return 'text-muted';
     }
   };
 
@@ -80,7 +80,7 @@ export default function MacroPage() {
     if (change === null || change === undefined || change === 0) return 'text-muted';
     const isPositive = change > 0;
     const isGood = inverted ? !isPositive : isPositive;
-    return isGood ? 'text-emerald-400' : 'text-red-400';
+    return isGood ? 'text-positive' : 'text-negative';
   };
 
   const formatChange = (change: number | null | undefined, isPoints: boolean = false): string => {
@@ -109,7 +109,7 @@ export default function MacroPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-fg flex items-center gap-3">
-          <Globe size={24} className="text-cyan-400" />
+          <Globe size={24} className="text-accent" />
           매크로 상황판
           <span className="text-sm font-normal text-muted bg-surface px-2.5 py-0.5 rounded-full border border-border">
             Macro Intel
@@ -129,7 +129,7 @@ export default function MacroPage() {
         <button
           onClick={() => setTab("indicators")}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-            tab === "indicators" ? "bg-neutral-800 text-white" : "text-muted hover:bg-surface"
+            tab === "indicators" ? "bg-inset text-white" : "text-muted hover:bg-surface"
           }`}
         >
           지표
@@ -137,7 +137,7 @@ export default function MacroPage() {
         <button
           onClick={() => setTab("news")}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-            tab === "news" ? "bg-neutral-800 text-white" : "text-muted hover:bg-surface"
+            tab === "news" ? "bg-inset text-white" : "text-muted hover:bg-surface"
           }`}
         >
           뉴스
@@ -149,7 +149,7 @@ export default function MacroPage() {
         <div className="space-y-6">
           {/* Category 1: Volatility & Sentiment */}
           <CategorySection 
-            icon={<BarChart3 size={16} className="text-amber-400" />} 
+            icon={<BarChart3 size={16} className="text-choppy" />} 
             title="변동성 & 센티먼트"
           >
             <IndicatorCard 
@@ -182,7 +182,7 @@ export default function MacroPage() {
 
           {/* Category 2: Rates & Credit */}
           <CategorySection 
-            icon={<Percent size={16} className="text-blue-400" />} 
+            icon={<Percent size={16} className="text-info" />} 
             title="금리 & 크레딧"
           >
             <IndicatorCard 
@@ -228,7 +228,7 @@ export default function MacroPage() {
 
           {/* Category 3: Markets & Futures */}
           <CategorySection 
-            icon={<TrendingUp size={16} className="text-emerald-400" />} 
+            icon={<TrendingUp size={16} className="text-positive" />} 
             title="시장 & 선물"
           >
             <IndicatorCard 
@@ -256,7 +256,7 @@ export default function MacroPage() {
 
           {/* Category 4: FX & Commodities */}
           <CategorySection 
-            icon={<DollarSign size={16} className="text-cyan-400" />} 
+            icon={<DollarSign size={16} className="text-accent" />} 
             title="통화 & 원자재"
           >
             <IndicatorCard 
@@ -305,7 +305,7 @@ export default function MacroPage() {
       )}
 
       {data?.updatedAt && (
-        <p className="text-[10px] text-muted text-right">
+        <p className="text-[11px] text-muted text-right">
           Last updated: {new Date(data.updatedAt).toLocaleString()}
         </p>
       )}
@@ -329,9 +329,9 @@ function IndicatorCard({
   if (loading) {
     return (
       <div className="bg-surface rounded-xl border border-border p-4 h-32 animate-pulse">
-        <div className="h-4 w-20 bg-neutral-800 rounded mb-4" />
-        <div className="h-8 w-24 bg-neutral-800 rounded mb-2" />
-        <div className="h-3 w-16 bg-neutral-800 rounded" />
+        <div className="h-4 w-20 bg-inset rounded mb-4" />
+        <div className="h-8 w-24 bg-inset rounded mb-2" />
+        <div className="h-3 w-16 bg-inset rounded" />
       </div>
     );
   }
@@ -341,11 +341,11 @@ function IndicatorCard({
   const Icon = isZero ? Minus : (isPositive ? ArrowUpRight : ArrowDownRight);
 
   return (
-    <div className="bg-surface rounded-xl border border-border p-4 transition-all hover:border-neutral-700">
+    <div className="bg-surface rounded-xl border border-border p-4 transition-all hover:border-border">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-medium text-muted uppercase tracking-tight">{title}</span>
-          {subtitle && <span className="text-[10px] text-neutral-600">{subtitle}</span>}
+          {subtitle && <span className="text-[11px] text-muted">{subtitle}</span>}
         </div>
         {statusColor && <div className={`w-2 h-2 rounded-full ${statusColor}`} />}
       </div>
@@ -353,7 +353,7 @@ function IndicatorCard({
         <div className={`text-2xl font-bold tracking-tight ${valueColor || 'text-fg'}`}>
           {value}
         </div>
-        {label && <span className="text-[10px] text-muted font-medium">{label}</span>}
+        {label && <span className="text-[11px] text-muted font-medium">{label}</span>}
       </div>
       <div className={`flex items-center gap-0.5 text-xs font-mono mt-1 ${changeColor}`}>
         <Icon size={12} />

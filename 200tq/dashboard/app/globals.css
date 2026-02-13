@@ -4,25 +4,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme: class-based dark mode ─────────────────────────────── */
+html.light, html.light * { color-scheme: only light; }
+html.dark,  html.dark  * { color-scheme: dark; }
+
 :root {
   /* fonts */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* surfaces */
-  --bg: 246 247 251;       /* #F6F7FB */
-  --surface: 255 255 255;  /* #FFFFFF */
-  --inset: 240 242 246;    /* #F0F2F6 */
-  --border: 230 232 239;   /* #E6E8EF */
+  --bg: 241 245 249;       /* #F1F5F9 (slate-100) — off-white page bg */
+  --surface: 255 255 255;  /* #FFFFFF — cards stay pure white */
+  --inset: 226 232 240;    /* #E2E8F0 (slate-200) — gauge tracks / inputs */
+  --border: 203 213 225;   /* #CBD5E1 (slate-300) — visible card edges */
 
   /* text */
-  --fg: 17 19 24;          /* #111318 */
-  --muted: 94 101 114;     /* #5E6572 */
+  --fg: 15 23 42;          /* #0F172A */
+  --muted: 51 65 85;       /* #334155 (slate-700) */
+  --muted-subtle: 100 116 139; /* #64748B (slate-500) */
 
   /* semantic colors */
-  --positive: 16 185 129;  /* #10B981 - Fintech Green (emerald-500) */
-  --choppy: 245 158 11;    /* amber-500 */
-  --negative: 248 113 113; /* red-400 (brighter for accessibility) */
+  --positive: 5 150 105;   /* #059669 (emerald-600) */
+  --choppy: 217 119 6;     /* #D97706 (amber-600) */
+  --negative: 220 38 38;   /* #DC2626 (red-600) */
+
+  /* info / accent */
+  --info: 37 99 235;       /* #2563EB (blue-600) */
+  --accent: 8 145 178;     /* #0891B2 (cyan-600) */
+
+  /* badge tint backgrounds (solid, mode-aware) */
+  --positive-tint: 209 250 229;  /* #D1FAE5 (emerald-100) */
+  --negative-tint: 254 226 226;  /* #FEE2E2 (red-100) */
+  --choppy-tint: 254 243 199;    /* #FEF3C7 (amber-100) */
+  --info-tint: 219 234 254;      /* #DBEAFE (blue-100) */
+  --accent-tint: 207 250 254;    /* #CFFAFE (cyan-100) */
 
   /* Strategy strips (Story Mode chart) */
   --strip-e03-on: #10b981;     /* emerald-500 */
@@ -33,8 +49,8 @@
   --strip-200tq-overheat: #f97316; /* orange-500 */
 
   /* status (semantic) */
-  --status-inactive-bg: 238 240 244; /* light inactive */
-  --status-inactive-fg: 91 97 109;
+  --status-inactive-bg: 241 245 249; /* light inactive */
+  --status-inactive-fg: 71 85 105;
 
   --status-action-bg: 245 158 11;    /* amber-500-ish */
   --status-action-fg: 17 19 24;
@@ -43,11 +59,11 @@
   --status-danger-fg: 255 255 255;
 }
 
-.dark {
+html.dark {
   --bg: 11 15 20;          /* #0B0F14 (Reference Grade) */
-  --surface: 17 24 39;     /* #111827 */
+  --surface: 25 32 50;     /* #191F32 — bumped +8% luminance for card visibility */
   --inset: 15 23 42;       /* #0F172A */
-  --border: 31 41 55;      /* #1F2937 */
+  --border: 45 55 72;      /* #2D3748 — bumped for visible card edges */
 
   --fg: 230 230 232;
   --muted: 180 185 191;    /* #B4B9BF - bumped up for better contrast */
@@ -57,6 +73,10 @@
   --positive: 52 211 153;  /* #34D399 - Fintech Green (emerald-400) */
   --choppy: 251 191 36;    /* amber-400 */
   --negative: 252 165 165; /* red-300 (salmon/coral for dark bg) */
+
+  /* info / accent — brighter for dark bg */
+  --info: 96 165 250;      /* #60A5FA - blue-400 */
+  --accent: 34 211 238;    /* #22D3EE - cyan-400 */
 
   /* Strategy strips (Story Mode chart) - brighter for dark bg */
   --strip-e03-on: #34d399;     /* emerald-400 */
@@ -74,12 +94,19 @@
 
   --status-danger-bg: 239 68 68;
   --status-danger-fg: 255 255 255;
+
+  --positive-tint: 6 78 59;       /* #064E3B (emerald-900) */
+  --negative-tint: 127 29 29;     /* #7F1D1D (red-900) */
+  --choppy-tint: 120 53 15;       /* #78350F (amber-900) */
+  --info-tint: 30 58 138;         /* #1E3A8A (blue-900) */
+  --accent-tint: 22 78 99;        /* #164E63 (cyan-900) */
 }
 
 body {
   color: rgb(var(--fg));
   background: rgb(var(--bg));
   font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
 }
 /* Custom color classes for SVG text - uses !important to override Tailwind/body inheritance */
 .fill-blue-force {

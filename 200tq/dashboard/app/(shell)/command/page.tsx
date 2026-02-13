@@ -305,23 +305,23 @@ export default function CommandPage({
       {/* REAL mode indicator + STALE warning */}
       {dataSource === "REAL" && (
         <div className="flex items-center gap-2 text-xs mb-4 flex-wrap">
-          <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full font-medium">
+          <span className="px-2 py-0.5 bg-positive-tint text-positive rounded-full font-medium">
             REAL DATA
           </span>
           {portfolioState && (
-            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full font-medium flex items-center gap-1">
+            <span className="px-2 py-0.5 bg-info-tint text-info rounded-full font-medium flex items-center gap-1">
               <Wallet className="w-3 h-3" />
               TQQQ {portfolioState.tqqq}주 / SGOV {portfolioState.sgov}주
             </span>
           )}
           {vmWithRecord.dataState === "STALE" && (
-            <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded-full font-medium flex items-center gap-1">
+            <span className="px-2 py-0.5 bg-choppy-tint text-choppy rounded-full font-medium flex items-center gap-1">
               <AlertTriangle className="w-3 h-3" />
               데이터 지연 - 전일 유지
             </span>
           )}
           {error && (
-            <span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded-full font-medium flex items-center gap-1">
+            <span className="px-2 py-0.5 bg-negative-tint text-negative rounded-full font-medium flex items-center gap-1">
               <AlertTriangle className="w-3 h-3" />
               API 오류 - MOCK으로 대체
             </span>
@@ -329,8 +329,8 @@ export default function CommandPage({
         </div>
       )}
 
-      {/* Dev Tools: Scenario Switcher (only in MOCK mode or when devScenario enabled) */}
-      {(dataSource === "MOCK" || devScenarioEnabled) && (
+      {/* Dev Tools: Scenario Switcher — hidden in production */}
+      {process.env.NODE_ENV !== 'production' && (dataSource === "MOCK" || devScenarioEnabled) && (
         <div className="flex gap-3 text-xs items-center mb-6 pl-1 opacity-70 hover:opacity-100 transition-opacity duration-300">
             <span className="uppercase font-bold tracking-widest text-muted dark:text-muted select-none">Dev Scenario</span>
             <div className="flex gap-1">
@@ -340,8 +340,8 @@ export default function CommandPage({
                   href={`/command?scenario=${id}`}
                   className={`px-2 py-0.5 rounded-full transition-all ${
                     currentScenario === id 
-                      ? "bg-neutral-200 dark:bg-surface text-neutral-900 dark:text-neutral-200 font-medium shadow-sm" 
-                      : "text-muted dark:text-muted hover:text-neutral-900 dark:hover:text-fg hover:bg-neutral-200/50 dark:hover:bg-inset/50"
+                      ? "bg-inset text-fg font-medium shadow-sm" 
+                      : "text-muted hover:text-fg hover:bg-inset/50"
                   }`}
                 >
                   {scenarioLabels[id]}
@@ -352,11 +352,11 @@ export default function CommandPage({
       )}
 
       {/* Main Command Center UI */}
-      <div className="relative">
+      <div className={`relative ${simMode ? 'border-[4px] border-dashed border-amber-500 rounded-xl' : ''}`}>
         {simMode && (
-           <div className="absolute inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden opacity-5">
-              <div className="text-[15vw] font-black text-amber-500 -rotate-12 select-none whitespace-nowrap">
-                 SIMULATION
+           <div className="absolute inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden opacity-[0.08]">
+              <div className="text-[15vw] font-black text-choppy -rotate-12 select-none whitespace-nowrap">
+                 SIMULATION MODE
               </div>
            </div>
         )}
@@ -364,8 +364,6 @@ export default function CommandPage({
         <div>
           <ZoneAHeader 
              vm={vmWithRecord} 
-             onToggleSimulation={toggleSim}
-             onTogglePrivacy={togglePriv}
              unresolvedAlerts={unresolvedAlerts}
           />
           
@@ -378,6 +376,29 @@ export default function CommandPage({
             />
           ) : (
             <div>
+              {(() => {
+                const totalValue = vmWithRecord.portfolio?.derived?.totalEquity ?? vmWithRecord.inputTotalValueKrw ?? 0;
+                const dailyPnL = vmWithRecord.portfolio?.derived?.dailyPnL ?? 0;
+                const dailyPnLPct = vmWithRecord.portfolio?.derived?.dailyPnLPct ?? 0;
+                const isPositive = dailyPnL >= 0;
+                return (
+                  <div className="flex items-center justify-between px-4 py-2.5 mb-4 rounded-lg bg-surface border border-border">
+                    <div className="flex items-center gap-2 text-sm text-muted">
+                      <Wallet size={14} />
+                      <span className="font-sans">총 자산</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg font-bold text-fg font-mono">
+                        {vmWithRecord.privacyMode ? "***" : `₩${totalValue.toLocaleString('ko-KR')}`}
+                      </span>
+                      <span className={`text-sm font-mono ${isPositive ? 'text-positive' : 'text-negative'}`}>
+                        {vmWithRecord.privacyMode ? '***' : `${isPositive ? '+' : ''}${dailyPnLPct.toFixed(2)}%`}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <ZoneBSignalCore 
                 vm={vmWithRecord} 
                 selectedPeriod={selectedPeriod}
@@ -387,18 +408,18 @@ export default function CommandPage({
                 onDateRangeChange={handleDateRangeChange}
               />
               
-              <div className="h-8" />
-
-              <PortfolioSummaryStrip portfolio={vmWithRecord.portfolio} />
-              
-              <div className="h-4" />
+              <div className="h-6" />
               
               <ZoneCOpsConsole 
                  vm={vmWithRecord} 
                  onRecordSuccess={() => setRecordUpdateTrigger(p => p + 1)} 
               />
+
+              <div className="h-6" />
+
+              <PortfolioSummaryStrip portfolio={vmWithRecord.portfolio} />
               
-              <div className="h-24" />
+              <div className="h-6" />
               
               <ZoneDIntelLab 
                 vm={vmWithRecord} 
@@ -416,7 +437,7 @@ export default function CommandPage({
         <summary className="text-xs text-muted cursor-pointer hover:text-fg">
            Debug JSON View
         </summary>
-        <pre suppressHydrationWarning className="mt-4 p-4 bg-black rounded-lg border border-border text-green-900 text-[10px] overflow-auto max-h-[400px] font-mono whitespace-pre">
+        <pre suppressHydrationWarning className="mt-4 p-4 bg-black rounded-lg border border-border text-green-900 text-[11px] overflow-auto max-h-[400px] font-mono whitespace-pre">
            {JSON.stringify({ 
              ...vmWithRecord,
              dataSource,

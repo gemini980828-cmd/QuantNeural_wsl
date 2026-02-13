@@ -105,13 +105,13 @@ export default function RecordModal({ isOpen, onClose, onSave, executionDateLabe
   const hasAutoFillData = Object.keys(tradeSuggestions).length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/80 backdrop-blur-sm p-4">
        <div className="bg-surface border border-border rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-5 max-h-[90vh] overflow-y-auto">
           <div className="flex justify-between items-center">
              <div className="flex items-center gap-2">
                <h3 className="text-lg font-bold text-fg font-sans">실행 기록</h3>
                {hasAutoFillData && autoFilled && (
-                 <span className="flex items-center gap-1 text-[10px] bg-positive/10 text-positive px-2 py-0.5 rounded-full font-sans">
+                 <span className="flex items-center gap-1 text-[11px] bg-positive-tint text-positive px-2 py-0.5 rounded-full font-sans">
                    <Sparkles size={10} />
                    자동 입력됨
                  </span>
@@ -129,7 +129,7 @@ export default function RecordModal({ isOpen, onClose, onSave, executionDateLabe
 
              {/* Validation Error */}
              {validationError && (
-               <div className="flex items-center gap-2 p-3 bg-negative/10 text-negative text-sm rounded-lg border border-negative/20">
+               <div className="flex items-center gap-2 p-3 bg-negative-tint text-negative text-sm rounded-lg border border-negative/20">
                  <AlertCircle size={16} />
                  {validationError}
                </div>
@@ -143,8 +143,8 @@ export default function RecordModal({ isOpen, onClose, onSave, executionDateLabe
                        <div className="flex items-center justify-between">
                          <span className="text-sm font-bold text-fg font-sans">{ticker}</span>
                          {suggestion && (
-                           <span className={`text-[10px] px-1.5 py-0.5 rounded font-sans ${
-                             suggestion.action === "BUY" ? "bg-positive/10 text-positive" : "bg-negative/10 text-negative"
+                           <span className={`text-[11px] px-1.5 py-0.5 rounded font-sans ${
+                             suggestion.action === "BUY" ? "bg-positive-tint text-positive" : "bg-negative-tint text-negative"
                            }`}>
                              예상: {suggestion.action} {suggestion.shares}주
                            </span>
@@ -154,7 +154,7 @@ export default function RecordModal({ isOpen, onClose, onSave, executionDateLabe
                        <div className="grid grid-cols-2 gap-2">
                          {/* Shares Input */}
                          <div className="space-y-1">
-                           <label className="text-[10px] font-medium text-muted font-sans">체결 수량</label>
+                           <label className="text-[11px] font-medium text-muted font-sans">체결 수량</label>
                            <input 
                              type="number" 
                              className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-fg font-mono text-sm focus:border-positive focus:outline-none focus:ring-1 focus:ring-positive placeholder-muted"
@@ -166,7 +166,7 @@ export default function RecordModal({ isOpen, onClose, onSave, executionDateLabe
                          
                          {/* Price Input */}
                          <div className="space-y-1">
-                           <label className="text-[10px] font-medium text-muted font-sans">
+                           <label className="text-[11px] font-medium text-muted font-sans">
                              체결가 <span className="text-negative">*</span>
                            </label>
                            <div className="relative">
@@ -205,7 +205,7 @@ export default function RecordModal({ isOpen, onClose, onSave, executionDateLabe
                saveSuccess 
                  ? "bg-positive text-white cursor-default" 
                  : isSaving
-                 ? "bg-neutral-600 text-neutral-400 cursor-wait"
+                  ? "bg-inset text-muted cursor-wait"
                  : "bg-positive hover:bg-positive/90 text-white"
              }`}
           >

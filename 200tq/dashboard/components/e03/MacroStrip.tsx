@@ -23,17 +23,17 @@ interface MacroStripProps {
 
 function getCircleColor(color: ColorTone): string {
   switch (color) {
-    case 'ok': return 'bg-emerald-500';
-    case 'action': return 'bg-amber-500';
-    case 'danger': return 'bg-red-500';
+    case 'ok': return 'bg-positive';
+    case 'action': return 'bg-choppy';
+    case 'danger': return 'bg-negative';
   }
 }
 
 function getTextColor(color: ColorTone): string {
   switch (color) {
-    case 'ok': return 'text-emerald-400';
-    case 'action': return 'text-amber-400';
-    case 'danger': return 'text-red-400';
+    case 'ok': return 'text-positive';
+    case 'action': return 'text-choppy';
+    case 'danger': return 'text-negative';
   }
 }
 
@@ -41,7 +41,7 @@ function getChangeColor(change: number | null | undefined, inverted: boolean): s
   if (change === null || change === undefined || change === 0) return 'text-muted';
   const isPositive = change > 0;
   const isGood = inverted ? !isPositive : isPositive;
-  return isGood ? 'text-emerald-400' : 'text-red-400';
+  return isGood ? 'text-positive' : 'text-negative';
 }
 
 function formatChange(change: number | null | undefined, isPoints: boolean = false): string {
@@ -74,7 +74,7 @@ export default function MacroStrip({ data, isLoading, condensed = false }: Macro
 
   if (isLoading) {
     return (
-      <div className="bg-surface rounded-lg shadow-sm px-4 py-2 mt-2">
+      <div className="bg-surface rounded-lg border border-border shadow-sm px-4 py-2 mt-2">
         <div className="flex items-center gap-2 text-xs text-muted">
           <Globe size={12} />
           <span>매크로 지표 로딩...</span>
@@ -87,7 +87,7 @@ export default function MacroStrip({ data, isLoading, condensed = false }: Macro
   const fngColor = data?.fng.color || 'action';
 
   return (
-    <div className="bg-surface rounded-lg shadow-sm px-4 py-3 mt-3">
+    <div className="bg-surface rounded-lg border border-border shadow-sm px-4 py-3 mt-3">
       <div className="flex items-center text-sm">
         <Globe size={14} className="text-muted shrink-0 mr-4" />
         

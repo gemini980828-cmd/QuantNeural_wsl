@@ -26,31 +26,31 @@ interface SimpleViewProps {
 function getVerdictStyle(strategyState: E03ViewModel["strategyState"]): { bg: string; text: string; icon: React.ReactNode; label: string } {
   if (strategyState === "ON") {
     return { 
-      bg: "bg-emerald-500/20 border-emerald-500/30", 
-      text: "text-emerald-400",
+      bg: "bg-positive-tint border-positive/30", 
+      text: "text-positive",
       icon: <TrendingUp className="w-6 h-6" />,
       label: "ON (100% TQQQ)"
     };
   }
   if (strategyState === "ON_CHOPPY") {
     return {
-      bg: "bg-amber-500/20 border-amber-500/30",
-      text: "text-amber-400",
+      bg: "bg-choppy-tint border-choppy/30",
+      text: "text-choppy",
       icon: <TrendingDown className="w-6 h-6" />,
       label: "ON-CHOPPY (TQQQ 70%)"
     };
   }
   if (strategyState === "EMERGENCY") {
     return {
-      bg: "bg-red-500/20 border-red-500/30",
-      text: "text-red-400",
+      bg: "bg-negative-tint border-negative/30",
+      text: "text-negative",
       icon: <AlertTriangle className="w-6 h-6" />,
       label: "EMERGENCY (TQQQ 10%)"
     };
   }
   return { 
-    bg: "bg-amber-500/20 border-amber-500/30", 
-    text: "text-amber-400",
+    bg: "bg-choppy-tint border-choppy/30", 
+    text: "text-choppy",
     icon: <TrendingDown className="w-6 h-6" />,
     label: "OFF10 (10% TQQQ)"
   };
@@ -78,7 +78,7 @@ export default function SimpleView({ vm, macroData, macroLoading, onSwitchToPro 
         <p className="text-4xl sm:text-5xl font-bold text-fg font-mono">
           {formatKRW(totalValue, vm.privacyMode)}
         </p>
-        <p className={`text-lg font-mono ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+        <p className={`text-lg font-mono ${isPositive ? 'text-positive' : 'text-negative'}`}>
           {vm.privacyMode ? '***' : (
             <>
               {isPositive ? '+' : ''}{dailyPnLPct.toFixed(2)}%
@@ -101,8 +101,8 @@ export default function SimpleView({ vm, macroData, macroLoading, onSwitchToPro 
       {hasEmergency && (
         <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
           isHardEmergency 
-            ? "bg-red-500/20 text-red-400 border border-red-500/30" 
-            : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+            ? "bg-negative-tint text-negative border border-negative/30" 
+            : "bg-choppy-tint text-choppy border border-choppy/30"
         }`}>
           <AlertTriangle className={`w-4 h-4 ${isHardEmergency ? "animate-pulse" : ""}`} />
           <span className="text-sm font-medium">

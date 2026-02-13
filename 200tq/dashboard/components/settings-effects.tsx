@@ -1,49 +1,31 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { useSettingsStore } from "@/lib/stores/settings-store";
+import { applyThemeToDOM } from "@/lib/theme";
 
-/**
- * SettingsEffects component applies settings to the DOM.
- * Should be placed once at the root of the app.
- */
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 export function SettingsEffects() {
   const theme = useSettingsStore((s) => s.theme);
   const compactMode = useSettingsStore((s) => s.compactMode);
   const hasHydrated = useSettingsStore((s) => s._hasHydrated);
 
-  // Apply theme (supports system/dark/light)
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!hasHydrated) return;
-    
-    const root = document.documentElement;
-    
-    const applyTheme = (isDark: boolean) => {
-      if (isDark) {
-        root.classList.remove("light");
-        root.classList.add("dark");
-      } else {
-        root.classList.remove("dark");
-        root.classList.add("light");
-      }
-    };
-    
+    applyThemeToDOM(theme);
+
     if (theme === "system") {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      applyTheme(mediaQuery.matches);
-      
-      const handler = (e: MediaQueryListEvent) => applyTheme(e.matches);
-      mediaQuery.addEventListener('change', handler);
-      return () => mediaQuery.removeEventListener('change', handler);
-    } else {
-      applyTheme(theme === "dark");
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      const handler = () => applyThemeToDOM("system");
+      mq.addEventListener("change", handler);
+      return () => mq.removeEventListener("change", handler);
     }
   }, [theme, hasHydrated]);
 
-  // Apply compact mode
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!hasHydrated) return;
-    
     const root = document.documentElement;
     if (compactMode) {
       root.classList.add("compact");

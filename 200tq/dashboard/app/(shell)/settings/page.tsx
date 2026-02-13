@@ -6,6 +6,7 @@ import {
   Database, Shield, AlertTriangle, Check, Send, MessageSquare, RefreshCw, CheckCircle2, XCircle, Archive
 } from "lucide-react";
 import { useSettingsStore, type AppSettings } from "@/lib/stores/settings-store";
+import { applyThemeToDOM } from "@/lib/theme";
 
 // Toggle Switch Component
 function Toggle({ 
@@ -23,7 +24,7 @@ function Toggle({
       disabled={disabled}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
         disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
-      } ${enabled ? "bg-blue-600" : "bg-neutral-700"}`}
+      } ${enabled ? "bg-info" : "bg-inset"}`}
     >
       <span
         className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -97,7 +98,7 @@ function Select<T extends string>({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value as T)}
-      className="bg-inset border border-border rounded-lg px-3 py-1.5 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+      className="bg-inset border border-border rounded-lg px-3 py-1.5 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-info/50"
     >
       {options.map((opt) => (
         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -114,6 +115,7 @@ export default function SettingsPage() {
     decimalPlaces,
     currency,
     compactMode,
+    defaultChartTab,
     simulationMode,
     privacyMode,
     devScenario,
@@ -209,7 +211,7 @@ export default function SettingsPage() {
             href="#mode-section"
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               simulationMode 
-                ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30" 
+                ? "bg-choppy-tint text-choppy border border-choppy/30 hover:bg-choppy/30" 
                 : "bg-surface text-muted hover:bg-surface"
             }`}
           >
@@ -253,27 +255,27 @@ export default function SettingsPage() {
         <SettingsRow label="테마" description="시스템/다크/라이트 모드 전환">
           <div className="flex gap-1 bg-inset dark:bg-inset p-1 rounded-lg">
             <button
-              onClick={() => setSetting("theme", "system")}
+              onClick={() => { applyThemeToDOM("system"); setSetting("theme", "system"); }}
               className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${
-                theme === "system" ? "bg-neutral-700 text-white" : "text-muted"
+                theme === "system" ? "bg-inset text-white" : "text-muted"
               }`}
             >
               <Monitor size={12} />
               System
             </button>
             <button
-              onClick={() => setSetting("theme", "dark")}
+              onClick={() => { applyThemeToDOM("dark"); setSetting("theme", "dark"); }}
               className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${
-                theme === "dark" ? "bg-neutral-700 text-white" : "text-muted"
+                theme === "dark" ? "bg-inset text-white" : "text-muted"
               }`}
             >
               <Moon size={12} />
               Dark
             </button>
             <button
-              onClick={() => setSetting("theme", "light")}
+              onClick={() => { applyThemeToDOM("light"); setSetting("theme", "light"); }}
               className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${
-                theme === "light" ? "bg-neutral-700 text-white" : "text-muted"
+                theme === "light" ? "bg-inset text-white" : "text-muted"
               }`}
             >
               <Sun size={12} />
@@ -308,6 +310,17 @@ export default function SettingsPage() {
         <SettingsRow label="컴팩트 모드" description="UI 요소 간격 축소">
           <Toggle enabled={compactMode} onChange={(v) => setSetting("compactMode", v)} />
         </SettingsRow>
+        <SettingsRow label="차트 기본 탭" description="Analysis 페이지 기본 표시">
+          <Select
+            value={defaultChartTab}
+            onChange={(v) => setSetting("defaultChartTab", v)}
+            options={[
+              { value: "equity", label: "수익률 곡선" },
+              { value: "heatmap", label: "히트맵" },
+              { value: "decomposition", label: "성과 분해" },
+            ]}
+          />
+        </SettingsRow>
       </SettingsSection>
 
       {/* B. Mode */}
@@ -315,7 +328,7 @@ export default function SettingsPage() {
         <SettingsRow label="시뮬레이션 모드" description="실제 주문 없이 테스트 실행">
           <div className="flex items-center gap-2">
             {simulationMode && (
-              <span className="text-[10px] font-bold text-amber-400 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-900/50">
+              <span className="text-[11px] font-bold text-choppy bg-choppy-tint px-2 py-0.5 rounded border border-choppy/30">
                 SIM
               </span>
             )}
@@ -331,7 +344,7 @@ export default function SettingsPage() {
         <SettingsRow label="Dev Scenario" description="개발용 시나리오 모드">
           <div className="flex items-center gap-2">
             {devScenario && (
-              <span className="text-[10px] font-bold text-purple-400 bg-purple-950/30 px-2 py-0.5 rounded border border-purple-900/50">
+              <span className="text-[11px] font-bold text-purple-400 bg-purple-950/30 px-2 py-0.5 rounded border border-purple-900/50">
                 DEV
               </span>
             )}
@@ -344,7 +357,7 @@ export default function SettingsPage() {
       <SettingsSection id="notifications-section" title="알림" badge="Notifications" icon={Bell}>
         <SettingsRow label="알림 활성화" description="모든 알림 끄기/켜기">
           <div className="flex items-center gap-2">
-            {notificationsEnabled ? <Bell size={14} className="text-blue-400" /> : <BellOff size={14} className="text-muted" />}
+            {notificationsEnabled ? <Bell size={14} className="text-info" /> : <BellOff size={14} className="text-muted" />}
             <Toggle enabled={notificationsEnabled} onChange={(v) => setSetting("notificationsEnabled", v)} />
           </div>
         </SettingsRow>
@@ -374,7 +387,7 @@ export default function SettingsPage() {
                 연결됨
               </span>
             ) : (
-              <span className="text-xs text-red-400 flex items-center gap-1 bg-red-900/30 px-2 py-1 rounded-lg border border-red-700/30">
+              <span className="text-xs text-negative flex items-center gap-1 bg-negative-tint px-2 py-1 rounded-lg border border-negative/30">
                 <XCircle size={12} />
                 미설정
               </span>
@@ -399,7 +412,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-2">
             {telegramTestResult && (
               <span className={`text-xs flex items-center gap-1 ${
-                telegramTestResult.success ? "text-green-400" : "text-red-400"
+                telegramTestResult.success ? "text-green-400" : "text-negative"
               }`}>
                 {telegramTestResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                 {telegramTestResult.message}
@@ -410,7 +423,7 @@ export default function SettingsPage() {
               disabled={!telegramConfigured || telegramLoading}
               className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
                 telegramConfigured 
-                  ? "bg-blue-600 hover:bg-blue-500 text-white" 
+                  ? "bg-info hover:bg-info/80 text-white" 
                   : "bg-surface text-muted cursor-not-allowed"
               }`}
             >
@@ -424,11 +437,11 @@ export default function SettingsPage() {
           </div>
         </SettingsRow>
         {!telegramConfigured && (
-          <div className="p-4 bg-amber-900/20 border-t border-amber-800/30">
-            <div className="text-xs text-amber-400">
+          <div className="p-4 bg-choppy-tint border-t border-choppy/30">
+            <div className="text-xs text-choppy">
               <strong className="block mb-1">설정 방법:</strong>
               Vercel Dashboard → Settings → Environment Variables에서:
-              <ul className="list-disc list-inside mt-1 space-y-0.5 text-amber-400/80">
+              <ul className="list-disc list-inside mt-1 space-y-0.5 text-choppy/80">
                 <li><code className="bg-surface px-1 rounded">TELEGRAM_BOT_TOKEN</code></li>
                 <li><code className="bg-surface px-1 rounded">TELEGRAM_CHAT_ID</code></li>
               </ul>
@@ -445,7 +458,7 @@ export default function SettingsPage() {
               onClick={() => setSetting("dataSource", "MOCK")}
               className={`text-xs font-bold px-3 py-1 rounded transition-all ${
                 dataSource === "MOCK"
-                  ? "text-amber-400 bg-amber-950/50 border border-amber-800"
+                  ? "text-choppy bg-choppy-tint border border-choppy/40"
                   : "text-muted hover:text-fg hover:bg-surface"
               }`}
             >
@@ -455,7 +468,7 @@ export default function SettingsPage() {
               onClick={() => setSetting("dataSource", "REAL")}
               className={`text-xs font-bold px-3 py-1 rounded transition-all ${
                 dataSource === "REAL"
-                  ? "text-emerald-400 bg-emerald-950/50 border border-emerald-800"
+                  ? "text-positive bg-positive-tint border border-positive/40"
                   : "text-muted hover:text-fg hover:bg-surface"
               }`}
             >
@@ -473,7 +486,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-2">
             {backfillResult && (
               <span className={`text-xs flex items-center gap-1 ${
-                backfillResult.success ? "text-green-400" : "text-red-400"
+                backfillResult.success ? "text-green-400" : "text-negative"
               }`}>
                 {backfillResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                 {backfillResult.message}
@@ -482,7 +495,7 @@ export default function SettingsPage() {
             <button
               onClick={runBackfill}
               disabled={backfillLoading}
-              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-blue-600 hover:bg-blue-500 text-white disabled:bg-neutral-700 disabled:text-muted"
+              className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all bg-info hover:bg-info/80 text-white disabled:bg-inset disabled:text-muted"
             >
               {backfillLoading ? (
                 <RefreshCw size={12} className="animate-spin" />
@@ -508,7 +521,7 @@ export default function SettingsPage() {
         </SettingsRow>
         <SettingsRow label="고위험 상태 경고 강제" description="Down 등에서 경고 항상 표시">
           <div className="flex items-center gap-2">
-            <AlertTriangle size={14} className="text-red-400" />
+            <AlertTriangle size={14} className="text-negative" />
             <Toggle enabled={forceHighRiskWarning} onChange={(v) => setSetting("forceHighRiskWarning", v)} />
           </div>
         </SettingsRow>
@@ -516,4 +529,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-

@@ -12,6 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="color-scheme" content="only light" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -23,9 +24,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     
     if (stored) {
       var settings = JSON.parse(stored);
-      var state = settings.state || settings;
-      theme = state.theme || "system";
-      compactMode = state.compactMode;
+      var state = settings && settings.state ? settings.state : settings;
+      if (state && (state.theme === "dark" || state.theme === "light" || state.theme === "system")) {
+        theme = state.theme;
+      }
+      compactMode = !!(state && state.compactMode);
     }
     
     var isDark = false;
@@ -35,17 +38,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       isDark = theme === "dark";
     }
     
+    var d = document.documentElement;
+    var meta = document.querySelector('meta[name="color-scheme"]');
+    d.classList.remove("dark", "light");
     if (isDark) {
-      document.documentElement.classList.add("dark");
+      d.classList.add("dark");
+      d.setAttribute("data-theme", "dark");
+      d.style.setProperty('color-scheme', 'dark');
+      if (meta) meta.setAttribute('content', 'dark');
     } else {
-      document.documentElement.classList.remove("dark");
+      d.classList.add("light");
+      d.setAttribute("data-theme", "light");
+      d.style.setProperty('color-scheme', 'only light');
+      if (meta) meta.setAttribute('content', 'only light');
     }
     
     if (compactMode) {
-      document.documentElement.classList.add("compact");
+      d.classList.add("compact");
+    } else {
+      d.classList.remove("compact");
     }
   } catch (e) {
-    document.documentElement.classList.add("dark");
+    var d = document.documentElement;
+    var fallbackDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    d.classList.toggle('dark', fallbackDark);
+    d.classList.toggle('light', !fallbackDark);
+    d.setAttribute('data-theme', fallbackDark ? 'dark' : 'light');
+    d.style.setProperty('color-scheme', fallbackDark ? 'dark' : 'only light');
+    if (meta) meta.setAttribute('content', fallbackDark ? 'dark' : 'only light');
   }
 })();
 `,

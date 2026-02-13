@@ -34,7 +34,7 @@ function StatCard({
   valueColor?: string;
 }) {
   return (
-    <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-4">
+    <div className="bg-inset/50 border border-border rounded-lg p-4">
       <div className="flex items-center gap-2 text-xs text-muted mb-2">
         <Icon size={12} />
         {label}
@@ -73,12 +73,12 @@ export function ReturnsHeatmap({ equity, isMock, isLoading }: ReturnsHeatmapProp
         {isMock ? (
           <>
             <span className="text-sm">백테스트를 실행하면 히트맵이 표시됩니다</span>
-            <span className="text-xs text-neutral-600">Generate 버튼을 클릭하세요</span>
+            <span className="text-xs text-muted">Generate 버튼을 클릭하세요</span>
           </>
         ) : (
           <>
             <span className="text-sm">아직 포트폴리오 데이터가 없습니다</span>
-            <span className="text-xs text-neutral-600">거래 기록이 쌓이면 성과가 표시됩니다</span>
+            <span className="text-xs text-muted">거래 기록이 쌓이면 성과가 표시됩니다</span>
           </>
         )}
       </div>
@@ -107,21 +107,21 @@ export function ReturnsHeatmap({ equity, isMock, isLoading }: ReturnsHeatmapProp
             {years.map(year => {
               const yearTotal = getYearlyTotal(data, year);
               return (
-                <tr key={year} className="border-t border-neutral-800/50">
+                <tr key={year} className="border-t border-border/50">
                   <td className="py-1.5 px-2 font-mono font-bold text-fg">{year}</td>
                   {months.map(month => {
                     const ret = getReturnForMonth(data, year, month);
                     if (ret === null) {
                       return (
                         <td key={month} className="py-1.5 px-1">
-                          <div className="w-full h-8 rounded bg-neutral-900/50" />
+                          <div className="w-full h-8 rounded bg-inset/50" />
                         </td>
                       );
                     }
                     return (
                       <td key={month} className="py-1.5 px-1">
                         <div
-                          className="w-full h-8 rounded flex items-center justify-center font-mono text-[10px] font-bold text-white transition-transform hover:scale-105 cursor-default"
+                          className="w-full h-8 rounded flex items-center justify-center font-mono text-[11px] font-bold text-white transition-transform hover:scale-105 cursor-default"
                           style={{ backgroundColor: getReturnColor(ret) }}
                           title={`${getMonthName(month)} ${year}: ${formatReturn(ret)}`}
                         >

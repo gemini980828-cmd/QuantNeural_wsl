@@ -3,17 +3,14 @@
 import Link from "next/link";
 import { E03ViewModel } from "../../lib/ops/e03/types";
 import { AlertCircle, Shield, MonitorPlay, Clock, Database, AlertTriangle, Bell, LayoutDashboard, Minimize2, Activity, Clock3 } from "lucide-react";
-import { ThemeToggle } from "../ThemeToggle";
 import { useViewMode, useSettingsStore } from "@/lib/stores/settings-store";
 
 interface ZoneAHeaderProps {
   vm: E03ViewModel;
-  onToggleSimulation?: (next: boolean) => void;
-  onTogglePrivacy?: (next: boolean) => void;
   unresolvedAlerts?: number;
 }
 
-export default function ZoneAHeader({ vm, onToggleSimulation, onTogglePrivacy, unresolvedAlerts = 0 }: ZoneAHeaderProps) {
+export default function ZoneAHeader({ vm, unresolvedAlerts = 0 }: ZoneAHeaderProps) {
   const viewMode = useViewMode();
   const store = useSettingsStore();
   const needsRecord = vm.executionState === "DUE_TODAY" || vm.executionState === "UNKNOWN";
@@ -40,38 +37,29 @@ export default function ZoneAHeader({ vm, onToggleSimulation, onTogglePrivacy, u
           </div>
           
           <div className="flex flex-wrap gap-2 shrink-0">
-            <ThemeToggle />
-            <button 
-               onClick={() => onToggleSimulation?.(!vm.simulationMode)}
-               className={`flex items-center gap-1.5 px-2 py-1 rounded border transition-colors text-xs sm:text-sm ${
-                 vm.simulationMode ? "bg-amber-900/40 text-amber-500 border-amber-800" : "border-neutral-800 hover:border-neutral-700"
-               }`}
-            >
-              <MonitorPlay size={14} />
-              <span className="hidden xs:inline">{vm.simulationMode ? "SIM MODE" : "Sim"}</span>
-            </button>
-            <button 
-               onClick={() => onTogglePrivacy?.(!vm.privacyMode)}
-               className={`flex items-center gap-1.5 px-2 py-1 rounded border transition-colors text-xs sm:text-sm ${
-                 vm.privacyMode ? "bg-indigo-900/40 text-indigo-400 border-indigo-800" : "border-neutral-800 hover:border-neutral-700"
-               }`}
-            >
-              <Shield size={14} />
-              <span className="hidden xs:inline">{vm.privacyMode ? "Privacy" : "Visible"}</span>
-            </button>
-            
-            {/* Notifications Bell */}
+            {vm.simulationMode && (
+              <span className="flex items-center gap-1.5 px-2 py-1 rounded border text-xs bg-choppy-tint text-choppy border-choppy/40">
+                <MonitorPlay size={14} />
+                <span className="hidden xs:inline">SIM</span>
+              </span>
+            )}
+            {vm.privacyMode && (
+              <span className="flex items-center gap-1.5 px-2 py-1 rounded border text-xs bg-indigo-900/40 text-indigo-400 border-indigo-800">
+                <Shield size={14} />
+                <span className="hidden xs:inline">Privacy</span>
+              </span>
+            )}
             <Link 
               href="/notifications"
               className={`relative flex items-center gap-1.5 px-2 py-1 rounded border transition-colors text-xs sm:text-sm ${
                 unresolvedAlerts > 0 
-                  ? "bg-red-900/40 text-red-400 border-red-800" 
-                  : "border-neutral-800 hover:border-neutral-700"
-              }`}
+                  ? "bg-negative-tint text-negative border-negative/40" 
+                   : "border-border hover:border-fg/20"
+               }`}
             >
               <Bell size={14} />
               {unresolvedAlerts > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
                   {unresolvedAlerts > 9 ? "9+" : unresolvedAlerts}
                 </span>
               )}
@@ -82,7 +70,7 @@ export default function ZoneAHeader({ vm, onToggleSimulation, onTogglePrivacy, u
             <button 
                onClick={() => store.setSetting('viewMode', viewMode === 'simple' ? 'pro' : 'simple')}
                className={`flex items-center gap-1.5 px-2 py-1 rounded border transition-colors text-xs sm:text-sm ${
-                 viewMode === 'pro' ? "bg-purple-900/40 text-purple-400 border-purple-800" : "border-neutral-800 hover:border-neutral-700"
+                  viewMode === 'pro' ? "bg-purple-900/40 text-purple-400 border-purple-800" : "border-border hover:border-fg/20"
                }`}
             >
               {viewMode === 'simple' ? <LayoutDashboard size={14} /> : <Minimize2 size={14} />}
@@ -96,74 +84,53 @@ export default function ZoneAHeader({ vm, onToggleSimulation, onTogglePrivacy, u
           <div className="flex flex-wrap items-center gap-2 min-w-0">
             
             {/* 1. EMERGENCY - Priority 1 (Prominent when active, minimal when NONE) */}
-            {hasEmergency ? (
+            {hasEmergency && (
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-bold text-xs ${
                 showHardEmergency 
-                  ? "bg-red-500 text-white animate-pulse shadow-lg shadow-red-900/40" 
-                  : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                  ? "bg-negative text-white animate-pulse shadow-lg shadow-negative/30" 
+                  : "bg-choppy-tint text-choppy border border-choppy/30"
               }`}>
                 <AlertTriangle size={14} className={showHardEmergency ? "animate-bounce" : ""} />
                 <span>{showHardEmergency ? "🚨 비상 확정" : "⚠️ 긴급 점검"}</span>
               </div>
-            ) : (
-              <div className="flex items-center gap-1.5 text-neutral-600 text-xs" title="비상 상황 없음">
-                <div className="w-2 h-2 rounded-full bg-neutral-700" />
-                <span className="hidden sm:inline">비상 없음</span>
-              </div>
             )}
 
-            {isChoppy ? (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-medium bg-amber-900/40 text-amber-500 border-amber-800">
+            {isChoppy && (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-medium bg-choppy-tint text-choppy border-choppy/40">
                 <Activity size={14} />
                 <span>시그널 불안정</span>
               </div>
-            ) : vm.strategyState === "ON" ? (
-              <div className="flex items-center gap-1.5 text-positive text-xs" title="ON-Normal">
-                <div className="w-2 h-2 rounded-full bg-positive" />
-                <span className="hidden sm:inline">정상</span>
-              </div>
-            ) : vm.strategyState === "OFF10" ? (
+            )}
+            {vm.strategyState === "OFF10" && (
               <div className="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs bg-status-inactive-bg text-status-inactive-fg">
                 <span>OFF10</span>
               </div>
-            ) : null}
+            )}
 
             {vm.cooldownActive && (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded border text-xs bg-amber-900/40 text-amber-400 border-amber-800">
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded border text-xs bg-choppy-tint text-choppy border-choppy/40">
                 <Clock3 size={12} />
                 <span>쿨다운</span>
               </div>
             )}
             
-            {/* 2. EXEC - Priority 2 (Prominent when scheduled/due) */}
-            {isExecScheduled || isExecDueToday ? (
+            {(isExecScheduled || isExecDueToday) && (
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-bold text-xs ${
                 isExecDueToday
-                  ? "bg-blue-500 text-white"
-                  : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                  ? "bg-info text-white"
+                  : "bg-info-tint text-info border border-info/30"
               }`}>
                 <Clock size={14} />
                 <span>{isExecDueToday ? "오늘 실행 예정" : "내일 아침 실행 예정"}</span>
               </div>
-            ) : (
-              <div className="flex items-center gap-1.5 text-neutral-600 text-xs" title="실행 예정 없음">
-                <Clock size={12} className="opacity-50" />
-                <span className="hidden sm:inline">실행 없음</span>
-              </div>
             )}
             
-            {/* 3. DATA - Priority 3 (Subtle, tooltip) */}
-            <div 
-              className="flex items-center gap-1.5 text-neutral-500 text-xs cursor-help group relative"
-              title={`데이터: ${vm.dataBadge.detail || "FRESH"}`}
-            >
-              <Database size={12} className={vm.dataBadge.detail?.includes("STALE") ? "text-amber-500" : "opacity-50"} />
-              {vm.dataBadge.detail?.includes("STALE") ? (
-                <span className="text-amber-500">데이터 오래됨</span>
-              ) : (
-                <span className="hidden lg:inline opacity-60">데이터 정상</span>
-              )}
-            </div>
+            {vm.dataBadge.detail?.includes("STALE") && (
+              <div className="flex items-center gap-1.5 text-choppy text-xs">
+                <Database size={12} />
+                <span>데이터 오래됨</span>
+              </div>
+            )}
           </div>
 
           {/* Record Required CTA */}

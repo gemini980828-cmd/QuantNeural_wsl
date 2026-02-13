@@ -13,14 +13,14 @@ export default function PortfolioSummaryStrip({ portfolio, hideCta = false }: Po
   if (!portfolio) {
     // Empty State
     return (
-      <div className="w-full bg-surface border border-neutral-800 rounded-xl p-4 flex items-center justify-between text-sm">
+      <div className="w-full bg-surface border border-border rounded-xl p-4 flex items-center justify-between text-sm">
         <div className="flex items-center gap-2 text-muted">
           <Info size={16} />
           <span>보유 포트폴리오 데이터가 없습니다</span>
         </div>
         <Link 
           href="/portfolio" 
-          className="text-blue-400 hover:text-blue-300 transition-colors text-xs font-bold flex items-center gap-1"
+          className="text-info hover:text-info transition-colors text-xs font-bold flex items-center gap-1"
         >
           입력하기 <ArrowRight size={12} />
         </Link>
@@ -39,7 +39,7 @@ export default function PortfolioSummaryStrip({ portfolio, hideCta = false }: Po
   const getColor = (n: number) => n > 0 ? "text-positive" : n < 0 ? "text-negative" : "text-muted";
 
   return (
-    <section className="w-full bg-surface border border-neutral-800 rounded-xl p-4 shadow-sm mb-6">
+    <section className="w-full bg-surface border border-border rounded-xl p-4 shadow-sm mb-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         
         {/* Metric Group 
@@ -105,7 +105,7 @@ export default function PortfolioSummaryStrip({ portfolio, hideCta = false }: Po
         </div>
 
         {hideCta ? (
-          <div className="hidden md:flex flex-col justify-center border-l border-neutral-800 pl-4 min-w-0">
+           <div className="hidden md:flex flex-col justify-center border-l border-border pl-4 min-w-0">
             <span className="text-xs text-muted mb-0.5 whitespace-nowrap">SGOV 보유</span>
             <div className="font-mono font-medium text-fg truncate">
               {sgov ? `${sgov.qty.toLocaleString()} 주` : "-"}
@@ -115,10 +115,10 @@ export default function PortfolioSummaryStrip({ portfolio, hideCta = false }: Po
             </div>
           </div>
         ) : (
-          <div className="hidden md:flex flex-col justify-center border-l border-neutral-800 pl-4 h-10 w-32 shrink-0">
+           <div className="hidden md:flex flex-col justify-center border-l border-border pl-4 h-10 w-32 shrink-0">
             <Link 
               href="/portfolio" 
-              className="w-full h-full flex items-center justify-center gap-1.5 bg-inset hover:bg-neutral-800 text-muted hover:text-fg text-xs font-bold rounded-lg transition-all"
+               className="w-full h-full flex items-center justify-center gap-1.5 bg-inset hover:bg-border text-muted hover:text-fg text-xs font-bold rounded-lg transition-all"
             >
               포트폴리오
               <ArrowRight size={14} />
@@ -130,7 +130,7 @@ export default function PortfolioSummaryStrip({ portfolio, hideCta = false }: Po
       {!hideCta && (
         <Link 
           href="/portfolio" 
-          className="md:hidden mt-4 w-full py-3 flex items-center justify-center gap-1.5 bg-inset hover:bg-neutral-800 text-muted text-xs font-bold rounded-lg transition-all"
+           className="md:hidden mt-4 w-full py-3 flex items-center justify-center gap-1.5 bg-inset hover:bg-border text-muted text-xs font-bold rounded-lg transition-all"
         >
           포트폴리오 자세히 보기
           <ArrowRight size={14} />

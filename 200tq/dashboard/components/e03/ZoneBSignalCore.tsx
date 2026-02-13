@@ -34,7 +34,7 @@ function EvidenceCard({ item }: { item: EvidenceItem }) {
         : "bg-surface text-muted opacity-60"
     }`}>
       <div className="mb-2">
-        {item.pass ? <CheckCircle2 size={24} className="text-emerald-500" /> : <XCircle size={24} />}
+        {item.pass ? <CheckCircle2 size={24} className="text-positive" /> : <XCircle size={24} />}
       </div>
       <div className="text-sm font-semibold mb-1 uppercase tracking-wider">{item.label}</div>
       <div className={`text-xs font-mono font-medium ${item.marginPct > 0 ? "text-positive" : "text-negative"}`}>
@@ -106,25 +106,25 @@ export default function ZoneBSignalCore({
       actionLabel: "매수 유지",
       stateLabel: "ON",
       headingClass: "text-positive",
-      badgeClass: "bg-positive/10 text-positive",
+      badgeClass: "bg-positive-tint text-positive",
     },
     ON_CHOPPY: {
       actionLabel: "매수 축소",
       stateLabel: "CHOPPY",
       headingClass: "text-choppy",
-      badgeClass: "bg-amber-900/40 text-amber-400",
+      badgeClass: "bg-choppy-tint text-choppy",
     },
     OFF10: {
       actionLabel: "매도 대기",
       stateLabel: "OFF",
-      headingClass: "text-amber-400",
+      headingClass: "text-choppy",
       badgeClass: "bg-status-inactive-bg text-status-inactive-fg",
     },
     EMERGENCY: {
       actionLabel: "비상 전환",
       stateLabel: "EMERGENCY",
       headingClass: "text-negative animate-pulse",
-      badgeClass: "bg-red-900/40 text-red-400",
+      badgeClass: "bg-negative-tint text-negative",
     },
   } as const;
   const currentState = stateConfig[vm.strategyState];
@@ -214,7 +214,7 @@ export default function ZoneBSignalCore({
                   />
                   <div className="absolute left-[37.5%] top-[-2px] h-4 w-px bg-fg/70" />
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-muted font-sans">
+                <div className="flex items-center justify-between text-[11px] text-muted font-sans">
                   <span>0 (안정)</span>
                   <span className="font-semibold">기준 3회</span>
                   <span>8+ (불안정)</span>
@@ -230,7 +230,7 @@ export default function ZoneBSignalCore({
 
               {/* Signal History Grid */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[10px] text-muted font-sans">
+                <div className="flex items-center justify-between text-[11px] text-muted font-sans">
                   <span>40일 시그널 히스토리</span>
                   <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-positive/70" /> ON</span>
@@ -251,7 +251,7 @@ export default function ZoneBSignalCore({
                     );
                   })}
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-muted/50 font-sans">
+                <div className="flex items-center justify-between text-[11px] text-muted/50 font-sans">
                   <span>40일 전</span>
                   <span>오늘</span>
                 </div>
@@ -263,25 +263,25 @@ export default function ZoneBSignalCore({
 
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-4">
-             {/* Primary: Action Label (what to do) */}
-             <h2 className={`text-4xl font-bold tracking-tight font-sans ${currentState.headingClass}`}>
-               {currentState.actionLabel}
+             {/* Primary: System State (hero verdict) */}
+             <h2 className={`text-5xl font-black tracking-tight font-sans ${currentState.headingClass}`}>
+               {currentState.stateLabel}
               </h2>
-              {/* Secondary: System State (technical status) */}
+              {/* Secondary: Action Label (what to do) */}
               <span className={`text-lg px-2 py-0.5 rounded font-medium font-sans ${currentState.badgeClass}`}>
-                {currentState.stateLabel}
+                {currentState.actionLabel}
               </span>
          </div>
          
          <div className="flex items-center gap-2">
            {vm.cooldownActive && (
-              <div className="flex items-center gap-1.5 text-amber-400 text-xs font-medium bg-amber-900/40 px-2 py-1 rounded border border-amber-800">
+              <div className="flex items-center gap-1.5 text-choppy text-xs font-medium bg-choppy-tint px-2 py-1 rounded border border-choppy/40">
                <Clock3 size={14} />
                쿨다운 활성 (1일)
              </div>
            )}
            {vm.emergencyState === "SOFT_ALERT" && (
-             <div className="flex items-center gap-2 text-status-action-fg text-sm font-medium bg-status-action-bg/10 px-3 py-1 rounded-lg border border-status-action-bg/20">
+             <div className="flex items-center gap-2 text-status-action-fg text-sm font-medium bg-choppy-tint px-3 py-1 rounded-lg border border-status-action-bg/20">
                <AlertTriangle size={16} />
                {vm.softAlertNote || "Soft Alert Active"}
              </div>
@@ -293,7 +293,7 @@ export default function ZoneBSignalCore({
         {vm.evidence.map((item) => (
           <div 
             key={item.window} 
-            className="flex flex-col items-center justify-center p-4 rounded-xl bg-surface shadow-sm relative overflow-hidden group"
+            className="flex flex-col items-center justify-center p-4 rounded-xl bg-surface border border-border shadow-sm relative overflow-hidden group"
           >
             {/* Hover Tooltip - fully opaque overlay */}
             <div className="absolute inset-0 bg-surface rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-4 z-20 pointer-events-none">
@@ -303,7 +303,7 @@ export default function ZoneBSignalCore({
                 <div className={`text-lg font-bold font-mono tabular-nums ${item.marginPct >= 0 ? "text-positive" : "text-negative"}`}>
                   = {item.marginPct >= 0 ? "+" : ""}{item.marginPct.toFixed(2)}%
                 </div>
-                <div className="pt-2 border-t border-border text-[10px] text-muted font-sans">
+                <div className="pt-2 border-t border-border text-[11px] text-muted font-sans">
                   SMA3 {">"} {item.label} 이면 ON 투표
                 </div>
               </div>
@@ -319,8 +319,14 @@ export default function ZoneBSignalCore({
               {item.marginPct > 0 ? "+" : ""}{item.marginPct.toFixed(2)}%
             </div>
             
-            {/* Clarifying text */}
-            <div className="text-[10px] text-muted/70 mt-2 font-sans text-center">
+            <div className="w-full mt-3 h-1.5 rounded-full bg-inset overflow-hidden">
+              <div 
+                className={`h-full rounded-full ${item.marginPct >= 0 ? "bg-positive" : "bg-negative"}`}
+                style={{ width: `${Math.min(Math.abs(item.marginPct) / 5, 1) * 100}%` }}
+              />
+            </div>
+            
+            <div className="text-[11px] text-muted/70 mt-2 font-sans text-center">
               SMA3 대비 괴리율
             </div>
           </div>
@@ -329,7 +335,7 @@ export default function ZoneBSignalCore({
 
       {/* Performance Strip with Settings */}
       {perfSummary && (
-        <div className="bg-surface rounded-lg shadow-sm">
+        <div className="bg-surface rounded-lg border border-border shadow-sm">
           {/* Main Strip */}
           <div className="flex items-center justify-between px-4 py-2 text-xs">
             <div className="flex items-center gap-3">
@@ -337,7 +343,7 @@ export default function ZoneBSignalCore({
                 <Wallet size={12} />
                 <span>기준: {localCapital.toLocaleString()}만</span>
               </div>
-              <TrendingUp size={14} className="text-neutral-500" />
+              <TrendingUp size={14} className="text-muted" />
               <span className="text-muted font-medium font-sans">PERF ({getPeriodLabel(localStartDate, localEndDate)}):</span>
               <span className={perfSummary.tq200.returnPct >= 0 ? "text-positive" : "text-negative"}>
                 <span className="font-sans">200TQ</span> <span className="font-mono">{perfSummary.tq200.returnPct > 0 ? "+" : ""}{perfSummary.tq200.returnPct.toFixed(1)}%</span>
@@ -350,7 +356,7 @@ export default function ZoneBSignalCore({
               </span>
               {/* Fee Badge */}
               <span className={`text-[9px] px-1.5 py-0.5 rounded font-sans ${
-                includeFees ? "bg-amber-900/30 text-amber-400" : "bg-inset text-muted"
+                includeFees ? "bg-choppy-tint text-choppy" : "bg-inset text-muted"
               }`}>
                 {includeFees ? "세금포함" : "세전"}
               </span>
@@ -417,7 +423,7 @@ export default function ZoneBSignalCore({
               </div>
               
               {/* Info Note */}
-              <div className="text-[10px] text-muted/70 font-sans pt-2 border-t border-border">
+              <div className="text-[11px] text-muted/70 font-sans pt-2 border-t border-border">
                 ※ 백테스트 기준. 실제 수익과 다를 수 있습니다.
               </div>
             </div>
@@ -425,7 +431,9 @@ export default function ZoneBSignalCore({
         </div>
       )}
       
-      <MacroStrip data={macroData} isLoading={macroLoading} />
+      <div className="mt-6 pt-4 border-t border-border">
+        <MacroStrip data={macroData} isLoading={macroLoading} />
+      </div>
     </section>
   );
 }

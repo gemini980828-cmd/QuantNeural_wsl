@@ -429,7 +429,7 @@ export default function SvgLineChart({
         {zoomRange[0] !== 0 || zoomRange[1] !== 1 ? (
           <button
             onClick={handleDoubleClick}
-            className="px-1.5 h-6 rounded bg-surface/80 hover:bg-surface border border-border text-muted text-[10px] flex items-center justify-center transition-colors"
+            className="px-1.5 h-6 rounded bg-surface/80 hover:bg-surface border border-border text-muted text-[11px] flex items-center justify-center transition-colors"
             title="리셋 (Reset)"
           >
             Reset

@@ -51,7 +51,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       <p className="text-xs text-muted mb-1 font-mono">{label}</p>
       <div className="flex items-center gap-2 text-sm">
         <span className="text-fg">Drawdown:</span>
-        <span className="font-mono font-bold text-red-400">
+        <span className="font-mono font-bold text-negative">
           {(drawdown * 100).toFixed(1)}%
         </span>
       </div>
