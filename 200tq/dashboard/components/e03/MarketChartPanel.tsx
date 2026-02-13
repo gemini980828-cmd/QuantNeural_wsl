@@ -429,7 +429,7 @@ export default function MarketChartPanel({
           </div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs overflow-x-auto">
-          <span className={`px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap ${e03State === "ON" ? "bg-green-900/40 text-green-400" : "bg-choppy-tint text-choppy"}`}>
+          <span className={`px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap ${e03State === "ON" ? "bg-positive-tint text-positive" : "bg-choppy-tint text-choppy"}`}>
             E03: {e03State}
           </span>
           <span className={`px-1.5 sm:px-2 py-0.5 rounded font-sans whitespace-nowrap ${

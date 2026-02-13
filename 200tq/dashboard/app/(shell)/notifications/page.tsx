@@ -271,7 +271,7 @@ export default function NotificationsPage() {
               onClick={() => setTab(t)}
               className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                 tab === t 
-                  ? "bg-inset text-white" 
+                  ? "bg-inset text-fg" 
                   : "text-muted hover:bg-surface"
               }`}
             >
@@ -373,7 +373,7 @@ export default function NotificationsPage() {
                     <td className="px-4 py-2 text-muted">{formatRelativeTime(run.started_at)}</td>
                     <td className="px-4 py-2">
                       <span className={`text-xs px-2 py-0.5 rounded ${
-                        run.status === "success" ? "bg-green-900/50 text-green-400" :
+                        run.status === "success" ? "bg-positive-tint text-positive" :
                         run.status === "failed" ? "bg-negative-tint text-negative" :
                         "bg-info-tint text-info"
                       }`}>

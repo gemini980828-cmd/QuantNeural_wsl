@@ -56,7 +56,7 @@ function SettingsSection({
         {title}
         <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">{badge}</span>
       </h2>
-      <div className="rounded-xl border border-border bg-surface divide-y divide-neutral-800">
+      <div className="rounded-xl border border-border bg-surface divide-y divide-border">
         {children}
       </div>
     </section>
@@ -241,7 +241,7 @@ export default function SettingsPage() {
             href="#notifications-section"
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               notificationsEnabled 
-                ? "bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30" 
+                ? "bg-positive-tint text-positive border border-positive/30 hover:bg-positive/20" 
                 : "bg-surface text-muted hover:bg-surface"
             }`}
           >
@@ -257,7 +257,7 @@ export default function SettingsPage() {
             <button
               onClick={() => { applyThemeToDOM("system"); setSetting("theme", "system"); }}
               className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${
-                theme === "system" ? "bg-inset text-white" : "text-muted"
+                theme === "system" ? "bg-inset text-fg" : "text-muted"
               }`}
             >
               <Monitor size={12} />
@@ -266,7 +266,7 @@ export default function SettingsPage() {
             <button
               onClick={() => { applyThemeToDOM("dark"); setSetting("theme", "dark"); }}
               className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${
-                theme === "dark" ? "bg-inset text-white" : "text-muted"
+                theme === "dark" ? "bg-inset text-fg" : "text-muted"
               }`}
             >
               <Moon size={12} />
@@ -275,7 +275,7 @@ export default function SettingsPage() {
             <button
               onClick={() => { applyThemeToDOM("light"); setSetting("theme", "light"); }}
               className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${
-                theme === "light" ? "bg-inset text-white" : "text-muted"
+                theme === "light" ? "bg-inset text-fg" : "text-muted"
               }`}
             >
               <Sun size={12} />
@@ -344,7 +344,7 @@ export default function SettingsPage() {
         <SettingsRow label="Dev Scenario" description="개발용 시나리오 모드">
           <div className="flex items-center gap-2">
             {devScenario && (
-              <span className="text-[11px] font-bold text-purple-400 bg-purple-950/30 px-2 py-0.5 rounded border border-purple-900/50">
+              <span className="text-[11px] font-bold text-purple-700 dark:text-purple-400 bg-purple-100 dark:bg-purple-950/30 px-2 py-0.5 rounded border border-purple-300 dark:border-purple-900/50">
                 DEV
               </span>
             )}
@@ -382,7 +382,7 @@ export default function SettingsPage() {
                 확인 중...
               </span>
             ) : telegramConfigured ? (
-              <span className="text-xs text-green-400 flex items-center gap-1 bg-green-900/30 px-2 py-1 rounded-lg border border-green-700/30">
+              <span className="text-xs text-positive flex items-center gap-1 bg-positive-tint px-2 py-1 rounded-lg border border-positive/30">
                 <CheckCircle2 size={12} />
                 연결됨
               </span>
@@ -412,7 +412,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-2">
             {telegramTestResult && (
               <span className={`text-xs flex items-center gap-1 ${
-                telegramTestResult.success ? "text-green-400" : "text-negative"
+                telegramTestResult.success ? "text-positive" : "text-negative"
               }`}>
                 {telegramTestResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                 {telegramTestResult.message}
@@ -486,7 +486,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-2">
             {backfillResult && (
               <span className={`text-xs flex items-center gap-1 ${
-                backfillResult.success ? "text-green-400" : "text-negative"
+                backfillResult.success ? "text-positive" : "text-negative"
               }`}>
                 {backfillResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                 {backfillResult.message}
@@ -512,7 +512,7 @@ export default function SettingsPage() {
       <SettingsSection id="safety-section" title="안전" badge="Safety" icon={Shield}>
         <SettingsRow label="주문 복사 전 확인" description="클립보드 복사 전 확인 대화상자">
           <div className="flex items-center gap-2">
-            <Check size={14} className="text-green-400" />
+            <Check size={14} className="text-positive" />
             <Toggle enabled={confirmBeforeCopy} onChange={(v) => setSetting("confirmBeforeCopy", v)} />
           </div>
         </SettingsRow>

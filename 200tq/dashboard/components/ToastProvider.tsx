@@ -20,7 +20,7 @@ function ToastSlot({ toast }: { toast: ToastItem }) {
 
   return (
     <div className="animate-fade-in-up">
-      <div className="bg-inset text-white px-4 py-2 rounded-lg shadow-xl border border-border flex items-center gap-2 text-sm font-medium">
+      <div className="bg-inset text-fg px-4 py-2 rounded-lg shadow-xl border border-border flex items-center gap-2 text-sm font-medium">
         {ICON_MAP[toast.type]}
         {toast.message}
       </div>

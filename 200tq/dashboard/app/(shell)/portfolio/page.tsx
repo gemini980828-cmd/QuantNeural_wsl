@@ -380,7 +380,7 @@ export default function PortfolioPage() {
         보유 현황 입력
         <span className="text-xs font-normal text-muted bg-surface px-2 py-0.5 rounded-full">Holdings Input</span>
       </h2>
-      <div className="rounded-xl border border-border bg-surface divide-y divide-neutral-800">
+      <div className="rounded-xl border border-border bg-surface divide-y divide-border">
         <div className="flex items-center justify-between p-4">
           <div>
             <div className="text-sm font-medium text-fg">TQQQ 보유량</div>
@@ -423,7 +423,7 @@ export default function PortfolioPage() {
           <div className="flex items-center gap-2">
             {ocrResult && (
               <span className={`text-xs flex items-center gap-1 ${
-                ocrResult.success ? "text-green-400" : "text-negative"
+                ocrResult.success ? "text-positive" : "text-negative"
               }`}>
                 {ocrResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                 {ocrResult.message}
@@ -462,7 +462,7 @@ export default function PortfolioPage() {
           <div className="flex items-center gap-2">
             {portfolioSaveResult && (
               <span className={`text-xs flex items-center gap-1 ${
-                portfolioSaveResult.success ? "text-green-400" : "text-negative"
+                portfolioSaveResult.success ? "text-positive" : "text-negative"
               }`}>
                 {portfolioSaveResult.success ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                 {portfolioSaveResult.message}

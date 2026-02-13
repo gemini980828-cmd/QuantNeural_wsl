@@ -102,7 +102,7 @@ function PeriodSelector({ selected, onChange }: { selected: Period; onChange: (p
           onClick={() => onChange(p)}
           className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
             selected === p 
-              ? "bg-inset text-white" 
+                ? "bg-inset text-fg"
               : "text-muted hover:text-fg"
           }`}
         >
@@ -313,7 +313,7 @@ function BacktestResults({ results }: { results: BacktestApiResult | null }) {
           <div className="text-xs text-muted uppercase tracking-wider text-right">Sortino</div>
           <div className="text-xs text-muted uppercase tracking-wider text-right">Calmar</div>
         </div>
-        <div className="divide-y divide-neutral-800">
+        <div className="divide-y divide-border">
           <div className="grid grid-cols-6 gap-4 p-4 hover:bg-surface/20 transition-colors">
             <div className="text-sm font-bold text-fg">{results.experiment}</div>
             <div className={`text-sm font-mono text-right ${metrics.CAGR >= 0 ? "text-positive" : "text-negative"}`}>

@@ -377,7 +377,7 @@ export default function RecordsPage() {
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setSelectedDate(null)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-inset border border-border text-muted hover:text-white hover:border-border transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-lg bg-inset border border-border text-muted hover:text-fg hover:border-border transition-colors"
           >
             <ArrowLeft size={18} />
           </button>
@@ -400,7 +400,7 @@ export default function RecordsPage() {
                   <th className="px-4 py-3 font-medium text-right">체결가</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-800">
+              <tbody className="divide-y divide-border">
                 {selectedRecord.record.lines && selectedRecord.record.lines.length > 0 ? (
                   selectedRecord.record.lines.map((line, idx) => (
                     <tr key={idx} className="hover:bg-surface/30 transition-colors">
@@ -575,7 +575,7 @@ export default function RecordsPage() {
                     onClick={() => setPeriodFilter(p)}
                     className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                       periodFilter === p
-                        ? "bg-inset text-white"
+                        ? "bg-inset text-fg"
                         : "text-muted hover:text-fg"
                     }`}
                   >
@@ -594,7 +594,7 @@ export default function RecordsPage() {
                     onClick={() => setStatusFilter(s)}
                     className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                       statusFilter === s
-                        ? "bg-inset text-white"
+                        ? "bg-inset text-fg"
                         : "text-muted hover:text-fg"
                     }`}
                   >
@@ -620,7 +620,7 @@ export default function RecordsPage() {
                     <th className="px-4 py-3 font-medium"></th>
                   </tr>
                 </thead>
-                  <tbody className="divide-y divide-neutral-800">
+                  <tbody className="divide-y divide-border">
                   {filteredRecords.map((entry) => {
                     const tqqq = getLineData(entry.record.lines, 'TQQQ');
                     const sgov = getLineData(entry.record.lines, 'SGOV');

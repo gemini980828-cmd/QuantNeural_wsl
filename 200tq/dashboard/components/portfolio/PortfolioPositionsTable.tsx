@@ -120,7 +120,7 @@ export default function PortfolioPositionsTable({ positions, totalEquity, strate
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-800">
+            <tbody className="divide-y divide-border">
               {heldPositions.map((pos) => renderRow(pos, false))}
               
               {heldPositions.length === 0 && (
@@ -154,7 +154,7 @@ export default function PortfolioPositionsTable({ positions, totalEquity, strate
             <div className="border-t border-border/50">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                  <tbody className="divide-y divide-neutral-800/50">
+                  <tbody className="divide-y divide-border/50">
                     {watchlistPositions.map((pos) => renderRow(pos, true))}
                   </tbody>
                 </table>

@@ -41,7 +41,7 @@ export default function AppHeader() {
         {/* Logo */}
         <Link
           href="/command"
-          className="ml-3 flex items-center gap-2 text-lg font-bold text-white hover:text-accent transition-colors"
+          className="ml-3 flex items-center gap-2 text-lg font-bold text-fg hover:text-accent transition-colors"
         >
           <span className="font-mono tracking-tight">200TQ <span className="text-accent">α</span></span>
         </Link>
@@ -54,7 +54,7 @@ export default function AppHeader() {
             </span>
           )}
           {devScenario && (
-            <span className="text-[11px] font-bold text-purple-400 bg-purple-950/50 px-1.5 py-0.5 rounded border border-purple-900/50">
+            <span className="text-[11px] font-bold text-purple-700 dark:text-purple-400 bg-purple-100 dark:bg-purple-950/50 px-1.5 py-0.5 rounded border border-purple-300 dark:border-purple-900/50">
               DEV
             </span>
           )}
@@ -81,7 +81,7 @@ export default function AppHeader() {
           <Link
             href="/command"
             onClick={closeDrawer}
-            className="flex items-center gap-2 text-lg font-bold text-white"
+            className="flex items-center gap-2 text-lg font-bold text-fg"
           >
             <span className="font-mono tracking-tight">200TQ <span className="text-accent">α</span></span>
           </Link>
@@ -107,8 +107,8 @@ export default function AppHeader() {
                 onClick={closeDrawer}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                   isActive
-                    ? "bg-inset text-white font-medium"
-                    : "text-muted hover:text-white hover:bg-inset/50"
+                    ? "bg-inset text-fg font-medium"
+                    : "text-muted hover:text-fg hover:bg-inset/50"
                 }`}
               >
                 <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />

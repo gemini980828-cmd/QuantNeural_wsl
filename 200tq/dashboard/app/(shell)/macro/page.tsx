@@ -129,7 +129,7 @@ export default function MacroPage() {
         <button
           onClick={() => setTab("indicators")}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-            tab === "indicators" ? "bg-inset text-white" : "text-muted hover:bg-surface"
+            tab === "indicators" ? "bg-inset text-fg" : "text-muted hover:bg-surface"
           }`}
         >
           지표
@@ -137,7 +137,7 @@ export default function MacroPage() {
         <button
           onClick={() => setTab("news")}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-            tab === "news" ? "bg-inset text-white" : "text-muted hover:bg-surface"
+            tab === "news" ? "bg-inset text-fg" : "text-muted hover:bg-surface"
           }`}
         >
           뉴스
